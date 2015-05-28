@@ -24,7 +24,7 @@
   <name>Metrics Client (Java)</name>
   <groupId>com.arpnetworking.metrics</groupId>
   <artifactId>metrics-client</artifactId>
-  <version>0.3.3</version>
+  <version>0.3.4-SNAPSHOT</version>
   <packaging>jar</packaging>
   <properties>
     <main.basedir>${project.basedir}</main.basedir>
