@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -219,6 +219,7 @@ public class TsdQueryLogSink implements Sink {
         simpleModule.addSerializer(Quantity.class, QuantitySerializer.newInstance());
         OBJECT_MAPPER.setSerializationInclusion(JsonInclude.Include.ALWAYS);
         OBJECT_MAPPER.registerModule(simpleModule);
+        OBJECT_MAPPER.registerModule(new AfterburnerModule());
     }
 
     private static final class Entry {

@@ -15,7 +15,9 @@
  */
 package com.arpnetworking.metrics;
 
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /**
  * Interface for logging metrics: timers, counters and gauges. Clients should
@@ -183,4 +185,27 @@ public interface Metrics extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * Returns <code>Instant</code> this <code>Metrics</code> instance was
+     * opened. Commonly <code>Metrics</code> instances are opened on creation;
+     * however, that is not required. If this instance has not been opened the
+     * returned <code>Instant</code> will be null.
+     *
+     * @return The <code>Instant</code> this <code>Metrics</code> instance was
+     * opened.
+     */
+    @Nullable
+    Instant getOpenTime();
+
+    /**
+     * Returns <code>Instant</code> this <code>Metrics</code> instance was
+     * closed. If this instance has not been closed the returned
+     * <code>Instant</code> will be null.
+     *
+     * @return The <code>Instant</code> this <code>Metrics</code> instance was
+     * closed.
+     */
+    @Nullable
+    Instant getCloseTime();
 }

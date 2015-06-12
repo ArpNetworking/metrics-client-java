@@ -25,22 +25,23 @@ import com.arpnetworking.metrics.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 
 /**
  * Default implementation of <code>Metrics</code> that publishes metrics as
@@ -288,7 +289,9 @@ public class TsdMetrics implements Metrics {
         if (!assertIsOpen(_isOpen.getAndSet(false))) {
             return;
         }
-        _annotations.put(FINAL_TIMESTAMP_KEY, _dateTimeFormatIso8601.format(new Date()));
+        _finalTimestamp = _clock.instant();
+        _annotations.put(INITIAL_TIMESTAMP_KEY, DATE_TIME_FORMATTER.format(_initialTimestamp));
+        _annotations.put(FINAL_TIMESTAMP_KEY, DATE_TIME_FORMATTER.format(_finalTimestamp));
 
         final Map<String, String> annotations = Collections.unmodifiableMap(_annotations);
         final Map<String, List<Quantity>> timerSamples = cloneSamples(_timerSamples, PREDICATE_STOPPED_TIMERS);
@@ -302,6 +305,24 @@ public class TsdMetrics implements Metrics {
                     counterSamples,
                     gaugeSamples);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Nullable
+    public Instant getOpenTime() {
+        return _initialTimestamp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Nullable
+    public Instant getCloseTime() {
+        return _finalTimestamp;
     }
 
     // NOTE: Package private for testing
@@ -373,25 +394,27 @@ public class TsdMetrics implements Metrics {
      * Package private constructor. Instances of this class should be 
      * constructed with an appropriate implementation of 
      * <code>MetricsFactory</code>.
-     * 
-     * @param queryLogger
      */
-    // NOTE: Package private for testing
-    TsdMetrics(final List<Sink> sinks) {
-        this(sinks, LOGGER);
+    /* package private */ TsdMetrics(final List<Sink> sinks) {
+        this(sinks, Clock.systemUTC(), LOGGER);
     }
 
-    // NOTE: Package private for testing
-    TsdMetrics(final List<Sink> sinks, final Logger logger) {
+    /**
+     * Package private constructor. This constructor is for testing only.
+     */
+    /* package private */ TsdMetrics(final List<Sink> sinks, final Clock clock, final Logger logger) {
         _sinks = sinks;
         _logger = logger;
-        _dateTimeFormatIso8601.setTimeZone(TimeZone.getTimeZone("UTC"));
-        _annotations.put(INITIAL_TIMESTAMP_KEY, _dateTimeFormatIso8601.format(new Date()));
+        _clock = clock;
+        _initialTimestamp = _clock.instant();
     }
 
     private final List<Sink> _sinks;
     private final Logger _logger;
     private final AtomicBoolean _isOpen = new AtomicBoolean(true);
+    private final Clock _clock;
+    private final Instant _initialTimestamp;
+    private Instant _finalTimestamp = null;
     private final ConcurrentMap<String, TsdCounter> _counters = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TsdTimer> _timers = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _counterSamples = new ConcurrentHashMap<>();
@@ -399,9 +422,8 @@ public class TsdMetrics implements Metrics {
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _gaugeSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, String> _annotations = new ConcurrentHashMap<>();
 
-    // NOTE: SimpleDateFormat is not thread safe thus it is non-static
-    private final DateFormat _dateTimeFormatIso8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ");
-
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ").withZone(ZoneId.of("UTC"));
     private static final Predicate<Quantity> PREDICATE_ALL_QUANTITIES = new AllQuantitiesPredicate();
     private static final Predicate<Quantity> PREDICATE_STOPPED_TIMERS = new StoppedTimersPredicate();
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetrics.class);
