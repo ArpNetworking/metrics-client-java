@@ -24,7 +24,7 @@
   <name>Metrics Client (Java)</name>
   <groupId>com.arpnetworking.metrics</groupId>
   <artifactId>metrics-client</artifactId>
-  <version>0.3.4-SNAPSHOT</version>
+  <version>0.3.4</version>
   <packaging>jar</packaging>
   <properties>
     <main.basedir>${project.basedir}</main.basedir>
@@ -123,7 +123,7 @@
           <minimizeJar>false</minimizeJar>
           <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
           <artifactSet>
-            <excludes/>
+            <excludes />
             <includes>
               <include>ch.qos.logback:logback-classic</include>
               <include>ch.qos.logback:logback-core</include>
@@ -414,4 +414,8 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <scm>
+    <tag>metrics-client-0.3.4</tag>
+  </scm>
 </project>
