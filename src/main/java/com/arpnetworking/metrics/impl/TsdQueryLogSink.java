@@ -357,6 +357,14 @@ public class TsdQueryLogSink implements Sink {
          * @return Instance of <code>Sink</code>.
          */
         public Sink build() {
+            validateSinkParams();
+            return new TsdQueryLogSink(this);
+        }
+
+        /**
+         * Validate parameters before creating <code>Sink</code> object instance.
+         */
+        protected void validateSinkParams() {
             if (_path == null) {
                 throw new IllegalArgumentException("Path cannot be null");
             }
@@ -375,7 +383,6 @@ public class TsdQueryLogSink implements Sink {
             if (_maxHistory.intValue() < 0) {
                 throw new IllegalArgumentException("MaxHistory cannot be negative");
             }
-            return new TsdQueryLogSink(this);
         }
 
         /**
