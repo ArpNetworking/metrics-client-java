@@ -58,9 +58,11 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
 
         Map<String, List<Quantity>> aggCounterSamples = new HashMap<>();
         for (Map.Entry<String, List<Quantity>> entry : counterSamples.entrySet()) {
-            if (entry.getKey().contains(AGGREGATION_SIGNAL)) {
-                String aggKey = entry.getKey().substring(0, entry.getKey().lastIndexOf(AGGREGATION_SIGNAL)+1)
+            int lastSignalIndex = entry.getKey().lastIndexOf(AGGREGATION_SIGNAL);
+            if (lastSignalIndex > 0) {
+                String aggKey = entry.getKey().substring(0, lastSignalIndex+1)
                                                 .replaceAll(REPLACE_REGEX, _signalReplacement);
+
                 if (!aggCounterSamples.containsKey(aggKey)) {
                     aggCounterSamples.put(aggKey, new ArrayList<>());
                 }
