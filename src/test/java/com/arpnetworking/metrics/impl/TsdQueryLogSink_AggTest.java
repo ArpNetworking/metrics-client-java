@@ -85,7 +85,7 @@ public class TsdQueryLogSink_AggTest extends TsdQueryLogSinkTest {
         final File actualFile = new File("./target/TsdQueryLogSinkTest/testSerialization-Query.log");
         Files.deleteIfExists(actualFile.toPath());
 
-        final Sink sink = new TsdQueryLogSink_Agg.Builder_Agg()
+        final Sink sink = new TsdQueryLogSink_Agg.Builder()
             .setSignalReplacement('X')
             .setPath("./target/TsdQueryLogSinkTest")
             .setName("testSerialization-Query")
@@ -119,7 +119,7 @@ public class TsdQueryLogSink_AggTest extends TsdQueryLogSinkTest {
         final File actualFile = new File("./target/TsdQueryLogSinkTest/testSerialization-Query.log");
         Files.deleteIfExists(actualFile.toPath());
 
-        final Sink sink = new TsdQueryLogSink_Agg.Builder_Agg()
+        final Sink sink = new TsdQueryLogSink_Agg.Builder()
             .setSignalReplacement('X')
             .setAggregationSignal('%')
             .setPath("./target/TsdQueryLogSinkTest")

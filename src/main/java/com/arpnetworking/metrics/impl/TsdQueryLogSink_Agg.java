@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
 
-    protected TsdQueryLogSink_Agg(final Builder_Agg builder) {
+    protected TsdQueryLogSink_Agg(final Builder builder) {
         super(builder);
         _signalReplacement = builder._signalReplacement;
         _aggregationSignal = builder._aggregationSignal;
@@ -82,7 +82,7 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
     private static final char CARET = '^';
     private static final char BLANK = '\0';
 
-    public static class Builder_Agg extends TsdQueryLogSink.Builder {
+    public static class Builder extends TsdQueryLogSink.Builder {
 
         /**
          * Create an instance of <code>Sink</code>.
@@ -95,12 +95,12 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
             return new TsdQueryLogSink_Agg(this);
         }
 
-        public Builder_Agg setAggregationSignal(final char value) {
+        public Builder setAggregationSignal(final char value) {
             _aggregationSignal = value;
             return this;
         }
 
-        public Builder_Agg setSignalReplacement(final char value) {
+        public Builder setSignalReplacement(final char value) {
             _signalReplacement = value;
             return this;
         }
