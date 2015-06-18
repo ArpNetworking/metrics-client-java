@@ -47,6 +47,7 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
     protected TsdQueryLogSink_Agg(final Builder_Agg builder) {
         super(builder);
         _signalReplacement = builder._signalReplacement;
+        _aggregationSignal = builder._aggregationSignal;
     }
 
     @Override
@@ -58,9 +59,9 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
 
         Map<String, List<Quantity>> aggCounterSamples = new HashMap<>();
         for (Map.Entry<String, List<Quantity>> entry : counterSamples.entrySet()) {
-            int lastSignalIndex = entry.getKey().lastIndexOf(AGGREGATION_SIGNAL);
+            int lastSignalIndex = entry.getKey().lastIndexOf(_aggregationSignal);
             if (lastSignalIndex > 0) {
-                String aggKey = entry.getKey().substring(0, lastSignalIndex + 1).replace(AGGREGATION_SIGNAL, _signalReplacement);
+                String aggKey = entry.getKey().substring(0, lastSignalIndex + 1).replace(_aggregationSignal, _signalReplacement);
 
                 if (!aggCounterSamples.containsKey(aggKey)) {
                     aggCounterSamples.put(aggKey, new ArrayList<>());
@@ -69,15 +70,16 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
                 aggCounterSamples.get(aggKey).addAll(entry.getValue());
             }
 
-            aggCounterSamples.put(entry.getKey().replace(AGGREGATION_SIGNAL, BLANK), entry.getValue());
+            aggCounterSamples.put(entry.getKey().replace(_aggregationSignal, BLANK), entry.getValue());
         }
 
         super.record(annotations, timerSamples, aggCounterSamples, gaugeSamples);
     }
 
+    private final char _aggregationSignal;
     private final char _signalReplacement;
 
-    private static final char AGGREGATION_SIGNAL = '^';
+    private static final char CARET = '^';
     private static final char BLANK = '\0';
 
     public static class Builder_Agg extends TsdQueryLogSink.Builder {
@@ -93,11 +95,17 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
             return new TsdQueryLogSink_Agg(this);
         }
 
+        public Builder_Agg setAggregationSignal(final char value) {
+            _aggregationSignal = value;
+            return this;
+        }
+
         public Builder_Agg setSignalReplacement(final char value) {
             _signalReplacement = value;
             return this;
         }
 
+        private char _aggregationSignal = CARET;
         private char _signalReplacement = BLANK;
     }
 }

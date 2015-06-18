@@ -113,4 +113,47 @@ public class TsdQueryLogSink_AggTest extends TsdQueryLogSinkTest {
 
         JSONCompare.compareJSON(EXPECTED_AGGREGATED_JSON, actualComparableJson, JSONCompareMode.NON_EXTENSIBLE);
     }
+
+    @Test
+    public void testSetAggSignal() throws IOException, InterruptedException, JSONException {
+        final File actualFile = new File("./target/TsdQueryLogSinkTest/testSerialization-Query.log");
+        Files.deleteIfExists(actualFile.toPath());
+
+        final Sink sink = new TsdQueryLogSink_Agg.Builder_Agg()
+            .setSignalReplacement('X')
+            .setAggregationSignal('%')
+            .setPath("./target/TsdQueryLogSinkTest")
+            .setName("testSerialization-Query")
+            .setImmediateFlush(Boolean.TRUE)
+            .build();
+
+        final Map<String, List<Quantity>> SERIALIZATION_COUNTERS = createQuantityMap(
+            "counter%%A",       TsdQuantity.newInstance(1L, null),
+            "counter%%B",       TsdQuantity.newInstance(2L, null),
+            "signalLast%",      TsdQuantity.newInstance(3L, null),  // supported but not productive
+            "%signalFirst",     TsdQuantity.newInstance(4L, null),  // ignored
+            "signal%Spl%it",    TsdQuantity.newInstance(5L, null),  // possible future multiple level aggregation
+            "signalNone",       TsdQuantity.newInstance(6L, null)); // ignored
+
+        sink.record(
+            ANNOTATIONS,
+            createQuantityMap(),
+            SERIALIZATION_COUNTERS,
+            createQuantityMap());
+
+        // TODO(vkoskela): Add protected option to disable async [MAI-181].
+        Thread.sleep(100);
+
+        final String actualOriginalJson = fileToString(actualFile);
+        assertMatchesJsonSchema(actualOriginalJson);
+
+        final String actualComparableJson = actualOriginalJson
+            .replaceAll("\"time\":\"[^\"]*\"", "\"time\":\"<TIME>\"")
+            .replaceAll("\"host\":\"[^\"]*\"", "\"host\":\"<HOST>\"")
+            .replaceAll("\"processId\":\"[^\"]*\"", "\"processId\":\"<PROCESSID>\"")
+            .replaceAll("\"threadId\":\"[^\"]*\"", "\"threadId\":\"<THREADID>\"")
+            .replaceAll("\"id\":\"[^\"]*\"", "\"id\":\"<ID>\"");
+
+        JSONCompare.compareJSON(EXPECTED_AGGREGATED_JSON, actualComparableJson, JSONCompareMode.NON_EXTENSIBLE);
+    }
 }
