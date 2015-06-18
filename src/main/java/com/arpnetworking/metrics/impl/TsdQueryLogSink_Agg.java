@@ -60,8 +60,7 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
         for (Map.Entry<String, List<Quantity>> entry : counterSamples.entrySet()) {
             int lastSignalIndex = entry.getKey().lastIndexOf(AGGREGATION_SIGNAL);
             if (lastSignalIndex > 0) {
-                String aggKey = entry.getKey().substring(0, lastSignalIndex+1)
-                                                .replaceAll(REPLACE_REGEX, _signalReplacement);
+                String aggKey = entry.getKey().substring(0, lastSignalIndex + 1).replace(AGGREGATION_SIGNAL, _signalReplacement);
 
                 if (!aggCounterSamples.containsKey(aggKey)) {
                     aggCounterSamples.put(aggKey, new ArrayList<>());
@@ -70,16 +69,16 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
                 aggCounterSamples.get(aggKey).addAll(entry.getValue());
             }
 
-            aggCounterSamples.put(entry.getKey().replaceAll(REPLACE_REGEX, ""), entry.getValue());
+            aggCounterSamples.put(entry.getKey().replace(AGGREGATION_SIGNAL, BLANK), entry.getValue());
         }
 
         super.record(annotations, timerSamples, aggCounterSamples, gaugeSamples);
     }
 
-    private final String _signalReplacement;
+    private final char _signalReplacement;
 
-    private static final String AGGREGATION_SIGNAL = "^";
-    private static final String REPLACE_REGEX = "\\^";
+    private static final char AGGREGATION_SIGNAL = '^';
+    private static final char BLANK = '\0';
 
     public static class Builder_Agg extends TsdQueryLogSink.Builder {
 
@@ -94,13 +93,11 @@ public class TsdQueryLogSink_Agg extends TsdQueryLogSink {
             return new TsdQueryLogSink_Agg(this);
         }
 
-        public Builder_Agg setSignalReplacement(final String value) {
+        public Builder_Agg setSignalReplacement(final char value) {
             _signalReplacement = value;
             return this;
         }
 
-        private String _signalReplacement = DEFAULT_SIGNAL_REPLACEMENT;
-
-        private static final String DEFAULT_SIGNAL_REPLACEMENT = "";
+        private char _signalReplacement = BLANK;
     }
 }

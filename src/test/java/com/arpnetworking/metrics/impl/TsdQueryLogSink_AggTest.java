@@ -86,7 +86,7 @@ public class TsdQueryLogSink_AggTest extends TsdQueryLogSinkTest {
         Files.deleteIfExists(actualFile.toPath());
 
         final Sink sink = new TsdQueryLogSink_Agg.Builder_Agg()
-            .setSignalReplacement("X")
+            .setSignalReplacement('X')
             .setPath("./target/TsdQueryLogSinkTest")
             .setName("testSerialization-Query")
             .setImmediateFlush(Boolean.TRUE)
