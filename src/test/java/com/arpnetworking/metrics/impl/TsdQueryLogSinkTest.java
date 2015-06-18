@@ -276,7 +276,7 @@ public class TsdQueryLogSinkTest {
                 actual);
     }
 
-    private static Map<String, List<Quantity>> createQuantityMap(final Object... arguments) {
+    protected static Map<String, List<Quantity>> createQuantityMap(final Object... arguments) {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
         final Map<String, List<Quantity>> map = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
@@ -307,7 +307,7 @@ public class TsdQueryLogSinkTest {
         return Mockito.mock(org.slf4j.Logger.class);
     }
 
-    private void assertMatchesJsonSchema(final String json) {
+    protected void assertMatchesJsonSchema(final String json) {
         try {
             final JsonNode jsonNode = JsonLoader.fromString(json);
             final ProcessingReport report = VALIDATOR.validate(STENO_SCHEMA, jsonNode);
@@ -317,7 +317,7 @@ public class TsdQueryLogSinkTest {
         }
     }
 
-    private String fileToString(final File file) throws InterruptedException {
+    protected String fileToString(final File file) throws InterruptedException {
         // TODO(vkoskela): Need to work around async flushes to disk [MAI-458]
         Thread.sleep(500);
         try {
