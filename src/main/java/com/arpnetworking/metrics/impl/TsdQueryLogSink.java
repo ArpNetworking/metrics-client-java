@@ -24,6 +24,7 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 
 import com.arpnetworking.logback.StenoEncoder;
@@ -49,6 +50,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Implementation of <code>Sink</code> for the query log. For an example of its
@@ -109,14 +111,19 @@ public class TsdQueryLogSink implements Sink {
     }
 
     private TimeBasedRollingPolicy<ILoggingEvent> createRollingPolicy(
-            final String extension,
-            final String fileNameWithoutExtension,
-            final int maxHistory) {
+            final String historicalFileName,
+            final int maxHistory,
+            final Optional<Long> maxFileSize) {
         final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
         rollingPolicy.setContext(_loggerContext);
         rollingPolicy.setMaxHistory(maxHistory);
         rollingPolicy.setCleanHistoryOnStart(true);
-        rollingPolicy.setFileNamePattern(fileNameWithoutExtension + DATE_EXTENSION + extension + GZIP_EXTENSION);
+        rollingPolicy.setFileNamePattern(historicalFileName);
+        if (maxFileSize.isPresent()) {
+            final SizeAndTimeBasedFNATP<ILoggingEvent> triggerPolicy = new SizeAndTimeBasedFNATP<>();
+            triggerPolicy.setMaxFileSize(maxFileSize.get().toString());
+            rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(triggerPolicy);
+        }
         return rollingPolicy;
     }
 
@@ -153,49 +160,87 @@ public class TsdQueryLogSink implements Sink {
 
     /**
      * Protected constructor.
-     * 
+     *
      * @param builder Instance of <code>Builder</code>.
      */
     protected TsdQueryLogSink(final Builder builder) {
         this(builder, OBJECT_MAPPER, LOGGER);
     }
 
-    // NOTE: Package private for testing
-    /* package private */TsdQueryLogSink(final Builder builder, final ObjectMapper objectMapper, final org.slf4j.Logger logger) {
-        _loggerContext = new LoggerContext();
-
-        final String path = builder._path;
-        final String extension = builder._extension;
-        final boolean immediateFlush = builder._immediateFlush.booleanValue();
-        final int maxHistory = builder._maxHistory.intValue();
-
+    private String createFileNameWithoutExtension(final String path, final String name) {
         final StringBuilder fileNameBuilder = new StringBuilder(path);
         if (!path.isEmpty() && !path.endsWith(File.separator)) {
             fileNameBuilder.append(File.separator);
         }
-        fileNameBuilder.append(builder._name);
-        final String fileNameWithoutExtension = fileNameBuilder.toString();
-        fileNameBuilder.append(extension);
-        final String fileName = fileNameBuilder.toString();
+        fileNameBuilder.append(name);
+        return fileNameBuilder.toString();
+    }
 
-        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = createRollingPolicy(
-                extension,
+    private String createHistoricalFileName(
+            final String fileNameWithoutExtension,
+            final String extension,
+            final boolean compressHistory,
+            final Optional<Long> maxFileSize) {
+        final StringBuilder historicalFileNameBuilder = new StringBuilder(fileNameWithoutExtension)
+                .append(DATE_EXTENSION);
+        if (maxFileSize.isPresent()) {
+            historicalFileNameBuilder.append(INDEX_EXTENSION);
+        }
+        historicalFileNameBuilder.append(extension);
+        if (compressHistory) {
+            historicalFileNameBuilder.append(GZIP_EXTENSION);
+        }
+        return historicalFileNameBuilder.toString();
+    }
+
+    // NOTE: Package private for testing
+    /* package private */ TsdQueryLogSink(
+            final Builder builder,
+            final ObjectMapper objectMapper,
+            final org.slf4j.Logger logger) {
+        _loggerContext = new LoggerContext();
+
+        final String path = builder._path;
+        final String extension = builder._extension;
+        final String name = builder._name;
+        final boolean immediateFlush = builder._immediateFlush.booleanValue();
+        final int maxHistory = builder._maxHistory.intValue();
+        final boolean compressHistory = builder._compressHistory.booleanValue();
+        final Optional<Long> maxFileSize = Optional.ofNullable(builder._maxFileSize);
+
+        // Create the current file name
+        final String fileNameWithoutExtension = createFileNameWithoutExtension(path, name);
+        final String fileName = fileNameWithoutExtension + extension;
+
+        // Create the historical file name
+        final String historicalFileName = createHistoricalFileName(
                 fileNameWithoutExtension,
-                maxHistory);
+                extension,
+                compressHistory,
+                maxFileSize);
+
+        // Configure logback
+        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = createRollingPolicy(
+                historicalFileName,
+                maxHistory,
+                maxFileSize);
         final Encoder<ILoggingEvent> encoder = createEncoder(immediateFlush);
         final FileAppender<ILoggingEvent> rollingAppender = createRollingAppender(fileName, rollingPolicy, encoder);
         final Appender<ILoggingEvent> asyncAppender = createAsyncAppender(rollingAppender);
 
+        // Initialize logback
         rollingPolicy.setParent(rollingAppender);
         rollingPolicy.start();
         encoder.start();
         rollingAppender.start();
         asyncAppender.start();
 
+        // Obtain the logger
         final Logger rootLogger = _loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
         rootLogger.setLevel(Level.INFO);
         rootLogger.addAppender(asyncAppender);
 
+        // Flush on shutdown
         Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(_loggerContext));
 
         _queryLogger = _loggerContext.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -210,6 +255,7 @@ public class TsdQueryLogSink implements Sink {
 
     private static final String DATE_EXTENSION = ".%d{yyyy-MM-dd-HH}";
     private static final String GZIP_EXTENSION = ".gz";
+    private static final String INDEX_EXTENSION = ".%i";
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TsdQueryLogSink.class);
 
@@ -344,7 +390,7 @@ public class TsdQueryLogSink implements Sink {
 
     /**
      * Builder for <code>TsdQueryLogSink</code>.
-     * 
+     *
      * This class is thread safe.
      *
      * @author Ville Koskela (vkoskela at groupon dot com)
@@ -353,7 +399,7 @@ public class TsdQueryLogSink implements Sink {
 
         /**
          * Create an instance of <code>Sink</code>.
-         * 
+         *
          * @return Instance of <code>Sink</code>.
          */
         public Sink build() {
@@ -375,13 +421,19 @@ public class TsdQueryLogSink implements Sink {
             if (_maxHistory.intValue() < 0) {
                 throw new IllegalArgumentException("MaxHistory cannot be negative");
             }
+            if (_compressHistory == null) {
+                throw new IllegalArgumentException("CompressHistory cannot be null");
+            }
+            if (_maxFileSize != null && _maxFileSize.longValue() < 0) {
+                throw new IllegalArgumentException("MaxFileSize cannot be negative");
+            }
             return new TsdQueryLogSink(this);
         }
 
         /**
          * Set the path. Optional; default is empty string which defaults to a
          * the current working directory of the application.
-         * 
+         *
          * @param value The value for path.
          * @return This <code>Builder</code> instance.
          */
@@ -393,7 +445,7 @@ public class TsdQueryLogSink implements Sink {
         /**
          * Set the file name without extension. Optional; default is "query".
          * The file name without extension cannot be empty.
-         * 
+         *
          * @param value The value for name.
          * @return This <code>Builder</code> instance.
          */
@@ -404,7 +456,7 @@ public class TsdQueryLogSink implements Sink {
 
         /**
          * Set the file extension. Optional; default is ".log".
-         * 
+         *
          * @param value The value for extension.
          * @return This <code>Builder</code> instance.
          */
@@ -414,9 +466,9 @@ public class TsdQueryLogSink implements Sink {
         }
 
         /**
-         * Set whether entries are flushed immediately. Entries are still 
+         * Set whether entries are flushed immediately. Entries are still
          * written asynchronously. Optional; default is true.
-         * 
+         *
          * @param value Whether to flush immediately.
          * @return This <code>Builder</code> instance.
          */
@@ -438,16 +490,43 @@ public class TsdQueryLogSink implements Sink {
             return this;
         }
 
+        /**
+         * Set whether to compress historical files. Optional; default is true.
+         *
+         * @param value Whether to compress historical files.
+         * @return This <code>Builder</code> instance.
+         */
+        public Builder setCompressHistory(final Boolean value) {
+            _compressHistory = value;
+            return this;
+        }
+
+        /**
+         * Set maximum file size in bytes before rotating. Optional; default is
+         * no maximum size (e.g. null).
+         *
+         * @param value Maximum file size before rotating or null for no maximum.
+         * @return This <code>Builder</code> instance.
+         */
+        public Builder setMaxFileSize(final Long value) {
+            _maxFileSize = value;
+            return this;
+        }
+
         private String _path = DEFAULT_PATH;
         private String _name = DEFAULT_NAME;
         private String _extension = DEFAULT_EXTENSION;
         private Boolean _immediateFlush = DEFAULT_IMMEDIATE_FLUSH;
         private Integer _maxHistory = DEFAULT_MAX_HISTORY;
+        private Boolean _compressHistory = DEFAULT_COMPRESS_HISTORY;
+        private Long _maxFileSize = DEFAULT_MAX_FILE_SIZE;
 
         private static final String DEFAULT_PATH = "";
         private static final String DEFAULT_NAME = "query";
         private static final String DEFAULT_EXTENSION = ".log";
         private static final Boolean DEFAULT_IMMEDIATE_FLUSH = true;
         private static final Integer DEFAULT_MAX_HISTORY = 24;
+        private static final Boolean DEFAULT_COMPRESS_HISTORY = Boolean.TRUE;
+        private static final Long DEFAULT_MAX_FILE_SIZE = null;
     }
 }
