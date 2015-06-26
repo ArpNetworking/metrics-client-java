@@ -86,8 +86,10 @@ public class TsdQueryLogSinkTest {
                 .setPath(expectedPath)
                 .setImmediateFlush(false)
                 .setMaxHistory(48)
+                .setCompressHistory(false)
                 .setName("foo")
                 .setExtension(".bar")
+                .setMaxFileSize(10000000L)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
@@ -102,7 +104,7 @@ public class TsdQueryLogSinkTest {
         Assert.assertFalse(encoder.isImmediateFlush());
         Assert.assertEquals(48, rollingPolicy.getMaxHistory());
         Assert.assertEquals(expectedPath + "foo.bar", rollingAppender.getFile());
-        Assert.assertEquals(expectedPath + "foo.%d{yyyy-MM-dd-HH}.bar.gz", rollingPolicy.getFileNamePattern());
+        Assert.assertEquals(expectedPath + "foo.%d{yyyy-MM-dd-HH}.%i.bar", rollingPolicy.getFileNamePattern());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -151,6 +153,20 @@ public class TsdQueryLogSinkTest {
     public void testBuilderNegativeMaxHistory() {
         new TsdQueryLogSink.Builder()
                 .setMaxHistory(-1)
+                .build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuilderNullCompressHistory() {
+        new TsdQueryLogSink.Builder()
+                .setCompressHistory(null)
+                .build();
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testBuilderNegativeMaxFileSize() {
+        new TsdQueryLogSink.Builder()
+                .setMaxFileSize(-1L)
                 .build();
     }
 
