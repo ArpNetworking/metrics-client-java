@@ -1,4 +1,5 @@
 language: java
+sudo: false
 jdk:
 - oraclejdk8
 cache:
@@ -13,6 +14,6 @@ install: true
 before_script:
 - gpg --import arpnetworking.key
 script:
-- mvn verify install --settings settings.xml -P ci
+- mvn verify install --settings settings.xml -P ci -Dgpg.skip=true
 after_success:
-- if [ \( "${TRAVIS_BRANCH}" = "master" -o -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then mvn deploy --settings settings.xml -P ci; fi;
+- if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then mvn deploy --settings settings.xml -P ci; fi;
