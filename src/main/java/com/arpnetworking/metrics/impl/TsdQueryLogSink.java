@@ -286,7 +286,7 @@ public class TsdQueryLogSink implements Sink {
             return _gaugeSamples;
         }
 
-        public Entry(
+        private Entry(
                 final Map<String, String> annotations,
                 final Map<String, List<Quantity>> timerSamples,
                 final Map<String, List<Quantity>> counterSamples,
@@ -374,9 +374,9 @@ public class TsdQueryLogSink implements Sink {
     }
 
     // NOTE: Package private for testing
-    /* package private */static final class ShutdownHookThread extends Thread {
+    /* package private */ static final class ShutdownHookThread extends Thread {
 
-        public ShutdownHookThread(final LoggerContext context) {
+        /* package private */ ShutdownHookThread(final LoggerContext context) {
             _context = context;
         }
 

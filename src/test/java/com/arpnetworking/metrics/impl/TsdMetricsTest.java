@@ -40,6 +40,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -140,7 +142,7 @@ public class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
-        metrics.setGauge("gauge", 3.14);
+        metrics.setGauge("gauge", 1.23);
         metrics.close();
 
         Mockito.verify(sink).record(
@@ -153,7 +155,7 @@ public class TsdMetricsTest {
                 MockitoHelper.<Map<String, List<Quantity>>>argThat(
                         MetricMatcher.match(
                                 "gauge",
-                                QuantityMatcher.match(3.14, null))));
+                                QuantityMatcher.match(1.23, null))));
     }
 
     @Test
@@ -163,7 +165,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(sink);
         metrics.incrementCounter("counter");
         metrics.setTimer("timer", 1L, TimeUnit.MILLISECONDS);
-        metrics.setGauge("gauge", 3.14);
+        metrics.setGauge("gauge", 1.23);
         metrics.close();
 
         Mockito.verify(sink).record(
@@ -182,7 +184,7 @@ public class TsdMetricsTest {
                 MockitoHelper.<Map<String, List<Quantity>>>argThat(
                         MetricMatcher.match(
                                 "gauge",
-                                QuantityMatcher.match(3.14, null))));
+                                QuantityMatcher.match(1.23, null))));
     }
 
     @Test
@@ -237,7 +239,7 @@ public class TsdMetricsTest {
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
-        metrics.setGauge("gauge-closed", 3.14);
+        metrics.setGauge("gauge-closed", 1.23);
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
     }
 
@@ -480,11 +482,11 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(sink);
 
         metrics.setGauge("gaugeA", 10L);
-        metrics.setGauge("gaugeB", 3.14);
+        metrics.setGauge("gaugeB", 1.23);
         metrics.setGauge("gaugeC", 10L);
         metrics.setGauge("gaugeC", 20L);
         metrics.setGauge("gaugeD", 2.07);
-        metrics.setGauge("gaugeD", 3.14);
+        metrics.setGauge("gaugeD", 1.23);
 
         Thread.sleep(10);
         metrics.close();
@@ -503,13 +505,13 @@ public class TsdMetricsTest {
                                 "gaugeA",
                                 QuantityMatcher.match(10),
                                 "gaugeB",
-                                QuantityMatcher.match(3.14),
+                                QuantityMatcher.match(1.23),
                                 "gaugeC",
                                 QuantityMatcher.match(10),
                                 QuantityMatcher.match(20),
                                 "gaugeD",
                                 QuantityMatcher.match(2.07),
-                                QuantityMatcher.match(3.14))));
+                                QuantityMatcher.match(1.23))));
 
         final Map<String, String> annotations = captureAnnotations.getValue();
         Assert.assertThat(annotations, IsMapWithSize.aMapWithSize(2));
@@ -560,7 +562,7 @@ public class TsdMetricsTest {
 
         // You should never do this but the library cannot prevent it because
         // values are combined across instances, processes and hosts:
-        metrics.setGauge("mixedUnit", 3.14, Unit.BYTE);
+        metrics.setGauge("mixedUnit", 1.23, Unit.BYTE);
         metrics.setGauge("mixedUnit", 2.07, Unit.SECOND);
 
         metrics.setTimer("withTimeUnit", 11L, TimeUnit.NANOSECONDS);
@@ -613,7 +615,7 @@ public class TsdMetricsTest {
                                 QuantityMatcher.match(23, Unit.MEGABYTE),
                                 QuantityMatcher.match(24, Unit.GIGABYTE),
                                 "mixedUnit",
-                                QuantityMatcher.match(3.14, Unit.BYTE),
+                                QuantityMatcher.match(1.23, Unit.BYTE),
                                 QuantityMatcher.match(2.07, Unit.SECOND))));
     }
 
@@ -742,6 +744,17 @@ public class TsdMetricsTest {
 
         metrics.close();
         Assert.assertEquals(end, metrics.getCloseTime());
+    }
+
+    @Test
+    public void testGetOrCreate() {
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+
+        final ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
+        Assert.assertEquals("bar", metrics.getOrCreate(map, "foo", "bar"));
+        Assert.assertEquals("bar", metrics.getOrCreate(map, "foo", "who"));
     }
 
     private TsdMetrics createTsdMetrics(final Sink... sinks) {

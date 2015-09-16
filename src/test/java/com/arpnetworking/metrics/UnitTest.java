@@ -36,4 +36,12 @@ public class UnitTest {
             Assert.assertSame(timeUnit, secondTimeUnit);
         }
     }
+
+    @Test
+    public void testEnumeration() {
+        for (final Unit unit : Unit.values()) {
+            final Unit secondUnit = Unit.valueOf(unit.toString());
+            Assert.assertSame(unit, secondUnit);
+        }
+    }
 }

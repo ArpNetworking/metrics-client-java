@@ -110,7 +110,7 @@ public enum Unit {
         return INVERSE_TIME_UNIT_MAP.get(unit);
     }
 
-    private Unit(final String serializedName) {
+    Unit(final String serializedName) {
         _serializedName = serializedName;
     }
 
