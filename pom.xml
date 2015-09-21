@@ -18,20 +18,55 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
+    <relativePath/>
   </parent>
+
   <modelVersion>4.0.0</modelVersion>
-  <name>Metrics Client (Java)</name>
   <groupId>com.arpnetworking.metrics</groupId>
   <artifactId>metrics-client</artifactId>
-  <version>0.3.6-SNAPSHOT</version>
   <packaging>jar</packaging>
-  <properties>
-    <main.basedir>${project.basedir}</main.basedir>
-    <maven.test.skip>false</maven.test.skip>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  <name>Metrics Client (Java)</name>
+  <description>Client library in Java for metrics collection and publication.</description>
+  <url>https://github.com/ArpNetworking/metrics-client-java</url>
+  <version>0.3.6-SNAPSHOT</version>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>brandonarp</id>
+      <email>brandonarp@gmail.com</email>
+      <organization>Arp Networking</organization>
+      <organizationUrl>http://www.arpnetworking.com</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>villekoskela</id>
+      <email>vkoskela@groupon.com</email>
+      <organization>Groupon</organization>
+      <organizationUrl>http://www.groupon.com</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>
+  
+  <scm>
+    <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
+    <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
+    <url>https://github.com/arpnetworking/metrics-client-java</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <properties>
     <!-- IMPORTANT: Any changes to dependencies, including versions, require
       validation that the shading rules correctly resolve the transitive closure
       of all non-test packages. You can validate that the transitive closure of
@@ -49,34 +84,28 @@
       dependency then include the package and classpath(s) for package B in the
       shade plugin's mapping. This will hide package B.
     -->
-
+    
     <!--Dependency versions-->
-    <slf4j.version>1.7.10</slf4j.version>
-    <logback.steno.version>1.8.0</logback.steno.version>
-    <logback.version>1.1.2</logback.version>
-    <jackson.version>2.5.3</jackson.version>
-    <jsr305.version>3.0.0</jsr305.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
-    <junit.version>4.12</junit.version>
-    <mockito.version>1.10.19</mockito.version>
-    <mockito.version>1.10.8</mockito.version>
-    <multithreadedtc.version>1.01</multithreadedtc.version>
+    <jackson.version>2.6.2</jackson.version>
     <json-schema-validator.version>2.2.6</json-schema-validator.version>
+    <jsr305.version>3.0.0</jsr305.version>
+    <junit.version>4.12</junit.version>
+    <logback.steno.version>1.9.2</logback.steno.version>
+    <logback.version>1.1.3</logback.version>
+    <mockito.version>1.10.19</mockito.version>
+    <multithreadedtc.version>1.01</multithreadedtc.version>
+    <slf4j.version>1.7.12</slf4j.version>
 
     <!--Plugin versions-->
-    <maven.compiler.plugin.version>3.2</maven.compiler.plugin.version>
-    <maven.dependency.plugin.version>2.9</maven.dependency.plugin.version>
-    <maven.shade.plugin.version>2.3</maven.shade.plugin.version>
-    <maven.jar.plugin.version>2.5</maven.jar.plugin.version>
-    <maven.surefire.plugin.version>2.18.1</maven.surefire.plugin.version>
-    <maven.findbugs.plugin.version>3.0.0</maven.findbugs.plugin.version>
-    <maven.checkstyle.plugin.version>2.15</maven.checkstyle.plugin.version>
-    <maven.deploy.plugin.version>2.8.2</maven.deploy.plugin.version>
-    <maven.source.plugin.version>2.4</maven.source.plugin.version>
-    <maven.javadoc.plugin.version>2.10.1</maven.javadoc.plugin.version>
-    <maven.versions.plugin.version>2.1</maven.versions.plugin.version>
+    <maven.shade.plugin.version>2.4.1</maven.shade.plugin.version>
 
-    <jacoco-maven-plugin.version>0.7.4.201502262128</jacoco-maven-plugin.version>
+    <!-- Findbugs -->
+    <findbugs.exclude>${project.basedir}/findbugs.exclude.xml</findbugs.exclude>
+
+    <!-- Code Coverage -->
+    <jacoco.check.line.coverage>0.9</jacoco.check.line.coverage>
+    <jacoco.check.branch.coverage>0.9</jacoco.check.branch.coverage>
   </properties>
   <build>
     <finalName>${project.artifactId}</finalName>
@@ -86,6 +115,29 @@
       </resource>
     </resources>
     <plugins>
+      <!-- Enable Inherited Plugins -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Project Specific Plugins -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -93,19 +145,7 @@
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-          <compilerArgs>
-            <arg>-Werror</arg>
-            <arg>-Xlint:all</arg>
-          </compilerArgs>
-          <fork>false</fork>
         </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>${maven.dependency.plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -216,132 +256,6 @@
           </relocations>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven.jar.plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven.surefire.plugin.version}</version>
-        <configuration>
-          <parallel>methods</parallel>
-          <threadCount>4</threadCount>
-          <perCoreThreadCount>true</perCoreThreadCount>
-          <argLine>-Xms512m -Xmx512m -ea -Duser.timezone="UTC"</argLine>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <version>${maven.findbugs.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>findbugs-check</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>check</goal>
-              <goal>findbugs</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <skip>${maven.test.skip}</skip>
-          <failOnError>true</failOnError>
-          <effort>Max</effort>
-          <threshold>Low</threshold>
-          <includeTests>true</includeTests>
-          <xmlOutput>true</xmlOutput>
-          <xmlOutputDirectory>target/site/findbugs</xmlOutputDirectory>
-          <excludeFilterFile>${main.basedir}/findbugs.exclude.xml</excludeFilterFile>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>${jacoco-maven-plugin.version}</version>
-        <executions>
-          <execution>
-            <id>default-prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>default-report</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>report</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>default-check</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <rule>
-                  <element>BUNDLE</element>
-                  <limits>
-                    <limit>
-                      <counter>COMPLEXITY</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>1.0</minimum>
-                    </limit>
-                    <limit>
-                      <counter>BRANCH</counter>
-                      <value>COVEREDRATIO</value>
-                      <minimum>1.0</minimum>
-                    </limit>
-                  </limits>
-                </rule>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>${maven.deploy.plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${maven.source.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${maven.javadoc.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <version>${maven.versions.plugin.version}</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
     </plugins>
   </build>
   <dependencies>
@@ -414,11 +328,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <scm>
-    <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
-    <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
-    <url>https://github.com/arpnetworking/metrics-client-java</url>
-    <tag>HEAD</tag>
-  </scm>
 </project>

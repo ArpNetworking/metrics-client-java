@@ -53,7 +53,7 @@ The Maven Central repository is included by default.
 
 #### Vertx
 
-Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package.  The vertx-extra provides the necessary wrappers around the standard Java client to work with the shared data model in Vertx.  Special thanks to Gil Markham for contributing this work.  For more information please see [extras/vertx-extra/README.md](../extras/vertx-extra/README.md).
+Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package.  The vertx-extra provides the necessary wrappers around the standard Java metrics client to work with the shared data model in Vertx.  Special thanks to Gil Markham for contributing this work.  For more information please see [metrics-vertx-extra/README.md](https://github.com/ArpNetworking/metrics-client-java).
 
 ### MetricsFactory
 
@@ -184,7 +184,7 @@ Prerequisites:
 
 Building:
 
-    client-java> mvn verify
+    metrics-client-java> mvn verify
 
 To use the local version you must first install it locally:
 
