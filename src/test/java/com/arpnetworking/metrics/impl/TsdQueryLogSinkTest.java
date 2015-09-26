@@ -29,11 +29,13 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.github.fge.jackson.JacksonUtils;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
+import com.google.common.base.Charsets;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,7 +43,9 @@ import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -568,15 +572,21 @@ public class TsdQueryLogSinkTest {
             + "  \"version\":\"0\""
             + "}";
 
+    private static final String SCHEMA_FILE_NAME = "query-log-schema-2e.json";
+
     static {
         JsonNode jsonNode = null;
         try {
-            // Normally this is being executed from the project directory (e.g. root/client-java)
-            jsonNode = JsonLoader.fromPath("../doc/query-log-schema-2e.json");
+            // Attempt to load the cached copy
+            jsonNode = JsonLoader.fromPath("./target/" + SCHEMA_FILE_NAME);
         } catch (final IOException e1) {
             try {
-                // Under some IDE setups this may be executed from the workspace root (e.g. root)
-                jsonNode = JsonLoader.fromPath("doc/query-log-schema-2e.json");
+                // Download from the source repository
+                jsonNode = JsonLoader.fromURL(
+                        new URL("https://raw.githubusercontent.com/ArpNetworking/metrics-client-doc/master/schema/" + SCHEMA_FILE_NAME));
+
+                // Cache the schema file
+                Files.write(Paths.get("./target/" + SCHEMA_FILE_NAME), JacksonUtils.prettyPrint(jsonNode).getBytes(Charsets.UTF_8));
             } catch (final IOException e2) {
                 throw new RuntimeException(e2);
             }
