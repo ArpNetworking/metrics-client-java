@@ -1,8 +1,18 @@
-#+TITLE: MetricsJava Client
+MetricsJava Client
+==================
 
-[[https://raw.githubusercontent.com/ArpNetworking/metrics-client-java/master/LICENSE][file:https://img.shields.io/hexpm/l/plug.svg]]
-[[https://travis-ci.org/ArpNetworking/metrics-client-java/][file:https://travis-ci.org/ArpNetworking/metrics-client-java.png]]
-[[http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22][file:https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-client.svg]]
+<a href="https://raw.githubusercontent.com/ArpNetworking/metrics-client-java/master/LICENSE">
+    <img src="https://img.shields.io/hexpm/l/plug.svg"
+         alt="License: Apache 2">
+</a>
+<a href="https://travis-ci.org/ArpNetworking/metrics-client-java/">
+    <img src="https://travis-ci.org/ArpNetworking/metrics-client-java.png"
+         alt="Travis Build">
+</a>
+<a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22">
+    <img src="https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-client.svg"
+         alt="Maven Artifact">
+</a>
 
 Client implementation for publishing metrics from Java applications. 
 
