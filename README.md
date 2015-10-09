@@ -1,7 +1,7 @@
 Java Client
 ===========
 
-[[LICENSE][file:https://img.shields.io/hexpm/l/plug.svg]]
+[[https://raw.githubusercontent.com/ArpNetworking/metrics-client-java/master/LICENSE][file:https://img.shields.io/hexpm/l/plug.svg]]
 [[https://travis-ci.org/ArpNetworking/metrics-client-java/][file:https://travis-ci.org/ArpNetworking/metrics-client-java.png]]
 [[http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22][file:https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-client.svg]]
 
