@@ -1,5 +1,4 @@
-Java Client
-===========
+#+TITLE: MetricsJava Client
 
 [[https://raw.githubusercontent.com/ArpNetworking/metrics-client-java/master/LICENSE][file:https://img.shields.io/hexpm/l/plug.svg]]
 [[https://travis-ci.org/ArpNetworking/metrics-client-java/][file:https://travis-ci.org/ArpNetworking/metrics-client-java.png]]
