@@ -14,7 +14,7 @@ MetricsJava Client
          alt="Maven Artifact">
 </a>
 
-Client implementation for publishing metrics from Java applications. 
+Client implementation for publishing metrics from Java applications.
 
 
 Instrumenting Your Application
@@ -70,22 +70,39 @@ Users of Vertx need to depend on the vertx-extra package instead of the metrics-
 
 ### MetricsFactory
 
-Your application should instantiate a single instance of MetricsFactory.  For example: 
+Your application should instantiate a single instance of MetricsFactory.  For example:
+
+```java
+final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
+    "MyServiceName",            // The name of the service
+    "MyService-US-Prod",        // The name of the cluster or instance
+    new File("/var/logs/"));    // The query log output directory (must already exist)
+```
+
+Alternatively, you can customize construction using the Builder.  For example:
 
 ```java
 final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
+    .setServiceName("MyServiceName")
+    .setClusterName("MyService-US-Prod")
+    .setHostName("my-service-app1.us-east")
     .setSinks(Collections.singletonList(
-        new TsdQueryLogSink.Builder()
-            .setPath("/var/logs")
-            .setName("myapp-query")
+        new TsdLogSink.Builder()
+            .setDirectory(new File("/var/logs"))
+            .setName("myservice-query")
+            .setExtension(".json")
+            .setMaxHistory(168)
+            .setCompress(false)
             .build()))
     .build();
 ```
 
+Other options on the TsdLogSink include _immediateFlush_ and _prudent_.  The former is used to flush all writes to disk immediately while the latter performs file access in a more conservative manner enabling multiple processes to write to the same file (assuming they all have _prudent_ set to true).  Setting either _immediateFlush_ or _prudent_ to _true_ will have non-trivial performance impact.  All these options also apply to the _StenoLogSink_.
+
 ### Metrics
 
 The MetricsFactory is used to create a Metrics instance for each unit of work.  For example:
- 
+
  ```java
 final Metrics metrics = metricsFactory.create();
 ```
@@ -102,7 +119,7 @@ metrics.close();
 ```
 
 ### Injection
- 
+
 Passing the MetricsFactory instance around your code is far from ideal.  We strongly recommend a combination of two techniques to keep metrics from polluting your interfaces.  First, use a dependency injection framework like Spring or Guice to create your TsdMetricsFactory instance and inject it into the parts of your code that initiate units of work.
 
 Next, the unit of work entry points can leverage thread local storage to distribute the Metrics instance for each unit of work transparently throughout your codebase.  Log4J calls this a Mapped Diagnostics Context (MDC) and it is also available in LogBack although you will have to create a static thread-safe store (read ConcurrentMap) of Metrics instances since the LogBack implementation is limited to Strings.
@@ -114,9 +131,9 @@ One important note, if your unit of work leverages additional worker threads you
 Surprisingly, counters are probably more difficult to use and interpret than timers and gauges.  In the simplest case you can just starting counting, for example, iterations of a loop:
 
 ```java
-for (String s : listOfStrings) {
+for (String s : Arrays.asList("a", "b", "c", "d", "e")) {
     metrics.incrementCounter("strings");
-    ...
+    // Do something in a loop
 }
 ```
 
@@ -124,33 +141,36 @@ However, what happens if listOfString is empty? Then no sample is recorded. To a
 
 ```java
 metrics.resetCounter("strings");
-for (String s : listOfStrings) {
+for (String s : Arrays.asList("a", "b", "c", "d", "e")) {
     metrics.incrementCounter("strings");
-    ...
+    // Do something in a loop
 }
 ```
 
 Next, if the loop is executed multiple times:
 
 ```java
-for (List<String> listOfString : listOfListOfStrings) {
+for (List<String> listOfString : Arrays.asList(
+        Arrays.asList("a", "b", "c"),
+        Arrays.asList("d", "e"),
+        Arrays.asList("f"))) {
     metrics.resetCounter("strings");
-    for (String s : listOfStrings) {
+    for (String s : listOfString) {
         metrics.incrementCounter("s");
-        ...
+        // Do something in a nested loop
     }
 }
 ```
 
-The above code will produce a number of samples equal to the size of listOfListOfStrings (including no samples if listOfListOfStrings is empty).  If you move the resetCounter call outside the outer loop the code always produces a single sample (even if listOfListOfStrings is empty).  There is a significant difference between counting the total number of strings and the number of strings per list; especially, when computing and analyzing statistics such as percentiles. 
+The above code will produce a number of samples equal to the size of listOfListOfStrings (including no samples if listOfListOfStrings is empty).  If you move the resetCounter call outside the outer loop the code always produces a single sample (even if listOfListOfStrings is empty).  There is a significant difference between counting the total number of strings and the number of strings per list; especially, when computing and analyzing statistics such as percentiles.
 
 Finally, if the loop is being executed concurrently for the same unit of work, that is for the same Metrics instance, then you could use a Counter object:
 
 ```java
 final Counter counter = metrics.createCounter("strings");
-for (String s : listOfStrings) {
+for (String s : Arrays.asList("a", "b", "c", "d", "e")) {
     counter.increment();
-    ...
+    // Do something in a loop
 }
 ```
 
@@ -160,18 +180,10 @@ The Counter object example extends in a similar way for nested loops.
 
 Timers are very easy to use. The only note worth making is that when using timers - either procedural or via objects - do not forget to stop/close the timer!  If you fail to do this the client will log a warning and suppress any unstopped/unclosed samples.
 
-The timer object allows a timer sample to be detached from the Metrics instance.  For example:  
+The timer object allows a timer sample to be detached from the Metrics instance.  One common usage is in request/response filters (e.g. for Jersey and RestEasy) where the timer is started on the inbound filter and stopped/closed on the outbound filter.
 
-```java
-public void run() {
-    final Timer t = metrics.createTimer("operation");
-    // Perform your operation
-    t.stop();
-}
-```
+The timer instance is also very useful in a concurrent system when executing and thus measuring the same event multiple times concurrently for the same unit of work.  The one caveat is to ensure the timer objects are stopped/closed before the Metrics instance is closed.  Failing to do so will log a warning and suppress any samples stopped/closed after the Metrics instance is closed.
 
-This is very useful in a concurrent system when executing and thus measuring the same event multiple times concurrently.  The one caveat is to ensure the timer objects are stopped/closed before the Metrics instance is closed.  Failing to do so will log a warning and suppress any samples stopped/closed after the Metrics instance is closed.
- 
 ### Gauges
 
 Gauges are the simplest metric to record.  Samples for a gauge represent spot measurements. For example, the length of a queue or the number of active threads in a thread pool.  Gauges are often used in separate units of work to measure the state of system resources, for example the row count in a database table.  However, gauges are also useful in existing units of work, for example recording the memory in use at the beginning and end of each service request.
@@ -181,12 +193,15 @@ Gauges are the simplest metric to record.  Samples for a gauge represent spot me
 The Metrics interface as well as the Timer and Counter interfaces extend [Closeable](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html) which allows you to use Java 7's try-with-resources pattern.  For example:
 
 ```java
-try (final Timer timer = metrics.createTimer("timer")) {
-    // Time unsafe operation (e.g. this may throw)
+try (final Metrics metrics = metricsFactory.create()) {
+    try (final Timer timer = metrics.createTimer("timer")) {
+        // Time unsafe operation (e.g. this may throw)
+        Thread.sleep(1000);
+    }
 }
 ```
 
-The timer instance created and started in the try statement is automatically closed (e.g. stopped) when the try is exited either by completion of the block or by throwing an exception. 
+The timer instance created and started in the try statement is automatically closed (e.g. stopped) when the try is exited either by completion of the block or by throwing an exception.
 
 Building
 --------

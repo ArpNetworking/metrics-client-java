@@ -87,6 +87,42 @@ public class TsdTimerTest {
     }
 
     @Test
+    public void testAlreadyAborted() {
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        final Logger logger = createSlf4jLoggerMock();
+        @SuppressWarnings("resource")
+        final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
+        timer.abort();
+        Mockito.verifyZeroInteractions(logger);
+        timer.abort();
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testStopAfterAbort() {
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        final Logger logger = createSlf4jLoggerMock();
+        @SuppressWarnings("resource")
+        final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
+        timer.abort();
+        Mockito.verifyZeroInteractions(logger);
+        timer.close();
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testAbortAfterStop() {
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        final Logger logger = createSlf4jLoggerMock();
+        @SuppressWarnings("resource")
+        final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
+        timer.close();
+        Mockito.verifyZeroInteractions(logger);
+        timer.abort();
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
     public void testStopAfterMetricsClosed() {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final AtomicBoolean isOpen = new AtomicBoolean(true);
@@ -95,6 +131,18 @@ public class TsdTimerTest {
         isOpen.set(false);
         Mockito.verify(logger, Mockito.never()).warn(Mockito.argThat(Matchers.any(String.class)));
         timer.close();
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testAbortAfterMetricsClosed() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        @SuppressWarnings("resource")
+        final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
+        isOpen.set(false);
+        Mockito.verify(logger, Mockito.never()).warn(Mockito.argThat(Matchers.any(String.class)));
+        timer.abort();
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
     }
 
@@ -110,12 +158,21 @@ public class TsdTimerTest {
     }
 
     @Test
-    public void testIsStopped() {
+    public void testIsRunning() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final TsdTimer timer = TsdTimer.newInstance("timerName", isOpen);
-        Assert.assertFalse(timer.isStopped());
+        Assert.assertTrue(timer.isRunning());
         timer.stop();
-        Assert.assertTrue(timer.isStopped());
+        Assert.assertFalse(timer.isRunning());
+    }
+
+    @Test
+    public void testIsAborted() {
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        final TsdTimer timer = TsdTimer.newInstance("timerName", isOpen);
+        Assert.assertFalse(timer.isAborted());
+        timer.abort();
+        Assert.assertTrue(timer.isAborted());
     }
 
     @Test
@@ -131,7 +188,7 @@ public class TsdTimerTest {
     public void testConstructor() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final TsdTimer timer = TsdTimer.newInstance("timerName", isOpen);
-        Assert.assertFalse(timer.isStopped());
+        Assert.assertTrue(timer.isRunning());
     }
 
     private Logger createSlf4jLoggerMock() {

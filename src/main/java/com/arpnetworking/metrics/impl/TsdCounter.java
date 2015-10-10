@@ -18,7 +18,6 @@ package com.arpnetworking.metrics.impl;
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Unit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,18 +29,18 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-final class TsdCounter implements Counter, Quantity {
+/* package private */ final class TsdCounter implements Counter, Quantity {
     /**
      * Package private constructor. All <code>TsdCounter</code> instances should
      * be created through the <code>TsdMetrics</code> instance.
-     * 
+     *
      * @param name The name of the counter.
      * @param isOpen Reference to state of containing <code>TsdMetrics</code>
      * instance. This is provided as a separate parameter to avoid creating a
-     * cyclical dependency between <code>TsdMetrics</code> and 
+     * cyclical dependency between <code>TsdMetrics</code> and
      * <code>TsdCounter</code> which could cause garbage collection delays.
      */
-    /* package private */static TsdCounter newInstance(final String name, final AtomicBoolean isOpen) {
+    /* package private */ static TsdCounter newInstance(final String name, final AtomicBoolean isOpen) {
         return new TsdCounter(name, isOpen, DEFAULT_LOGGER);
     }
 

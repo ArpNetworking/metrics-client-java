@@ -14,6 +14,6 @@ install: true
 before_script:
 - gpg --import arpnetworking.key
 script:
-- ./mvnw verify install --settings settings.xml -P ci -Dgpg.skip=true
+- ./mvnw verify install --settings settings.xml -P ci -Dgpg.skip=true -U
 after_success:
 - if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then ./mvnw deploy --settings settings.xml -P ci; fi;

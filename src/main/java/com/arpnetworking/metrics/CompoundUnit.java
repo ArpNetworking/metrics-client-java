@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Groupon.com
+ * Copyright 2015 Groupon.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,26 @@
  */
 package com.arpnetworking.metrics;
 
+import java.util.List;
+
 /**
- * Interface representing a destination to record metrics to.
+ * Interface for a compound unit representation.
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-public interface Sink {
+public interface CompoundUnit extends Unit {
 
     /**
-     * Invoked by <code>Metrics</code> to record unit of work metrics data to
-     * this <code>Sink</code>.
+     * Accessor for numerator units.
      *
-     * @param event The metrics data for the unit of work.
+     * @return List of numerator units.
      */
-    void record(Event event);
+    List<Unit> getNumeratorUnits();
+
+    /**
+     * Accessor for denominator units.
+     *
+     * @return List of denominator units.
+     */
+    List<Unit> getDenominatorUnits();
 }

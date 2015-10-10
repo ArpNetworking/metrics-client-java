@@ -16,7 +16,6 @@
 package com.arpnetworking.metrics.test;
 
 import com.arpnetworking.metrics.Quantity;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -39,7 +38,7 @@ public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends
 
     /**
      * Create a new matcher for the expected metrics.
-     * 
+     *
      * @param arguments Array of variable length tuples where each tuple begins
      * with a <code>String</code> for the metric name followed by zero or more
      * samples as <code>QuantityMatcher</code> instances.

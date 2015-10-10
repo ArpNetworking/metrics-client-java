@@ -17,7 +17,6 @@ package com.arpnetworking.metrics.test;
 
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Unit;
-
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -33,7 +32,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expected The expected <code>Quantity</code>.
      * @return new matcher for the expected metrics.
      */
@@ -43,7 +42,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
@@ -61,7 +60,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
@@ -72,7 +71,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
@@ -83,7 +82,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
      */
@@ -96,7 +95,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
      */
@@ -106,7 +105,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for the expected <code>Quantity</code>.
-     * 
+     *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
      */
@@ -117,7 +116,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     /**
      * Create a new matcher for a <code>Quantity</code> with a matcher for the
      * value and unit.
-     * 
+     *
      * @param valueMatcher The expected value matcher.
      * @param unitMatcher The expected unit matcher.
      * @return new matcher for the expected metrics.
@@ -129,7 +128,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     /**
      * Create a new matcher for a <code>Quantity</code> with a matcher for the
      * value.
-     * 
+     *
      * @param valueMatcher The expected value matcher.
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
@@ -141,7 +140,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     /**
      * Create a new matcher for a <code>Quantity</code> with a matcher for the
      * value.
-     * 
+     *
      * @param valueMatcher The expected value matcher.
      * @return new matcher for the expected metrics.
      */

@@ -16,6 +16,7 @@
 package com.arpnetworking.metrics;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -31,10 +32,10 @@ import javax.annotation.Nullable;
 public interface Metrics extends AutoCloseable {
 
     /**
-     * Create and initialize a counter sample. It is valid to create multiple 
-     * <code>Counter</code> instances with the same name, even concurrently, 
-     * each will record a unique sample for the counter of the specified name. 
-     * 
+     * Create and initialize a counter sample. It is valid to create multiple
+     * <code>Counter</code> instances with the same name, even concurrently,
+     * each will record a unique sample for the counter of the specified name.
+     *
      * @param name The name of the counter.
      * @return <code>Counter</code> instance for recording a counter sample.
      */
@@ -42,16 +43,18 @@ public interface Metrics extends AutoCloseable {
 
     /**
      * Increment the specified counter by 1. All counters are initialized to
-     * zero.
-     * 
+     * zero. Creates a sample if one does not exist. To create a new sample
+     * invoke <code>resetCounter</code>.
+     *
      * @param name The name of the counter.
      */
     void incrementCounter(String name);
 
     /**
      * Increment the specified counter by the specified amount. All counters are
-     * initialized to zero.
-     * 
+     * initialized to zero. Creates a sample if one does not exist. To create a new
+     * sample invoke <code>resetCounter</code>.
+     *
      * @param name The name of the counter.
      * @param value The amount to increment by.
      */
@@ -59,27 +62,29 @@ public interface Metrics extends AutoCloseable {
 
     /**
      * Decrement the specified counter by 1. All counters are initialized to
-     * zero.
-     * 
+     * zero. Creates a sample if one does not exist. To create a new sample
+     * invoke <code>resetCounter</code>.
+     *
      * @param name The name of the counter.
      */
     void decrementCounter(String name);
 
     /**
      * Decrement the specified counter by the specified amount. All counters are
-     * initialized to zero.
-     * 
+     * initialized to zero. Creates a sample if one does not exist. To create a new
+     * sample invoke <code>resetCounter</code>.
+     *
      * @param name The name of the counter.
      * @param value The amount to decrement by.
      */
     void decrementCounter(String name, long value);
 
     /**
-     * Reset the counter to zero. This most commonly used to record a zero-count
-     * for a particular counter. If clients wish to record set count metrics
-     * then all counters should be reset before conditionally invoking increment
-     * and/or decrement.
-     * 
+     * Create a new sample for the counter with value zero. This most commonly used
+     * to record a zero-count for a particular counter. If clients wish to record set
+     * count metrics then all counters should be reset before conditionally invoking
+     * increment and/or decrement.
+     *
      * @param name The name of the counter.
      */
     void resetCounter(String name);
@@ -87,93 +92,104 @@ public interface Metrics extends AutoCloseable {
     /**
      * Create and start a timer. It is valid to create multiple <code>Timer</code>
      * instances with the same name, even concurrently, each will record a
-     * unique sample for the timer of the specified name. 
-     * 
+     * unique sample for the timer of the specified name.
+     *
      * @param name The name of the timer.
      * @return <code>Timer</code> instance for recording a timing sample.
      */
     Timer createTimer(String name);
 
     /**
-     * Start the specified timer measurement.
-     * 
+     * Start measurement of a sample for the specified timer. Use <code>createTimer</code>
+     * to make multiple concurrent measurements.
+     *
      * @param name The name of the timer.
      */
     void startTimer(String name);
 
     /**
-     * Stop the specified timer measurement.
-     * 
+     * Stop measurement of a sample for the specified timer. Use <code>createTimer</code>
+     * to make multiple concurrent measurements.
+     *
      * @param name The name of the timer.
      */
     void stopTimer(String name);
 
     /**
-     * Set the timer to the specified value. This is most commonly used to 
-     * record timers from external sources that are not integrated with metrics.
-     * 
+     * Set the timer to the specified value. This is most commonly used to
+     * record timers from external sources that are not directly integrated with
+     * metrics.
+     *
      * @param name The name of the timer.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
      */
-    void setTimer(String name, long duration, TimeUnit unit);
+    void setTimer(String name, long duration, @Nullable TimeUnit unit);
 
     /**
-     * Set the timer to the specified value. This is most commonly used to 
-     * record timers from external sources that are not integrated with metrics.
-     * 
+     * Set the timer to the specified value. This is most commonly used to
+     * record timers from external sources that are not directly integrated with
+     * metrics.
+     *
      * @param name The name of the timer.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
      */
-    void setTimer(String name, long duration, Unit unit);
+    void setTimer(String name, long duration, @Nullable Unit unit);
 
     /**
-     * Set the specified gauge reading. 
-     * 
+     * Set the specified gauge reading.
+     *
      * @param name The name of the gauge.
      * @param value The reading on the gauge
      */
     void setGauge(String name, double value);
 
     /**
-     * Set the specified gauge reading with a well-known unit. 
-     * 
+     * Set the specified gauge reading with a well-known unit.
+     *
      * @param name The name of the gauge.
      * @param value The reading on the gauge
      * @param unit The unit of the value.
      */
-    void setGauge(String name, double value, Unit unit);
+    void setGauge(String name, double value, @Nullable Unit unit);
 
     /**
-     * Set the specified gauge reading. 
-     * 
+     * Set the specified gauge reading.
+     *
      * @param name The name of the gauge.
      * @param value The reading on the gauge
      */
     void setGauge(String name, long value);
 
     /**
-     * Set the specified gauge reading with a well-known unit. 
-     * 
+     * Set the specified gauge reading with a well-known unit.
+     *
      * @param name The name of the gauge.
      * @param value The reading on the gauge
      * @param unit The unit of the value.
      */
-    void setGauge(String name, long value, Unit unit);
+    void setGauge(String name, long value, @Nullable Unit unit);
 
     /**
      * Add an attribute that describes the captured metrics or context.
-     * 
+     *
      * @param key The name of the attribute.
      * @param value The value of the attribute.
      */
-    void annotate(String key, String value);
+    void addAnnotation(String key, String value);
+
+    /**
+     * Add attributes that describe the captured metrics or context.
+     *
+     * @param map The <code>Map</code> of attribute names to attribute values.
+     */
+    void addAnnotations(Map<String, String> map);
 
     /**
      * Accessor to determine if this <code>Metrics</code> instance is open or
      * closed. Once closed an instance will not record new data.
-     * 
+     *
      * @return True if and only if this <code>Metrics</code> instance is open.
      */
     boolean isOpen();
@@ -181,7 +197,7 @@ public interface Metrics extends AutoCloseable {
     /**
      * Close the metrics object. This should complete publication of metrics to
      * the underlying data store. Once the metrics object is closed, no further
-     * metrics can be recorded. 
+     * metrics can be recorded.
      */
     @Override
     void close();
