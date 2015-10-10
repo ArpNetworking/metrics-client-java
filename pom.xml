@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.5</version>
     <relativePath />
   </parent>
 
@@ -108,12 +108,6 @@
     <jacoco.check.branch.coverage>0.9</jacoco.check.branch.coverage>
   </properties>
   <build>
-    <finalName>${project.artifactId}</finalName>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-      </resource>
-    </resources>
     <plugins>
       <!-- Enable Inherited Plugins -->
       <plugin>
@@ -139,6 +133,11 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.rimerosolutions.maven.plugins</groupId>
+        <artifactId>wrapper-maven-plugin</artifactId>
+        <inherited>false</inherited>
       </plugin>
 
       <!-- Project Specific Plugins -->
