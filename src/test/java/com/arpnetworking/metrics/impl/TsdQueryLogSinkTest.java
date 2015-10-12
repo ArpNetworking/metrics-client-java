@@ -35,7 +35,6 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.github.fge.jsonschema.main.JsonValidator;
-import com.google.common.base.Charsets;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,6 +43,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -586,7 +586,9 @@ public class TsdQueryLogSinkTest {
                         new URL("https://raw.githubusercontent.com/ArpNetworking/metrics-client-doc/master/schema/" + SCHEMA_FILE_NAME));
 
                 // Cache the schema file
-                Files.write(Paths.get("./target/" + SCHEMA_FILE_NAME), JacksonUtils.prettyPrint(jsonNode).getBytes(Charsets.UTF_8));
+                Files.write(
+                        Paths.get("./target/" + SCHEMA_FILE_NAME),
+                        JacksonUtils.prettyPrint(jsonNode).getBytes(Charset.forName("UTF-8")));
             } catch (final IOException e2) {
                 throw new RuntimeException(e2);
             }

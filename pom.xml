@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <relativePath />
   </parent>
 
@@ -58,7 +58,7 @@
       </roles>
     </developer>
   </developers>
-  
+
   <scm>
     <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
     <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
@@ -84,17 +84,18 @@
       dependency then include the package and classpath(s) for package B in the
       shade plugin's mapping. This will hide package B.
     -->
-    
+
     <!--Dependency versions-->
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <jackson.version>2.6.2</jackson.version>
+    <json-jackson-coreutils.version>1.8</json-jackson-coreutils.version>
+    <json-schema-core.version>1.2.5</json-schema-core.version>
     <json-schema-validator.version>2.2.6</json-schema-validator.version>
     <jsr305.version>3.0.0</jsr305.version>
     <junit.version>4.12</junit.version>
     <logback.steno.version>1.9.2</logback.steno.version>
     <logback.version>1.1.3</logback.version>
     <mockito.version>1.10.19</mockito.version>
-    <multithreadedtc.version>1.01</multithreadedtc.version>
     <slf4j.version>1.7.12</slf4j.version>
 
     <!--Plugin versions-->
@@ -275,6 +276,11 @@
       <version>${logback.version}</version>
     </dependency>
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>${logback.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.arpnetworking.logback</groupId>
       <artifactId>logback-steno</artifactId>
       <version>${logback.steno.version}</version>
@@ -287,6 +293,11 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>
@@ -319,15 +330,21 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>edu.umd.cs.mtc</groupId>
-      <artifactId>multithreadedtc</artifactId>
-      <version>${multithreadedtc.version}</version>
+      <groupId>com.github.fge</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>${json-schema-validator.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.github.fge</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>${json-schema-validator.version}</version>
+      <artifactId>json-schema-core</artifactId>
+      <version>${json-schema-core.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.fge</groupId>
+      <artifactId>jackson-coreutils</artifactId>
+      <version>${json-jackson-coreutils.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
