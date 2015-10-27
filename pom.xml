@@ -29,7 +29,7 @@
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
   <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.3.9-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -93,7 +93,7 @@
     <json-schema-validator.version>2.2.6</json-schema-validator.version>
     <jsr305.version>3.0.0</jsr305.version>
     <junit.version>4.12</junit.version>
-    <logback.steno.version>1.9.2</logback.steno.version>
+    <logback.steno.version>1.9.3</logback.steno.version>
     <logback.version>1.1.3</logback.version>
     <mockito.version>1.10.19</mockito.version>
     <slf4j.version>1.7.12</slf4j.version>
@@ -105,8 +105,8 @@
     <findbugs.exclude>${project.basedir}/findbugs.exclude.xml</findbugs.exclude>
 
     <!-- Code Coverage -->
-    <jacoco.check.line.coverage>0.9</jacoco.check.line.coverage>
-    <jacoco.check.branch.coverage>0.9</jacoco.check.branch.coverage>
+    <jacoco.check.line.coverage>1.0</jacoco.check.line.coverage>
+    <jacoco.check.branch.coverage>1.0</jacoco.check.branch.coverage>
   </properties>
   <build>
     <plugins>
@@ -298,11 +298,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.module</groupId>
-      <artifactId>jackson-module-afterburner</artifactId>
       <version>${jackson.version}</version>
     </dependency>
     <dependency>

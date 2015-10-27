@@ -18,7 +18,7 @@ package com.arpnetworking.metrics.impl;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Timer;
 import com.arpnetworking.metrics.Unit;
-
+import com.arpnetworking.metrics.Units;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,15 +29,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-final class TsdTimer implements Timer, Quantity {
+/* package private */ final class TsdTimer implements Timer, Quantity {
     /**
      * Package private constructor. All <code>TsdTimer</code> instances should
      * be created through the <code>TsdMetrics</code> instance.
-     * 
+     *
      * @param name The name of the timer.
      * @param isOpen Reference to state of containing <code>TsdMetrics</code>
      * instance. This is provided as a separate parameter to avoid creating a
-     * cyclical dependency between <code>TsdMetrics</code> and 
+     * cyclical dependency between <code>TsdMetrics</code> and
      * <code>TsdTimer</code> which could cause garbage collection delays.
      */
     /* package private */static TsdTimer newInstance(final String name, final AtomicBoolean isOpen) {
@@ -57,10 +57,15 @@ final class TsdTimer implements Timer, Quantity {
      */
     @Override
     public void close() {
-        if (_isStopped.getAndSet(true)) {
+        final boolean wasRunning = _isRunning.getAndSet(false);
+        final boolean wasAborted = _isAborted.get();
+        if (!_isOpen.get()) {
+            _logger.warn(String.format("Timer closed/stopped after metrics instance closed; timer=%s", this));
+        }
+        if (wasAborted) {
+            _logger.warn(String.format("Timer closed/stopped after aborted; timer=%s", this));
+        } else if (!wasRunning) {
             _logger.warn(String.format("Timer closed/stopped multiple times; timer=%s", this));
-        } else if (!_isOpen.get()) {
-            _logger.warn(String.format("Timer manipulated after metrics instance closed; timer=%s", this));
         } else {
             _elapsedTime = System.nanoTime() - _startTime;
         }
@@ -70,8 +75,25 @@ final class TsdTimer implements Timer, Quantity {
      * {@inheritDoc}
      */
     @Override
+    public void abort() {
+        final boolean wasAborted = _isAborted.getAndSet(true);
+        final boolean wasRunning = _isRunning.getAndSet(false);
+        if (!_isOpen.get()) {
+            _logger.warn(String.format("Timer aborted after metrics instance closed; timer=%s", this));
+        }
+        if (wasAborted) {
+            _logger.warn(String.format("Timer aborted multiple times; timer=%s", this));
+        } else if (!wasRunning) {
+            _logger.warn(String.format("Timer aborted after closed/stopped; timer=%s", this));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Number getValue() {
-        if (!_isStopped.get()) {
+        if (_isRunning.get()) {
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
         }
         return Long.valueOf(_elapsedTime);
@@ -82,7 +104,23 @@ final class TsdTimer implements Timer, Quantity {
      */
     @Override
     public Unit getUnit() {
-        return Unit.NANOSECOND;
+        return Units.NANOSECOND;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isRunning() {
+        return _isRunning.get();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isAborted() {
+        return _isAborted.get();
     }
 
     /**
@@ -91,21 +129,13 @@ final class TsdTimer implements Timer, Quantity {
     @Override
     public String toString() {
         return String.format(
-                "TsdTimer{id=%s, Name=%s, StartTime=%s, ElapsedTime=%s, IsStopped=%s, IsOpen=%s}",
-                Integer.toHexString(System.identityHashCode(this)),
+                "TsdTimer{Name=%s, StartTime=%s, ElapsedTime=%s, IsRunning=%s, IsAborted=%s, IsOpen=%s}",
                 _name,
-                _startTime,
-                _elapsedTime,
-                _isStopped,
+                Long.valueOf(_startTime),
+                Long.valueOf(_elapsedTime),
+                _isRunning,
+                _isAborted,
                 _isOpen);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean isStopped() {
-        return _isStopped.get();
     }
 
     // NOTE: Package private for testing
@@ -114,15 +144,17 @@ final class TsdTimer implements Timer, Quantity {
         _isOpen = isOpen;
         _logger = logger;
         _startTime = System.nanoTime();
-        _isStopped = new AtomicBoolean(false);
+        _isRunning = new AtomicBoolean(true);
+        _isAborted = new AtomicBoolean(false);
     }
 
     private final String _name;
     private final AtomicBoolean _isOpen;
-    private final Logger _logger;
+    private final AtomicBoolean _isRunning;
+    private final AtomicBoolean _isAborted;
     private final long _startTime;
     private long _elapsedTime = 0;
-    private final AtomicBoolean _isStopped;
+    private final Logger _logger;
 
     private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(TsdTimer.class);
 }

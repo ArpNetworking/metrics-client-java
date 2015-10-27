@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Groupon.com
+ * Copyright 2015 Groupon.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,22 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.net.UnknownHostException;
+
 /**
- * Tests for concurrent usage of <code>TsdMetrics</code>.
+ * Tests for <code>HostProvider</code>.
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-public class TsdMetricsConcurrencyTest {
+public class HostProviderTest {
 
+    @Test
+    public void testDefaulHostProvider() throws UnknownHostException {
+        final String hostName = HostProvider.DEFAULT.get();
+        Assert.assertNotNull(hostName);
+        Assert.assertFalse(hostName.isEmpty());
+    }
 }

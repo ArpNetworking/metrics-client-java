@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Groupon.com
+ * Copyright 2015 Groupon.com
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,30 +18,21 @@ package com.arpnetworking.metrics;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.concurrent.TimeUnit;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 
 /**
- * Tests for <code>Unit</code>.
+ * Tests for <code>Units</code>.
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-public class UnitTest {
+public class UnitsTest {
 
     @Test
-    public void testTimeUnitConversion() {
-        for (final TimeUnit timeUnit : TimeUnit.values()) {
-            final Unit unit = Unit.fromTimeUnit(timeUnit);
-            Assert.assertNotNull(unit);
-            final TimeUnit secondTimeUnit = Unit.toTimeUnit(unit);
-            Assert.assertSame(timeUnit, secondTimeUnit);
-        }
-    }
-
-    @Test
-    public void testEnumeration() {
-        for (final Unit unit : Unit.values()) {
-            final Unit secondUnit = Unit.valueOf(unit.toString());
-            Assert.assertSame(unit, secondUnit);
-        }
+    public void testConstructorIsPrivate() throws Exception {
+        final Constructor<Units> constructor = Units.class.getDeclaredConstructor();
+        Assert.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
+        constructor.setAccessible(true);
+        constructor.newInstance();
     }
 }

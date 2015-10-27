@@ -16,17 +16,14 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Counter;
-import com.arpnetworking.metrics.Quantity;
+import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
+import com.arpnetworking.metrics.Units;
 import com.arpnetworking.metrics.test.MetricMatcher;
-import com.arpnetworking.metrics.test.MockitoHelper;
 import com.arpnetworking.metrics.test.QuantityMatcher;
-
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
-import org.hamcrest.collection.IsMapContaining;
-import org.hamcrest.collection.IsMapWithSize;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -36,8 +33,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -58,14 +57,15 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(sink);
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -76,23 +76,27 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(sink1, sink2);
         metrics.close();
 
-        Mockito.verify(sink1).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture1 = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink1).record(eventCapture1.capture());
+        final Event actualEvent1 = eventCapture1.getValue();
+        Assert.assertThat(
+                actualEvent1.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent1.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent1.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent1.getGaugeSamples().isEmpty());
 
-        Mockito.verify(sink2).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture2 = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink2).record(eventCapture2.capture());
+        final Event actualEvent2 = eventCapture2.getValue();
+        Assert.assertThat(
+                actualEvent2.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent2.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent2.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent2.getGaugeSamples().isEmpty());
+
+        Assert.assertEquals(actualEvent1, actualEvent2);
     }
 
     @Test
@@ -103,17 +107,19 @@ public class TsdMetricsTest {
         metrics.incrementCounter("counter");
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "counter",
-                                QuantityMatcher.match(1))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getCounterSamples(),
+                MetricMatcher.match(
+                        "counter",
+                        QuantityMatcher.match(1)));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -124,17 +130,19 @@ public class TsdMetricsTest {
         metrics.setTimer("timer", 1L, TimeUnit.MILLISECONDS);
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timer",
-                                QuantityMatcher.match(1))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timer",
+                        QuantityMatcher.match(1, Units.MILLISECOND)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -145,17 +153,19 @@ public class TsdMetricsTest {
         metrics.setGauge("gauge", 1.23);
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "gauge",
-                                QuantityMatcher.match(1.23, null))));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getGaugeSamples(),
+                MetricMatcher.match(
+                        "gauge",
+                        QuantityMatcher.match(1.23, null)));
     }
 
     @Test
@@ -168,23 +178,27 @@ public class TsdMetricsTest {
         metrics.setGauge("gauge", 1.23);
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timer",
-                                QuantityMatcher.match(1))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "counter",
-                                QuantityMatcher.match(1))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "gauge",
-                                QuantityMatcher.match(1.23, null))));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timer",
+                        QuantityMatcher.match(1L, Units.MILLISECOND)));
+        Assert.assertThat(
+                actualEvent.getCounterSamples(),
+                MetricMatcher.match(
+                        "counter",
+                        QuantityMatcher.match(1)));
+        Assert.assertThat(
+                actualEvent.getGaugeSamples(),
+                MetricMatcher.match(
+                        "gauge",
+                        QuantityMatcher.match(1.23, null)));
     }
 
     @Test
@@ -300,13 +314,29 @@ public class TsdMetricsTest {
     }
 
     @Test
-    public void testAnnotateNotOpen() {
+    public void testAddAnnotationNotOpen() {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
-        metrics.annotate("key", "value");
+        metrics.addAnnotation("key", "value");
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testAddAnnotationsNotOpen() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        metrics.close();
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<String, String> annotations = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        annotations.put("key1", "value1");
+        annotations.put("key2", "value2");
+        metrics.addAnnotations(annotations);
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
     }
 
@@ -360,17 +390,19 @@ public class TsdMetricsTest {
             metrics.incrementCounter("testCloseTryWithResource");
         }
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "testCloseTryWithResource",
-                                QuantityMatcher.match(1))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getCounterSamples(),
+                MetricMatcher.match(
+                        "testCloseTryWithResource",
+                        QuantityMatcher.match(1)));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -395,30 +427,28 @@ public class TsdMetricsTest {
         metrics.close();
         final Date latestEndDate = new Date();
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        final ArgumentCaptor<Map<String, String>> captureAnnotations =
-                ArgumentCaptor.forClass((Class) Map.class);
-
-        Mockito.verify(sink).record(
-                captureAnnotations.capture(),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timerA",
-                                QuantityMatcher.match(100, Unit.MILLISECOND),
-                                "timerB",
-                                QuantityMatcher.match(Matchers.any(Number.class), Unit.NANOSECOND),
-                                "timerC",
-                                QuantityMatcher.match(Matchers.any(Number.class), Unit.NANOSECOND),
-                                QuantityMatcher.match(Matchers.any(Number.class), Unit.NANOSECOND),
-                                "timerD",
-                                QuantityMatcher.match(Matchers.any(Number.class), Unit.NANOSECOND),
-                                QuantityMatcher.match(1, Unit.MILLISECOND))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
-
-        final Map<String, String> annotations = captureAnnotations.getValue();
-        Assert.assertThat(annotations, IsMapWithSize.aMapWithSize(2));
-        assertTimestamps(earliestStartDate, latestEndDate, annotations);
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerA",
+                        QuantityMatcher.match(100, Units.MILLISECOND),
+                        "timerB",
+                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        "timerC",
+                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        "timerD",
+                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        QuantityMatcher.match(1, Units.MILLISECOND)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -444,34 +474,32 @@ public class TsdMetricsTest {
         metrics.close();
         final Date latestEndDate = new Date();
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        final ArgumentCaptor<Map<String, String>> captureAnnotations =
-                ArgumentCaptor.forClass((Class) Map.class);
-
-        Mockito.verify(sink).record(
-                captureAnnotations.capture(),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "counterA",
-                                QuantityMatcher.match(1),
-                                "counterB",
-                                QuantityMatcher.match(2),
-                                "counterC",
-                                QuantityMatcher.match(-1),
-                                "counterD",
-                                QuantityMatcher.match(-2),
-                                "counterE",
-                                QuantityMatcher.match(0),
-                                "counterF",
-                                QuantityMatcher.match(0),
-                                QuantityMatcher.match(1),
-                                QuantityMatcher.match(2))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
-
-        final Map<String, String> annotations = captureAnnotations.getValue();
-        Assert.assertThat(annotations, Matchers.aMapWithSize(2));
-        assertTimestamps(earliestStartDate, latestEndDate, annotations);
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getCounterSamples(),
+                MetricMatcher.match(
+                        "counterA",
+                        QuantityMatcher.match(1),
+                        "counterB",
+                        QuantityMatcher.match(2),
+                        "counterC",
+                        QuantityMatcher.match(-1),
+                        "counterD",
+                        QuantityMatcher.match(-2),
+                        "counterE",
+                        QuantityMatcher.match(0),
+                        "counterF",
+                        QuantityMatcher.match(0),
+                        QuantityMatcher.match(1),
+                        QuantityMatcher.match(2)));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -492,78 +520,106 @@ public class TsdMetricsTest {
         metrics.close();
         final Date latestEndDate = new Date();
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        final ArgumentCaptor<Map<String, String>> captureAnnotations =
-                ArgumentCaptor.forClass((Class) Map.class);
-
-        Mockito.verify(sink).record(
-                captureAnnotations.capture(),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "gaugeA",
-                                QuantityMatcher.match(10),
-                                "gaugeB",
-                                QuantityMatcher.match(1.23),
-                                "gaugeC",
-                                QuantityMatcher.match(10),
-                                QuantityMatcher.match(20),
-                                "gaugeD",
-                                QuantityMatcher.match(2.07),
-                                QuantityMatcher.match(1.23))));
-
-        final Map<String, String> annotations = captureAnnotations.getValue();
-        Assert.assertThat(annotations, IsMapWithSize.aMapWithSize(2));
-        assertTimestamps(earliestStartDate, latestEndDate, annotations);
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getGaugeSamples(),
+                MetricMatcher.match(
+                        "gaugeA",
+                        QuantityMatcher.match(10),
+                        "gaugeB",
+                        QuantityMatcher.match(1.23),
+                        "gaugeC",
+                        QuantityMatcher.match(10),
+                        QuantityMatcher.match(20),
+                        "gaugeD",
+                        QuantityMatcher.match(2.07),
+                        QuantityMatcher.match(1.23)));
     }
 
     @Test
-    public void testAnnotationMetrics() throws ParseException, InterruptedException {
+    public void testAddAnnotationMetrics() throws ParseException, InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
         final Date earliestStartDate = new Date();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
-        metrics.annotate("foo", "bar");
-        metrics.annotate("dup", "cat");
-        metrics.annotate("dup", "dog");
+        metrics.addAnnotation("foo", "bar");
+        metrics.addAnnotation("dup", "cat");
+        metrics.addAnnotation("dup", "dog");
 
         Thread.sleep(10);
         metrics.close();
         final Date latestEndDate = new Date();
 
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        final ArgumentCaptor<Map<String, String>> captureAnnotations =
-                ArgumentCaptor.forClass((Class) Map.class);
-
-        Mockito.verify(sink).record(
-                captureAnnotations.capture(),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
-
-        final Map<String, String> annotations = captureAnnotations.getValue();
-        Assert.assertThat(annotations, IsMapWithSize.aMapWithSize(4));
-        Assert.assertThat(annotations, IsMapContaining.hasEntry("foo", "bar"));
-        Assert.assertThat(annotations, IsMapContaining.hasEntry("dup", "dog"));
-        assertTimestamps(earliestStartDate, latestEndDate, annotations);
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher(
+                        Matchers.hasEntry("foo", "bar"),
+                        Matchers.hasEntry("dup", "dog")));
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
+    @Test
+    public void testAddAnnotationsMetrics() throws ParseException, InterruptedException {
+        final Sink sink = Mockito.mock(Sink.class);
+        final Date earliestStartDate = new Date();
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<String, String> annotations = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        annotations.put("foo", "bar");
+        annotations.put("dup", "dog");
+        metrics.addAnnotations(annotations);
+
+        Thread.sleep(10);
+        metrics.close();
+        final Date latestEndDate = new Date();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher(
+                        Matchers.hasEntry("foo", "bar"),
+                        Matchers.hasEntry("dup", "dog")));
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+    }
+
+    @Test
     public void testUnits() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
-        metrics.setGauge("bySize", 21L, Unit.BYTE);
-        metrics.setGauge("bySize", 22L, Unit.KILOBYTE);
-        metrics.setGauge("bySize", 23L, Unit.MEGABYTE);
-        metrics.setGauge("bySize", 24L, Unit.GIGABYTE);
+        metrics.setGauge("bySize", 21L, Units.BYTE);
+        metrics.setGauge("bySize", 22L, Units.KILOBYTE);
+        metrics.setGauge("bySize", 23L, Units.MEGABYTE);
+        metrics.setGauge("bySize", 24L, Units.GIGABYTE);
 
         // You should never do this but the library cannot prevent it because
         // values are combined across instances, processes and hosts:
-        metrics.setGauge("mixedUnit", 1.23, Unit.BYTE);
-        metrics.setGauge("mixedUnit", 2.07, Unit.SECOND);
+        metrics.setGauge("mixedUnit", 1.23, Units.BYTE);
+        metrics.setGauge("mixedUnit", 2.07, Units.SECOND);
 
         metrics.setTimer("withTimeUnit", 11L, TimeUnit.NANOSECONDS);
         metrics.setTimer("withTimeUnit", 12L, TimeUnit.MICROSECONDS);
@@ -573,50 +629,53 @@ public class TsdMetricsTest {
         metrics.setTimer("withTimeUnit", 16L, TimeUnit.HOURS);
         metrics.setTimer("withTimeUnit", 17L, TimeUnit.DAYS);
 
-        metrics.setTimer("withTsdUnit", 1L, Unit.NANOSECOND);
-        metrics.setTimer("withTsdUnit", 2L, Unit.MICROSECOND);
-        metrics.setTimer("withTsdUnit", 3L, Unit.MILLISECOND);
-        metrics.setTimer("withTsdUnit", 4L, Unit.SECOND);
-        metrics.setTimer("withTsdUnit", 5L, Unit.MINUTE);
-        metrics.setTimer("withTsdUnit", 6L, Unit.HOUR);
-        metrics.setTimer("withTsdUnit", 7L, Unit.DAY);
+        metrics.setTimer("withTsdUnit", 1L, Units.NANOSECOND);
+        metrics.setTimer("withTsdUnit", 2L, Units.MICROSECOND);
+        metrics.setTimer("withTsdUnit", 3L, Units.MILLISECOND);
+        metrics.setTimer("withTsdUnit", 4L, Units.SECOND);
+        metrics.setTimer("withTsdUnit", 5L, Units.MINUTE);
+        metrics.setTimer("withTsdUnit", 6L, Units.HOUR);
+        metrics.setTimer("withTsdUnit", 7L, Units.DAY);
 
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "withTimeUnit",
-                                QuantityMatcher.match(11, Unit.NANOSECOND),
-                                QuantityMatcher.match(12, Unit.MICROSECOND),
-                                QuantityMatcher.match(13, Unit.MILLISECOND),
-                                QuantityMatcher.match(14, Unit.SECOND),
-                                QuantityMatcher.match(15, Unit.MINUTE),
-                                QuantityMatcher.match(16, Unit.HOUR),
-                                QuantityMatcher.match(17, Unit.DAY),
-                                "withTsdUnit",
-                                QuantityMatcher.match(1, Unit.NANOSECOND),
-                                QuantityMatcher.match(2, Unit.MICROSECOND),
-                                QuantityMatcher.match(3, Unit.MILLISECOND),
-                                QuantityMatcher.match(4, Unit.SECOND),
-                                QuantityMatcher.match(5, Unit.MINUTE),
-                                QuantityMatcher.match(6, Unit.HOUR),
-                                QuantityMatcher.match(7, Unit.DAY))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "bySize",
-                                QuantityMatcher.match(21, Unit.BYTE),
-                                QuantityMatcher.match(22, Unit.KILOBYTE),
-                                QuantityMatcher.match(23, Unit.MEGABYTE),
-                                QuantityMatcher.match(24, Unit.GIGABYTE),
-                                "mixedUnit",
-                                QuantityMatcher.match(1.23, Unit.BYTE),
-                                QuantityMatcher.match(2.07, Unit.SECOND))));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "withTimeUnit",
+                        QuantityMatcher.match(11, Units.NANOSECOND),
+                        QuantityMatcher.match(12, Units.MICROSECOND),
+                        QuantityMatcher.match(13, Units.MILLISECOND),
+                        QuantityMatcher.match(14, Units.SECOND),
+                        QuantityMatcher.match(15, Units.MINUTE),
+                        QuantityMatcher.match(16, Units.HOUR),
+                        QuantityMatcher.match(17, Units.DAY),
+                        "withTsdUnit",
+                        QuantityMatcher.match(1, Units.NANOSECOND),
+                        QuantityMatcher.match(2, Units.MICROSECOND),
+                        QuantityMatcher.match(3, Units.MILLISECOND),
+                        QuantityMatcher.match(4, Units.SECOND),
+                        QuantityMatcher.match(5, Units.MINUTE),
+                        QuantityMatcher.match(6, Units.HOUR),
+                        QuantityMatcher.match(7, Units.DAY)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertThat(
+                actualEvent.getGaugeSamples(),
+                MetricMatcher.match(
+                        "bySize",
+                        QuantityMatcher.match(21, Units.BYTE),
+                        QuantityMatcher.match(22, Units.KILOBYTE),
+                        QuantityMatcher.match(23, Units.MEGABYTE),
+                        QuantityMatcher.match(24, Units.GIGABYTE),
+                        "mixedUnit",
+                        QuantityMatcher.match(1.23, Units.BYTE),
+                        QuantityMatcher.match(2.07, Units.SECOND)));
     }
 
     @Test
@@ -645,20 +704,22 @@ public class TsdMetricsTest {
         // two timer objects are instantiated and not the order in which they
         // are stopped/closed.
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timerObjectA",
-                                QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Unit.NANOSECOND),
-                                "timerObjectB",
-                                QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(2)), Unit.NANOSECOND),
-                                QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Unit.NANOSECOND))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerObjectA",
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Units.NANOSECOND),
+                        "timerObjectB",
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(2)), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Units.NANOSECOND)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -671,17 +732,19 @@ public class TsdMetricsTest {
 
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timerObjectA",
-                                QuantityMatcher.match(1, Unit.SECOND))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerObjectA",
+                        QuantityMatcher.match(1, Units.SECOND)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -694,22 +757,23 @@ public class TsdMetricsTest {
 
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timerObjectA",
-                                QuantityMatcher.match(1, Unit.SECOND),
-                                "timerObjectB")),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerObjectA",
+                        QuantityMatcher.match(1, Units.SECOND),
+                        "timerObjectB"));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
-    public void testOnlyTimerWithClosedSample() {
+    public void testOnlyTimersWithoutClosedSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
@@ -717,16 +781,107 @@ public class TsdMetricsTest {
 
         metrics.close();
 
-        Mockito.verify(sink).record(
-                MockitoHelper.<Map<String, String>>argThat(
-                        Matchers.allOf(
-                                Matchers.hasKey("initTimestamp"),
-                                Matchers.hasKey("finalTimestamp"))),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(
-                        MetricMatcher.match(
-                                "timerObjectB")),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                Matchers.allOf(
+                        Matchers.hasKey("_start"),
+                        Matchers.hasKey("_end")));
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match("timerObjectB"));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+    }
+
+    @Test
+    public void testSkipAbortedTimerSample() {
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Timer timer = metrics.createTimer("timerObjectA");
+        metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
+        timer.abort();
+
+        metrics.close();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerObjectA",
+                        QuantityMatcher.match(1, Units.SECOND)));
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+    }
+
+    @Test
+    public void testTimerWithoutUnabortedSample() {
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Timer timer = metrics.createTimer("timerObjectB");
+        metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
+        timer.abort();
+
+        metrics.close();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match(
+                        "timerObjectA",
+                        QuantityMatcher.match(1, Units.SECOND),
+                        "timerObjectB"));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+    }
+
+    @Test
+    public void testOnlyTimersWithoutUnabortedSample() {
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Timer timer = metrics.createTimer("timerObjectB");
+        timer.abort();
+
+        metrics.close();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                Matchers.allOf(
+                        Matchers.hasKey("_start"),
+                        Matchers.hasKey("_end")));
+        Assert.assertThat(
+                actualEvent.getTimerSamples(),
+                MetricMatcher.match("timerObjectB"));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+    }
+
+    @Test
+    public void testTimeUnitConversion() {
+        Assert.assertNull(TsdMetrics.fromTimeUnit(null));
+        Assert.assertEquals(Units.NANOSECOND, TsdMetrics.fromTimeUnit(TimeUnit.NANOSECONDS));
+        Assert.assertEquals(Units.MICROSECOND, TsdMetrics.fromTimeUnit(TimeUnit.MICROSECONDS));
+        Assert.assertEquals(Units.MILLISECOND, TsdMetrics.fromTimeUnit(TimeUnit.MILLISECONDS));
+        Assert.assertEquals(Units.SECOND, TsdMetrics.fromTimeUnit(TimeUnit.SECONDS));
+        Assert.assertEquals(Units.MINUTE, TsdMetrics.fromTimeUnit(TimeUnit.MINUTES));
+        Assert.assertEquals(Units.HOUR, TsdMetrics.fromTimeUnit(TimeUnit.HOURS));
+        Assert.assertEquals(Units.DAY, TsdMetrics.fromTimeUnit(TimeUnit.DAYS));
+        Assert.assertEquals(7, TimeUnit.values().length);
     }
 
     @Test
@@ -757,6 +912,15 @@ public class TsdMetricsTest {
         Assert.assertEquals("bar", metrics.getOrCreate(map, "foo", "who"));
     }
 
+    @Test
+    public void testToString() {
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final String asString = createTsdMetrics(sink).toString();
+        Assert.assertNotNull(asString);
+        Assert.assertFalse(asString.isEmpty());
+    }
+
     private TsdMetrics createTsdMetrics(final Sink... sinks) {
         return createTsdMetrics(createSlf4jLoggerMock(), sinks);
     }
@@ -767,6 +931,9 @@ public class TsdMetricsTest {
 
     private TsdMetrics createTsdMetrics(final Clock clock, final org.slf4j.Logger logger, final Sink... sinks) {
         return new TsdMetrics(
+                "MyService",
+                "MyCluster",
+                "MyHost",
                 Arrays.asList(sinks),
                 clock,
                 logger);
@@ -782,15 +949,29 @@ public class TsdMetricsTest {
             final Map<String, String> annotations)
             throws ParseException {
 
-        Assert.assertTrue(annotations.containsKey("initTimestamp"));
-        final Date actualStart = _iso8601Format.parse(annotations.get("initTimestamp"));
+        Assert.assertTrue(annotations.containsKey("_start"));
+        final Date actualStart = _iso8601Format.parse(annotations.get("_start"));
         Assert.assertTrue(earliestStartDate.getTime() <= actualStart.getTime());
         Assert.assertTrue(latestEndDate.getTime() >= actualStart.getTime());
 
-        Assert.assertTrue(annotations.containsKey("finalTimestamp"));
-        final Date actualEnd = _iso8601Format.parse(annotations.get("finalTimestamp"));
+        Assert.assertTrue(annotations.containsKey("_end"));
+        final Date actualEnd = _iso8601Format.parse(annotations.get("_end"));
         Assert.assertTrue(latestEndDate.getTime() >= actualEnd.getTime());
         Assert.assertTrue(earliestStartDate.getTime() <= actualEnd.getTime());
+    }
+
+    @SuppressWarnings(value = {"unchecked", "rawtypes"})
+    private static Matcher<Map<String, String>> standardAnnotationsMatcher(
+            final Matcher... additionalMatchers) {
+        final List matchers = new ArrayList();
+        matchers.add(Matchers.hasKey("_id"));
+        matchers.add(Matchers.hasEntry("_host", "MyHost"));
+        matchers.add(Matchers.hasEntry("_service", "MyService"));
+        matchers.add(Matchers.hasEntry("_cluster", "MyCluster"));
+        matchers.add(Matchers.hasKey("_start"));
+        matchers.add(Matchers.hasKey("_end"));
+        matchers.addAll(Arrays.asList(additionalMatchers));
+        return Matchers.allOf(matchers);
     }
 
     // NOTE: SimpleDateFormat is not thread safe thus it is non-static

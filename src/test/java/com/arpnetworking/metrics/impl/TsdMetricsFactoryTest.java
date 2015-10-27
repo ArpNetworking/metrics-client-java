@@ -15,21 +15,20 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
-import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Sink;
-import com.arpnetworking.metrics.test.MockitoHelper;
-
-import org.hamcrest.Matchers;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
 
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Tests for <code>TsdMetricsFactory</code>.
@@ -38,14 +37,122 @@ import java.util.Map;
  */
 public class TsdMetricsFactoryTest {
 
+    @AfterClass
+    public static void afterClass() {
+        new File("./query.log").deleteOnExit();
+    }
+
     @Test
-    public void testCreate() {
+    public void testNewInstance() throws UnknownHostException {
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance(
+                "MyService",
+                "MyCluster",
+                new File("./"));
+
+        Assert.assertEquals(HostProvider.DEFAULT.get(), metricsFactory.getHostName());
+        Assert.assertEquals("MyService", metricsFactory.getServiceName());
+        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
+                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+    }
+
+    @Test
+    public void testBuilderDefaults() throws UnknownHostException {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        Mockito.doReturn("MyHost").when(hostProvider).get();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .build();
+
+        Assert.assertEquals("MyHost", metricsFactory.getHostName());
+        Assert.assertEquals("MyService", metricsFactory.getServiceName());
+        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
+                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        Mockito.verify(hostProvider).get();
+    }
+
+    @Test
+    public void testBuilderNullSinks() throws UnknownHostException {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        Mockito.doReturn("MyHost").when(hostProvider).get();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .setSinks(null)
+                .build();
+
+        Assert.assertEquals("MyHost", metricsFactory.getHostName());
+        Assert.assertEquals("MyService", metricsFactory.getServiceName());
+        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
+                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        Mockito.verify(hostProvider).get();
+    }
+
+    @Test
+    public void testBuilderOverrideHost() throws UnknownHostException {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        Mockito.doReturn("MyHost").when(hostProvider).get();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setHostName("Foo")
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .build();
+
+        Assert.assertEquals("Foo", metricsFactory.getHostName());
+    }
+
+    @Test
+    public void testBuilderHostProviderFailure() throws UnknownHostException {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        Mockito.doThrow(new UnknownHostException()).when(hostProvider).get();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .build();
+
+        Mockito.verify(logger).warn(Mockito.anyString());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+
+        @SuppressWarnings("resource")
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        metrics.close();
+    }
+
+    @Test
+    public void testBuilderSinks() {
         final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink1");
         final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink2");
         final List<Sink> sinks = new ArrayList<>();
         sinks.add(sink1);
         sinks.add(sink2);
         final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
                 .setSinks(sinks)
                 .build();
         @SuppressWarnings("resource")
@@ -53,24 +160,56 @@ public class TsdMetricsFactoryTest {
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
         metrics.close();
-        Mockito.verify(sink1).record(
-                org.mockito.Matchers.anyMapOf(String.class, String.class),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
-        Mockito.verify(sink2).record(
-                org.mockito.Matchers.anyMapOf(String.class, String.class),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()),
-                MockitoHelper.<Map<String, List<Quantity>>>argThat(Matchers.anEmptyMap()));
+        Mockito.verify(sink1).record(org.mockito.Matchers.any(Event.class));
+        Mockito.verify(sink2).record(org.mockito.Matchers.any(Event.class));
     }
 
     @Test
-    public void testCreateEmptySinks() {
-        final List<Sink> sinks = new ArrayList<>();
-        final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
-                .setSinks(sinks)
+    public void testBuilderNoSinks() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setServiceName("MyService")
+                .setHostName("MyHost")
                 .build();
+        Mockito.verify(logger).warn(Mockito.anyString());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+
+        @SuppressWarnings("resource")
+        final Metrics metrics = metricsFactory.create();
+        metrics.close();
+    }
+
+    @Test
+    public void testBuilderFailureClusterName() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setServiceName("MyService")
+                .setHostName("MyHost")
+                .build();
+        Mockito.verify(logger).warn(Mockito.anyString());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        @SuppressWarnings("resource")
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        metrics.close();
+     }
+
+    @Test
+    public void testBuilderFailureServiceName() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setClusterName("MyCluster")
+                .setHostName("MyHost")
+                .build();
+        Mockito.verify(logger).warn(Mockito.anyString());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
@@ -79,53 +218,32 @@ public class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testCreateWithDeprecatedSink() {
-        final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder().build();
+    public void testBuilderFailureHostName() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+                .setServiceName("MyService")
+                .setClusterName("MyCluster")
+                .build();
+        Mockito.verify(logger).warn(Mockito.anyString());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
-
-        // Delete the file since it is created in the project directory
-        Assert.assertTrue(new File("./query.log").delete());
+        metrics.close();
     }
 
-    @SuppressWarnings("deprecation")
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuilderNullPath() {
-        new TsdMetricsFactory.Builder()
-                .setPath(null)
-                .build();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuilderNullExtension() {
-        new TsdMetricsFactory.Builder()
-                .setExtension(null)
-                .build();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuilderNullImmediateFlush() {
-        new TsdMetricsFactory.Builder()
-                .setImmediateFlush(null)
-                .build();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuilderNullName() {
-        new TsdMetricsFactory.Builder()
-                .setName(null)
-                .build();
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test(expected = IllegalArgumentException.class)
-    public void testBuilderEmptyName() {
-        new TsdMetricsFactory.Builder()
-                .setName("")
-                .build();
+    @Test
+    public void testToString() {
+        final String asString = new TsdMetricsFactory.Builder()
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .setHostName("MyHost")
+                .build()
+                .toString();
+        Assert.assertNotNull(asString);
+        Assert.assertFalse(asString.isEmpty());
     }
 }

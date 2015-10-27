@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.arpnetworking.metrics;
+package com.arpnetworking.metrics.impl;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * Interface representing a destination to record metrics to.
+ * Tests for <code>BaseUnit</code>.
  *
  * @author Ville Koskela (vkoskela at groupon dot com)
  */
-public interface Sink {
+public class BaseUnitTest {
 
-    /**
-     * Invoked by <code>Metrics</code> to record unit of work metrics data to
-     * this <code>Sink</code>.
-     *
-     * @param event The metrics data for the unit of work.
-     */
-    void record(Event event);
+    @Test
+    public void testEnumeration() {
+        for (final BaseUnit baseUnit : BaseUnit.values()) {
+            final BaseUnit actualBaseUnit = BaseUnit.valueOf(baseUnit.name());
+            Assert.assertSame(baseUnit, actualBaseUnit);
+        }
+    }
 }
