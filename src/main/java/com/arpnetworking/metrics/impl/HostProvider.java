@@ -44,7 +44,7 @@ import java.net.UnknownHostException;
     /* package private static final */ class DefaultHostProvider implements HostProvider {
 
         public String get() throws UnknownHostException {
-            return InetAddress.getLocalHost().getHostName();
+            return InetAddress.getLocalHost().getCanonicalHostName();
         }
     }
 }
