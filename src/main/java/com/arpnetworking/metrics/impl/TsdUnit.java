@@ -29,6 +29,14 @@ import javax.annotation.Nullable;
  */
 public final class TsdUnit implements Unit {
 
+    public BaseUnit getBaseUnit() {
+        return _baseUnit;
+    }
+
+    public BaseScale getBaseScale() {
+        return _baseScale;
+    }
+
     /**
      * {@inheritDoc}
      */
