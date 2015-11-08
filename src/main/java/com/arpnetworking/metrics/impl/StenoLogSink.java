@@ -192,13 +192,13 @@ public class StenoLogSink extends BaseFileSink {
                 if (simplifiedUnit instanceof CompoundUnit) {
                     final CompoundUnit compoundUnit = (CompoundUnit) simplifiedUnit;
                     if (!compoundUnit.getNumeratorUnits().isEmpty()) {
-                        writeUnits(jsonGenerator, compoundUnit.getNumeratorUnits(), "numeratorUnits");
+                        writeUnits(jsonGenerator, compoundUnit.getNumeratorUnits(), "unitNumerators");
                     }
                     if (!compoundUnit.getDenominatorUnits().isEmpty()) {
-                        writeUnits(jsonGenerator, compoundUnit.getDenominatorUnits(), "denominatorUnits");
+                        writeUnits(jsonGenerator, compoundUnit.getDenominatorUnits(), "unitDenominators");
                     }
                 } else if (simplifiedUnit != null) {
-                    writeUnits(jsonGenerator, Collections.singletonList(simplifiedUnit), "numeratorUnits");
+                    writeUnits(jsonGenerator, Collections.singletonList(simplifiedUnit), "unitNumerators");
                 }
 
             }
