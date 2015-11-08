@@ -31,6 +31,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class TsdUnitTest {
 
     @Test
+    public void testAccessors() {
+        final TsdUnit unit = (TsdUnit) new TsdUnit.Builder()
+                .setBaseUnit(BaseUnit.BIT)
+                .setScale(BaseScale.KILO)
+                .build();
+        Assert.assertSame(BaseUnit.BIT, unit.getBaseUnit());
+        Assert.assertSame(BaseScale.KILO, unit.getBaseScale());
+    }
+
+    @Test
     public void testBuild() {
         final Unit unit = new TsdUnit.Builder()
                 .setBaseUnit(BaseUnit.BIT)
