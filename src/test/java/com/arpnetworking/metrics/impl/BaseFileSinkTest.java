@@ -55,6 +55,8 @@ public class BaseFileSinkTest {
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
+        Assert.assertEquals(500, asyncAppender.getQueueSize());
+        Assert.assertEquals(0, asyncAppender.getDiscardingThreshold());
         Assert.assertFalse(rollingAppender.isPrudent());
         Assert.assertEquals(24, rollingPolicy.getMaxHistory());
         Assert.assertTrue(rollingPolicy.getFileNamePattern().endsWith(".gz"));
@@ -74,6 +76,8 @@ public class BaseFileSinkTest {
                 .setPrudent(Boolean.TRUE)
                 .setName("foo")
                 .setExtension(".bar")
+                .setMaxQueueSize(1000)
+                .setDropWhenQueueFull(true)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
@@ -85,6 +89,8 @@ public class BaseFileSinkTest {
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
+        Assert.assertEquals(1000, asyncAppender.getQueueSize());
+        Assert.assertEquals(1000, asyncAppender.getDiscardingThreshold());
         // TODO(vkoskela): Implement prudent mode [MAI-415]
         //Assert.assertTrue(rollingAppender.isPrudent());
         Assert.assertEquals(48, rollingPolicy.getMaxHistory());
@@ -104,6 +110,8 @@ public class BaseFileSinkTest {
                 .setMaxHistory(null)
                 .setName(null)
                 .setPrudent(null)
+                .setMaxQueueSize(null)
+                .setDropWhenQueueFull(null)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
@@ -115,6 +123,8 @@ public class BaseFileSinkTest {
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
+        Assert.assertEquals(500, asyncAppender.getQueueSize());
+        Assert.assertEquals(0, asyncAppender.getDiscardingThreshold());
         Assert.assertFalse(rollingAppender.isPrudent());
         Assert.assertEquals(24, rollingPolicy.getMaxHistory());
         Assert.assertTrue(encoder.isImmediateFlush());
