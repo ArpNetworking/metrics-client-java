@@ -88,12 +88,15 @@ import java.util.List;
         return rollingAppender;
     }
 
-    private Appender<ILoggingEvent> createAsyncAppender(final Appender<ILoggingEvent> appender) {
+    private Appender<ILoggingEvent> createAsyncAppender(
+            final Appender<ILoggingEvent> appender,
+            final int discardingThreshold,
+            final int queueSize) {
         final AsyncAppender asyncAppender = new AsyncAppender();
         asyncAppender.setContext(_loggerContext);
-        asyncAppender.setDiscardingThreshold(0);
+        asyncAppender.setDiscardingThreshold(discardingThreshold);
         asyncAppender.setName("query-log-async");
-        asyncAppender.setQueueSize(QUEUE_SIZE);
+        asyncAppender.setQueueSize(queueSize);
         asyncAppender.addAppender(appender);
         return asyncAppender;
     }
@@ -112,6 +115,8 @@ import java.util.List;
         final int maxHistory = builder._maxHistory.intValue();
         final boolean compress = builder._compress.booleanValue();
         final boolean prudent = builder._prudent.booleanValue();
+        final boolean dropWhenQueueFull = builder._dropWhenQueueFull.booleanValue();
+        final int maxQueueSize = builder._maxQueueSize.intValue();
 
         final StringBuilder fileNameBuilder = new StringBuilder(directory);
         fileNameBuilder.append(File.separator);
@@ -133,7 +138,10 @@ import java.util.List;
                 prudent,
                 rollingPolicy,
                 encoder);
-        final Appender<ILoggingEvent> asyncAppender = createAsyncAppender(rollingAppender);
+        final Appender<ILoggingEvent> asyncAppender = createAsyncAppender(
+                rollingAppender,
+                dropWhenQueueFull ? maxQueueSize : 0,
+                maxQueueSize);
 
         rollingPolicy.setParent(rollingAppender);
         rollingPolicy.start();
@@ -155,7 +163,6 @@ import java.util.List;
 
     private static final String DATE_EXTENSION = ".%d{yyyy-MM-dd-HH}";
     private static final String GZIP_EXTENSION = ".gz";
-    private static final Integer QUEUE_SIZE = 500;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BaseFileSink.class);
 
@@ -291,6 +298,31 @@ import java.util.List;
         }
 
         /**
+         * Set whether to drop events when the queue is full. If events are not
+         * dropped when the queue is full closing a <code>Metrics</code>
+         * instance will block on writing to this <code>Sink</code>. Optional;
+         * default is false.
+         *
+         * @param value Whether to drop events when the queue is full.
+         * @return This <code>Builder</code> instance.
+         */
+        public B setDropWhenQueueFull(final Boolean value) {
+            _dropWhenQueueFull = value;
+            return self();
+        }
+
+        /**
+         * Set maximum event queue size. Optional; default is 500.
+         *
+         * @param value The maximum event queue size.
+         * @return This <code>Builder</code> instance.
+         */
+        public B setMaxQueueSize(final Integer value) {
+            _maxQueueSize = value;
+            return self();
+        }
+
+        /**
          * Protected method allows child builder classes to add additional
          * defaulting behavior to fields.
          */
@@ -322,6 +354,14 @@ import java.util.List;
             if (_prudent == null) {
                 _prudent = DEFAULT_PRUDENT;
                 LOGGER.info(String.format("Defaulted null prudent; prudent=%s", _prudent));
+            }
+            if (_dropWhenQueueFull == null) {
+                _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
+                LOGGER.info(String.format("Defaulted null drop when queue full; dropWhenQueueFull=%s", _dropWhenQueueFull));
+            }
+            if (_maxQueueSize == null) {
+                _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
+                LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%s", _maxQueueSize));
             }
         }
 
@@ -362,6 +402,8 @@ import java.util.List;
         protected Boolean _compress = DEFAULT_COMPRESS;
         protected Boolean _immediateFlush = DEFAULT_IMMEDIATE_FLUSH;
         protected Boolean _prudent = DEFAULT_PRUDENT;
+        protected Boolean _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
+        protected Integer _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
 
         private static final File DEFAULT_DIRECTORY = new File("./");
         private static final String DEFAULT_NAME = "query";
@@ -370,5 +412,7 @@ import java.util.List;
         private static final Boolean DEFAULT_COMPRESS = Boolean.TRUE;
         private static final Boolean DEFAULT_IMMEDIATE_FLUSH = Boolean.TRUE;
         private static final Boolean DEFAULT_PRUDENT = Boolean.FALSE;
+        private static final Boolean DEFAULT_DROP_WHEN_QUEUE_FULL = Boolean.FALSE;
+        private static final Integer DEFAULT_MAX_QUEUE_SIZE = Integer.valueOf(500);
     }
 }
