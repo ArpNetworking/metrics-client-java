@@ -284,7 +284,6 @@ public class TsdCompoundUnitTest {
     @Test
     public void testFlattenRemoveUnit() {
         Unit unit;
-        CompoundUnit compoundUnit;
 
         unit = new TsdCompoundUnit.Builder()
                 .addNumeratorUnit(new TsdCompoundUnit.Builder()
@@ -302,7 +301,7 @@ public class TsdCompoundUnitTest {
         Assert.assertNotNull(unit);
         Assert.assertEquals(Units.SECOND, unit);
 
-        compoundUnit = (CompoundUnit) new TsdCompoundUnit.Builder()
+        final CompoundUnit compoundUnit = (CompoundUnit) new TsdCompoundUnit.Builder()
                 .addNumeratorUnit(new TsdCompoundUnit.Builder()
                         .addDenominatorUnit(Units.BYTE)
                         .build())

@@ -36,7 +36,7 @@ public class TsdTimerTest {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final long minimumTimeInMilliseconds = 100;
         final long startTime = System.nanoTime();
-        TsdTimer timer;
+        final TsdTimer timer;
         try (final TsdTimer resourceTimer = TsdTimer.newInstance("timerName", isOpen)) {
             // Without the assert compilation will log a warning
             assert resourceTimer != null;
