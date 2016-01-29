@@ -15,6 +15,8 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.commons.hostresolver.DefaultHostResolver;
+import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -49,7 +51,7 @@ public class TsdMetricsFactoryTest {
                 "MyCluster",
                 new File("./"));
 
-        Assert.assertEquals(HostProvider.DEFAULT.get(), metricsFactory.getHostName());
+        Assert.assertEquals(DEFAULT_HOST_RESOLVER.getLocalHostName(), metricsFactory.getHostName());
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -64,9 +66,9 @@ public class TsdMetricsFactoryTest {
     @Test
     public void testBuilderDefaults() throws UnknownHostException {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        Mockito.doReturn("MyHost").when(hostProvider).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        Mockito.doReturn("MyHost").when(hostResolver).getLocalHostName();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setClusterName("MyCluster")
                 .setServiceName("MyService")
                 .build();
@@ -81,15 +83,15 @@ public class TsdMetricsFactoryTest {
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(hostProvider).get();
+        Mockito.verify(hostResolver).getLocalHostName();
     }
 
     @Test
     public void testBuilderNullSinks() throws UnknownHostException {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        Mockito.doReturn("MyHost").when(hostProvider).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        Mockito.doReturn("MyHost").when(hostResolver).getLocalHostName();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setClusterName("MyCluster")
                 .setServiceName("MyService")
                 .setSinks(null)
@@ -105,15 +107,15 @@ public class TsdMetricsFactoryTest {
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(hostProvider).get();
+        Mockito.verify(hostResolver).getLocalHostName();
     }
 
     @Test
     public void testBuilderOverrideHost() throws UnknownHostException {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        Mockito.doReturn("MyHost").when(hostProvider).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        Mockito.doReturn("MyHost").when(hostResolver).getLocalHostName();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setHostName("Foo")
                 .setClusterName("MyCluster")
                 .setServiceName("MyService")
@@ -123,11 +125,11 @@ public class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderHostProviderFailure() throws UnknownHostException {
+    public void testBuilderHostResolverFailure() throws UnknownHostException {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        Mockito.doThrow(new UnknownHostException()).when(hostProvider).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        Mockito.doThrow(new UnknownHostException()).when(hostResolver).getLocalHostName();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setClusterName("MyCluster")
                 .setServiceName("MyService")
                 .build();
@@ -167,8 +169,8 @@ public class TsdMetricsFactoryTest {
     @Test
     public void testBuilderNoSinks() {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setServiceName("MyService")
                 .setHostName("MyHost")
                 .build();
@@ -184,8 +186,8 @@ public class TsdMetricsFactoryTest {
     @Test
     public void testBuilderFailureClusterName() {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setServiceName("MyService")
                 .setHostName("MyHost")
                 .build();
@@ -202,8 +204,8 @@ public class TsdMetricsFactoryTest {
     @Test
     public void testBuilderFailureServiceName() {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setClusterName("MyCluster")
                 .setHostName("MyHost")
                 .build();
@@ -220,8 +222,8 @@ public class TsdMetricsFactoryTest {
     @Test
     public void testBuilderFailureHostName() {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostProvider hostProvider = Mockito.mock(HostProvider.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostProvider, logger)
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
                 .setServiceName("MyService")
                 .setClusterName("MyCluster")
                 .build();
@@ -246,4 +248,6 @@ public class TsdMetricsFactoryTest {
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
     }
+
+    private static final HostResolver DEFAULT_HOST_RESOLVER = new DefaultHostResolver();
 }
