@@ -86,6 +86,7 @@
     -->
 
     <!--Dependency versions-->
+    <arpnetworking.commons.version>1.1.0</arpnetworking.commons.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <jackson.version>2.6.2</jackson.version>
     <json-jackson-coreutils.version>1.8</json-jackson-coreutils.version>
@@ -156,6 +157,7 @@
           <artifactSet>
             <excludes />
             <includes>
+              <include>com.arpnetworking.commons</include>
               <include>ch.qos.logback:logback-classic</include>
               <include>ch.qos.logback:logback-core</include>
               <include>com.arpnetworking.logback:logback-steno</include>
@@ -167,6 +169,16 @@
             </includes>
           </artifactSet>
           <filters>
+            <filter>
+              <artifact>com.arpnetworking.commons:commons</artifact>
+              <excludes>
+                <exclude>META-INF/**</exclude>
+                <exclude>LICENSE</exclude>
+              </excludes>
+              <includes>
+                <include>com/arpnetworking/commons/hostresolver/**</include>
+              </includes>
+            </filter>
             <filter>
               <artifact>ch.qos.logback:logback-classic</artifact>
               <excludes>
@@ -221,6 +233,10 @@
           </filters>
           <relocations>
             <relocation>
+              <pattern>com.arpnetworking.commons</pattern>
+              <shadedPattern>com.arpnetworking.metrics.com.arpnetworking.commons</shadedPattern>
+            </relocation>
+            <relocation>
               <pattern>ch.qos.logback</pattern>
               <shadedPattern>com.arpnetworking.metrics.ch.qos.logback</shadedPattern>
             </relocation>
@@ -257,6 +273,11 @@
       <version>${slf4j.version}</version>
     </dependency>
     <!-- Application -->
+    <dependency>
+      <groupId>com.arpnetworking.commons</groupId>
+      <artifactId>commons</artifactId>
+      <version>${arpnetworking.commons.version}</version>
+    </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
