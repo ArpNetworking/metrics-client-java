@@ -22,12 +22,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -50,39 +50,44 @@ public final class TsdCompoundUnit implements CompoundUnit {
      */
     @Override
     public String getName() {
-        final StringBuilder stringBuilder = new StringBuilder();
-        final boolean numeratorParenthesis = _numeratorUnits.size() > 1 && !_denominatorUnits.isEmpty();
-        final boolean denominatorParenthesis = _denominatorUnits.size() > 1;
-        if (!_numeratorUnits.isEmpty()) {
-            if (numeratorParenthesis) {
-                stringBuilder.append("(");
+        return _name.updateAndGet(existingName -> {
+            if (existingName != null) {
+                return existingName;
             }
-            for (final Unit unit : _numeratorUnits) {
-                stringBuilder.append(unit.getName());
-                stringBuilder.append("*");
+            final StringBuilder stringBuilder = new StringBuilder();
+            final boolean numeratorParenthesis = _numeratorUnits.size() > 1 && !_denominatorUnits.isEmpty();
+            final boolean denominatorParenthesis = _denominatorUnits.size() > 1;
+            if (!_numeratorUnits.isEmpty()) {
+                if (numeratorParenthesis) {
+                    stringBuilder.append("(");
+                }
+                for (final Unit unit : _numeratorUnits) {
+                    stringBuilder.append(unit.getName());
+                    stringBuilder.append("*");
+                }
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                if (numeratorParenthesis) {
+                    stringBuilder.append(")");
+                }
+            } else {
+                stringBuilder.append("1");
             }
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            if (numeratorParenthesis) {
-                stringBuilder.append(")");
+            if (!_denominatorUnits.isEmpty()) {
+                stringBuilder.append("/");
+                if (denominatorParenthesis) {
+                    stringBuilder.append("(");
+                }
+                for (final Unit unit : _denominatorUnits) {
+                    stringBuilder.append(unit.getName());
+                    stringBuilder.append("*");
+                }
+                stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+                if (denominatorParenthesis) {
+                    stringBuilder.append(")");
+                }
             }
-        } else {
-            stringBuilder.append("1");
-        }
-        if (!_denominatorUnits.isEmpty()) {
-            stringBuilder.append("/");
-            if (denominatorParenthesis) {
-                stringBuilder.append("(");
-            }
-            for (final Unit unit : _denominatorUnits) {
-                stringBuilder.append(unit.getName());
-                stringBuilder.append("*");
-            }
-            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-            if (denominatorParenthesis) {
-                stringBuilder.append(")");
-            }
-        }
-        return stringBuilder.toString();
+            return stringBuilder.toString();
+        });
     }
 
     /**
@@ -145,6 +150,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
 
     private final List<Unit> _numeratorUnits;
     private final List<Unit> _denominatorUnits;
+    private final AtomicReference<String> _name = new AtomicReference<>();
 
     private static final Comparator<Unit> UNIT_COMPARATOR = new UnitNameComparator();
 
@@ -282,29 +288,37 @@ public final class TsdCompoundUnit implements CompoundUnit {
                     final Integer count = numeratorUnitCount.get(unit);
                     numeratorUnitCount.put(unit, Integer.valueOf(count == null ? 1 : count.intValue() + 1));
                 }
-
             }
         }
 
         private void reduceCommonUnits(
                 final Map<Unit, Integer> numeratorUnitCount,
                 final Map<Unit, Integer> denominatorUnitCount) {
-            // CHECKSTYLE.OFF: IllegalInstantiation - No Guava dependency here.
-            final Set<Unit> commonUnits = new HashSet<>(numeratorUnitCount.keySet());
-            // CHECKSTYLE.ON: IllegalInstantiation
-            commonUnits.retainAll(denominatorUnitCount.keySet());
-            for (final Unit unit : commonUnits) {
-                final int numeratorCount = numeratorUnitCount.get(unit).intValue();
-                final int denominatorCount = denominatorUnitCount.get(unit).intValue();
-                if (numeratorCount > denominatorCount) {
-                    denominatorUnitCount.remove(unit);
-                    numeratorUnitCount.put(unit, Integer.valueOf(numeratorCount - denominatorCount));
-                } else if (denominatorCount > numeratorCount) {
-                    numeratorUnitCount.remove(unit);
-                    denominatorUnitCount.put(unit, Integer.valueOf(denominatorCount - numeratorCount));
-                } else { // numeratorCount == denominatorCount
-                    numeratorUnitCount.remove(unit);
-                    denominatorUnitCount.remove(unit);
+            final Map<Unit, Integer> smallerMap;
+            final Map<Unit, Integer> otherMap;
+            if (numeratorUnitCount.size() < denominatorUnitCount.size()) {
+                smallerMap = numeratorUnitCount;
+                otherMap = denominatorUnitCount;
+            } else {
+                smallerMap = denominatorUnitCount;
+                otherMap = numeratorUnitCount;
+            }
+            final Iterator<Map.Entry<Unit, Integer>> iterator = smallerMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Map.Entry<Unit, Integer> entry = iterator.next();
+                final Unit unit = entry.getKey();
+                final int smallerCount = entry.getValue();
+                @Nullable final Integer otherCountBoxed = otherMap.get(unit);
+                final int otherCount = otherCountBoxed == null ? 0 : otherCountBoxed.intValue();
+                if (smallerCount > otherCount) {
+                    otherMap.remove(unit);
+                    smallerMap.put(unit, Integer.valueOf(smallerCount - otherCount));
+                } else if (otherCount > smallerCount) {
+                    iterator.remove();
+                    otherMap.put(unit, Integer.valueOf(otherCount - smallerCount));
+                } else { // smallerCount == otherCount
+                    iterator.remove();
+                    otherMap.remove(unit);
                 }
             }
         }
