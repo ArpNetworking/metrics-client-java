@@ -515,14 +515,15 @@ public class TsdCompoundUnitTest {
         Assert.assertNotNull(name);
         Assert.assertEquals("millisecond/kilobyte", name);
 
-        name = new TsdCompoundUnit.Builder()
+        final Unit unit = new TsdCompoundUnit.Builder()
                 .addNumeratorUnit(Units.BYTE)
                 .addDenominatorUnit(new MyCompoundUnitA())
                 .addDenominatorUnit(Units.SECOND)
-                .build()
-                .getName();
+                .build();
+        name = unit.getName();
         Assert.assertNotNull(name);
         Assert.assertEquals("(byte*byte*kilobyte)/(millisecond*second*second)", name);
+        Assert.assertEquals(name, unit.getName());
     }
 
     @Test
