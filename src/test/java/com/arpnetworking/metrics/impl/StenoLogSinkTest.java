@@ -19,6 +19,7 @@ import com.arpnetworking.metrics.ComplexCompoundUnit;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.Units;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -67,7 +68,9 @@ public class StenoLogSinkTest {
                 objectMapper,
                 logger);
 
-        Mockito.doThrow(new JsonMappingException("JsonMappingException")).when(objectMapper).writeValueAsString(Mockito.any());
+        Mockito.doThrow(new JsonMappingException(Mockito.mock(JsonParser.class), "JsonMappingException"))
+                .when(objectMapper)
+                .writeValueAsString(Mockito.any());
         recordEmpty(sink);
         Mockito.verify(logger).warn(
                 Mockito.argThat(Matchers.any(String.class)),
