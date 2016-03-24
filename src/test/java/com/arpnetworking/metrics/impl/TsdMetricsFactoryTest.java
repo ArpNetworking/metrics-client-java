@@ -238,6 +238,29 @@ public class TsdMetricsFactoryTest {
     }
 
     @Test
+    public void testBuilderWithHostProvider() throws UnknownHostException {
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        Mockito.doReturn("foo.example.com").when(hostResolver).getLocalHostName();
+
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver)
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .build();
+
+        Assert.assertEquals("foo.example.com", metricsFactory.getHostName());
+        Assert.assertEquals("MyService", metricsFactory.getServiceName());
+        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
+                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        Mockito.verify(hostResolver).getLocalHostName();
+    }
+
+    @Test
     public void testToString() {
         final String asString = new TsdMetricsFactory.Builder()
                 .setClusterName("MyCluster")

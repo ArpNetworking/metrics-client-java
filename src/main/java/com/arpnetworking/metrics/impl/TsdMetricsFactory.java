@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
-import com.arpnetworking.commons.hostresolver.DefaultHostResolver;
+import com.arpnetworking.commons.hostresolver.CachingHostResolver;
 import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -213,6 +214,15 @@ public class TsdMetricsFactory implements MetricsFactory {
             this(DEFAULT_HOST_RESOLVER, LOGGER);
         }
 
+        /**
+         * Public constructor.
+         *
+         * @param hostResolver The <code>HostResolver</code> instance to use to determine the default host name.
+         */
+        public Builder(final HostResolver hostResolver) {
+            this(hostResolver, LOGGER);
+        }
+
         // NOTE: Package private for testing
         /* package private */ Builder(final HostResolver hostResolver, final Logger logger) {
             _hostResolver = hostResolver;
@@ -323,6 +333,6 @@ public class TsdMetricsFactory implements MetricsFactory {
         private String _clusterName;
         private String _hostName;
 
-        private static final HostResolver DEFAULT_HOST_RESOLVER = new DefaultHostResolver();
+        private static final HostResolver DEFAULT_HOST_RESOLVER = new CachingHostResolver(Duration.ofMinutes(1));
     }
 }
