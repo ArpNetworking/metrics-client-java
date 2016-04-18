@@ -6,7 +6,7 @@ MetricsJava Client
          alt="License: Apache 2">
 </a>
 <a href="https://travis-ci.org/ArpNetworking/metrics-client-java/">
-    <img src="https://travis-ci.org/ArpNetworking/metrics-client-java.png"
+    <img src="https://travis-ci.org/ArpNetworking/metrics-client-java.png?branch=master"
          alt="Travis Build">
 </a>
 <a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22">
