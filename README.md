@@ -115,6 +115,7 @@ metrics.startTimer("bar");
 // Do something that is being timed
 metrics.stopTimer("bar");
 metrics.setGauge("temperature", 21.7);
+metrics.addAnnotation("room", "kitchen");
 metrics.close();
 ```
 
@@ -187,6 +188,10 @@ The timer instance is also very useful in a concurrent system when executing and
 ### Gauges
 
 Gauges are the simplest metric to record.  Samples for a gauge represent spot measurements. For example, the length of a queue or the number of active threads in a thread pool.  Gauges are often used in separate units of work to measure the state of system resources, for example the row count in a database table.  However, gauges are also useful in existing units of work, for example recording the memory in use at the beginning and end of each service request.
+
+### Annotations
+
+Annotations can be used to augment the context of the emitted metric. This can be useful for post-mortems or analysis outside the scope of the Metrics project. Currently, the Metrics project makes no use of these annotations.
 
 ### Closeable
 
