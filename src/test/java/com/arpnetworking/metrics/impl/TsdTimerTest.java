@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Tests for <code>TsdTimer</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdTimerTest {
 
@@ -38,8 +38,6 @@ public class TsdTimerTest {
         final long startTime = System.nanoTime();
         final TsdTimer timer;
         try (final TsdTimer resourceTimer = TsdTimer.newInstance("timerName", isOpen)) {
-            // Without the assert compilation will log a warning
-            assert resourceTimer != null;
             timer = resourceTimer;
             Thread.sleep(minimumTimeInMilliseconds);
             resourceTimer.stop();
@@ -47,10 +45,10 @@ public class TsdTimerTest {
         final long elapsedTimeInNanoseconds = System.nanoTime() - startTime;
         Assert.assertThat(
                 (Long) timer.getValue(),
-                Matchers.greaterThanOrEqualTo(Long.valueOf(TimeUnit.NANOSECONDS.convert(
+                Matchers.greaterThanOrEqualTo(TimeUnit.NANOSECONDS.convert(
                         minimumTimeInMilliseconds,
-                        TimeUnit.MILLISECONDS))));
-        Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(Long.valueOf(elapsedTimeInNanoseconds)));
+                        TimeUnit.MILLISECONDS)));
+        Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
     }
 
     @Test
@@ -59,18 +57,16 @@ public class TsdTimerTest {
         final long minimumTimeInMilliseconds = 100;
         final long startTime = System.nanoTime();
         try (final TsdTimer timer = TsdTimer.newInstance("timerName", isOpen)) {
-            // Without the assert compilation will log a warning
-            assert timer != null;
             Thread.sleep(minimumTimeInMilliseconds);
             timer.stop();
 
             final long elapsedTimeInNanoseconds = System.nanoTime() - startTime;
             Assert.assertThat(
                     (Long) timer.getValue(),
-                    Matchers.greaterThanOrEqualTo(Long.valueOf(TimeUnit.NANOSECONDS.convert(
+                    Matchers.greaterThanOrEqualTo(TimeUnit.NANOSECONDS.convert(
                             minimumTimeInMilliseconds,
-                            TimeUnit.MILLISECONDS))));
-            Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(Long.valueOf(elapsedTimeInNanoseconds)));
+                            TimeUnit.MILLISECONDS)));
+            Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
         }
     }
 

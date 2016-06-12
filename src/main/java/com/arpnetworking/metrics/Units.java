@@ -29,7 +29,7 @@ import com.arpnetworking.metrics.impl.TsdUnit;
  * have any unit. This library cannot detect such inconsistencies since
  * aggregation can occur across Metric instances, processes and even hosts.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class Units {
 

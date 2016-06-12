@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Implementation of <code>Counter</code>.  This class is thread safe.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class TsdCounter implements Counter, Quantity {
     /**

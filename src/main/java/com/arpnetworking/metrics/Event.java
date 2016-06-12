@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * Interface representing one unit of work's metrics data.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public interface Event {
 

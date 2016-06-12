@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Implementation of <code>Timer</code>. This class is thread safe.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class TsdTimer implements Timer, Quantity {
     /**

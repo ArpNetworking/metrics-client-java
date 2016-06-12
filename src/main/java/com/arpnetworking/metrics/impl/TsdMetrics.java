@@ -81,7 +81,7 @@ import javax.annotation.Nullable;
  * emitted. It is up to clients to ensure that multithreaded use of the same
  * <code>TsdMetrics</code> instance is correct.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdMetrics implements Metrics {
 

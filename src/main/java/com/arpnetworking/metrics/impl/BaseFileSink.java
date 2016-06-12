@@ -38,7 +38,7 @@ import java.util.List;
  * to disk. It is designed not to interfere with Logback or SLF4J usage for
  * application logging.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ abstract class BaseFileSink implements Sink {
 
@@ -186,7 +186,7 @@ import java.util.List;
      *
      * This class is thread safe.
      *
-     * @author Ville Koskela (vkoskela at groupon dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public abstract static class Builder<T extends Sink, B extends Builder<? extends Sink, ?>> {
 

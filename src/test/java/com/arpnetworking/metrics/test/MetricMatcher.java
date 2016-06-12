@@ -32,7 +32,7 @@ import java.util.Set;
  * Implementation of <code>Matcher</code> which matches a map of metrics
  * using the <code>QuantityMatcher</code> for each sample.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends String, ? extends List<Quantity>>> {
 
@@ -80,8 +80,8 @@ public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends
                     mismatchDescription.appendText(String.format(
                             "Sample sets differ in size: key=%s, expected=%d, actual=%d",
                             entry.getKey(),
-                            Integer.valueOf(expectedSamples.size()),
-                            Integer.valueOf(actualSamples.size())));
+                            expectedSamples.size(),
+                            actualSamples.size()));
                     matches = false;
                 } else {
                     final Iterator<Matcher<Quantity>> expectedIterator = expectedSamples.iterator();

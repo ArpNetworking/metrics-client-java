@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 /**
  * Default implementation of <code>Unit</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class TsdUnit implements Unit {
 
@@ -95,7 +95,7 @@ public final class TsdUnit implements Unit {
     /**
      * Builder for <code>TsdScaledUnit</code>.
      *
-     * @author Ville Koskela (vkoskela at groupon dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public static final class Builder {
 

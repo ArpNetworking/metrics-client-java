@@ -26,7 +26,7 @@ import java.util.List;
  * Implementation of <code>Sink</code> which emits a warning each time an
  * <code>Event</code> is to recorded.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class WarningSink implements Sink {
 

@@ -28,7 +28,7 @@ package com.arpnetworking.metrics;
  * <code>Timer</code> instances bound to that <code>Metrics</code> instance will
  * be discarded.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public interface Timer extends AutoCloseable {
 

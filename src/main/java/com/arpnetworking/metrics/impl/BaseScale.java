@@ -18,7 +18,7 @@ package com.arpnetworking.metrics.impl;
 /**
  * Base scales.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public enum BaseScale {
 
