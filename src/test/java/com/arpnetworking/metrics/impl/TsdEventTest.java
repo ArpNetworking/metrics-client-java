@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Tests for <code>TsdEvent</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdEventTest {
 
@@ -40,13 +40,13 @@ public class TsdEventTest {
         annotations.put("foo", "bar");
         final Map<String, List<Quantity>> timerSamples = new HashMap<>();
         timerSamples.put("timer", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Integer.valueOf(1), null)));
+                TsdQuantity.newInstance(1, null)));
         final Map<String, List<Quantity>> counterSamples = new HashMap<>();
         counterSamples.put("counter", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), null)));
+                TsdQuantity.newInstance(1.23, null)));
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), Units.BYTE)));
+                TsdQuantity.newInstance(1.23, Units.BYTE)));
         // CHECKSTYLE.ON: IllegalInstantiation
         final Event event = new TsdEvent(
                 annotations,
@@ -67,13 +67,13 @@ public class TsdEventTest {
         annotations.put("foo", "bar");
         final Map<String, List<Quantity>> timerSamples = new HashMap<>();
         timerSamples.put("timer", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Integer.valueOf(1), null)));
+                TsdQuantity.newInstance(1, null)));
         final Map<String, List<Quantity>> counterSamples = new HashMap<>();
         counterSamples.put("counter", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), null)));
+                TsdQuantity.newInstance(1.23, null)));
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), Units.BYTE)));
+                TsdQuantity.newInstance(1.23, Units.BYTE)));
         // CHECKSTYLE.ON: IllegalInstantiation
         final Event event = new TsdEvent(
                 annotations,
@@ -91,13 +91,13 @@ public class TsdEventTest {
         annotations.put("foo2", "bar");
         final Map<String, List<Quantity>> differentTimerSamples = new HashMap<>();
         differentTimerSamples.put("timer2", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Integer.valueOf(1), null)));
+                TsdQuantity.newInstance(1, null)));
         final Map<String, List<Quantity>> differentCounterSamples = new HashMap<>();
         differentCounterSamples.put("counter2", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), null)));
+                TsdQuantity.newInstance(1.23, null)));
         final Map<String, List<Quantity>> differentGaugeSamples = new HashMap<>();
         differentGaugeSamples.put("gauge2", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), Units.BYTE)));
+                TsdQuantity.newInstance(1.23, Units.BYTE)));
         // CHECKSTYLE.ON: IllegalInstantiation
 
         final Event differentEvent1 = new TsdEvent(
@@ -137,13 +137,13 @@ public class TsdEventTest {
         annotations.put("foo", "bar");
         final Map<String, List<Quantity>> timerSamples = new HashMap<>();
         timerSamples.put("timer", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Integer.valueOf(1), null)));
+                TsdQuantity.newInstance(1, null)));
         final Map<String, List<Quantity>> counterSamples = new HashMap<>();
         counterSamples.put("counter", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), null)));
+                TsdQuantity.newInstance(1.23, null)));
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), Units.BYTE)));
+                TsdQuantity.newInstance(1.23, Units.BYTE)));
         // CHECKSTYLE.ON: IllegalInstantiation
 
         Assert.assertEquals(
@@ -166,13 +166,13 @@ public class TsdEventTest {
         annotations.put("foo", "bar");
         final Map<String, List<Quantity>> timerSamples = new HashMap<>();
         timerSamples.put("timer", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Integer.valueOf(1), null)));
+                TsdQuantity.newInstance(1, null)));
         final Map<String, List<Quantity>> counterSamples = new HashMap<>();
         counterSamples.put("counter", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), null)));
+                TsdQuantity.newInstance(1.23, null)));
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.<Quantity>singletonList(
-                TsdQuantity.newInstance(Double.valueOf(1.23), Units.BYTE)));
+                TsdQuantity.newInstance(1.23, Units.BYTE)));
         // CHECKSTYLE.ON: IllegalInstantiation
         final String asString = new TsdEvent(
                 annotations,

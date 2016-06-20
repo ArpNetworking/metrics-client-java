@@ -26,7 +26,7 @@ import java.util.Objects;
 /**
  * Default implementation of <code>Event</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class TsdEvent implements Event {
 

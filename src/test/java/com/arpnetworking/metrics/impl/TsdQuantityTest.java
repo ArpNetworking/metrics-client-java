@@ -24,13 +24,13 @@ import org.junit.Test;
 /**
  * Tests for <code>TsdQuantity</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdQuantityTest {
 
     @Test
     public void testQuantity() {
-        final Long expectedValue = Long.valueOf(1);
+        final Long expectedValue = 1L;
         final Unit expectedUnit = Units.BYTE;
         final Quantity q = TsdQuantity.newInstance(expectedValue, expectedUnit);
         Assert.assertEquals(expectedValue, q.getValue());
@@ -39,18 +39,18 @@ public class TsdQuantityTest {
 
     @Test
     public void testEquals() {
-        final Quantity quantity = TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE);
+        final Quantity quantity = TsdQuantity.newInstance(1, Units.BYTE);
         Assert.assertTrue(quantity.equals(quantity));
 
         Assert.assertTrue(
-                TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE).equals(
-                        TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE)));
+                TsdQuantity.newInstance(1, Units.BYTE).equals(
+                        TsdQuantity.newInstance(1, Units.BYTE)));
 
         Assert.assertFalse(quantity.equals(null));
         Assert.assertFalse(quantity.equals("This is a String"));
 
-        final Quantity differentQuantity1 = TsdQuantity.newInstance(Long.valueOf(1), Units.BIT);
-        final Quantity differentQuantity2 = TsdQuantity.newInstance(Long.valueOf(2), Units.BYTE);
+        final Quantity differentQuantity1 = TsdQuantity.newInstance(1, Units.BIT);
+        final Quantity differentQuantity2 = TsdQuantity.newInstance(2, Units.BYTE);
 
         Assert.assertFalse(quantity.equals(differentQuantity1));
         Assert.assertFalse(quantity.equals(differentQuantity2));
@@ -59,13 +59,13 @@ public class TsdQuantityTest {
     @Test
     public void testHashCode() {
         Assert.assertEquals(
-                TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE).hashCode(),
-                TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE).hashCode());
+                TsdQuantity.newInstance(1, Units.BYTE).hashCode(),
+                TsdQuantity.newInstance(1, Units.BYTE).hashCode());
     }
 
     @Test
     public void testToString() {
-        final String asString = TsdQuantity.newInstance(Long.valueOf(1), Units.BYTE).toString();
+        final String asString = TsdQuantity.newInstance(1, Units.BYTE).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
     }

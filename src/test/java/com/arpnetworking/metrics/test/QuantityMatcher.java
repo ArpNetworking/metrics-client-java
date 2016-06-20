@@ -26,7 +26,7 @@ import org.hamcrest.core.IsNull;
 /**
  * Implementation of <code>Matcher</code> which matches a <code>Quantity</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
@@ -51,11 +51,11 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
         if (expectedValue instanceof Double) {
             return new QuantityMatcher(
                     Matchers.closeTo(expectedValue.doubleValue(), 0.001),
-                    Matchers.<Unit>equalTo(expectedUnit));
+                    Matchers.equalTo(expectedUnit));
         }
         return new QuantityMatcher(
-                Matchers.<Number>equalTo(expectedValue),
-                Matchers.<Unit>equalTo(expectedUnit));
+                Matchers.equalTo(expectedValue),
+                Matchers.equalTo(expectedUnit));
     }
 
     /**
@@ -90,7 +90,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
         if (expectedValue instanceof Double) {
             return match(Matchers.closeTo(expectedValue.doubleValue(), 0.001));
         }
-        return match(Matchers.<Number>equalTo(expectedValue));
+        return match(Matchers.equalTo(expectedValue));
     }
 
     /**

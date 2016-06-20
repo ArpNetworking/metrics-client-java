@@ -21,7 +21,7 @@ import org.mockito.Matchers;
 /**
  * Additional helper methods for Mockito.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class MockitoHelper {
 

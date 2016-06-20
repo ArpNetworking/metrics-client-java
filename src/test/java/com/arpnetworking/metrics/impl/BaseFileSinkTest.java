@@ -35,7 +35,7 @@ import java.nio.file.Files;
 /**
  * Tests for <code>BaseFileSink</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class BaseFileSinkTest {
 
@@ -70,7 +70,7 @@ public class BaseFileSinkTest {
         final String expectedPath = "./target/BaseFileSinkTest/testBuilderWithoutImmediateFlush/";
         final TestFileSink sink = (TestFileSink) new TestFileSink.Builder()
                 .setDirectory(createDirectory(expectedPath))
-                .setMaxHistory(Integer.valueOf(48))
+                .setMaxHistory(48)
                 .setImmediateFlush(Boolean.FALSE)
                 .setCompress(Boolean.FALSE)
                 .setPrudent(Boolean.TRUE)

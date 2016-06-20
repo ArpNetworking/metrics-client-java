@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Ensures code samples from README.md at least compile.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 @SuppressWarnings(value = {"resource", "try"})
 public class Samples {

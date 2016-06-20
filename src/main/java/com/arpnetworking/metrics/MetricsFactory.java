@@ -24,7 +24,7 @@ package com.arpnetworking.metrics;
  * <code>MetricsFactory</code> instance into various components within the 
  * application.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public interface MetricsFactory {
 

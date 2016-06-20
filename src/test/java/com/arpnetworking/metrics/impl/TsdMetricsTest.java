@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for <code>TsdMetrics</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdMetricsTest {
 

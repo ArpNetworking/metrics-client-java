@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of <code>Sink</code> for the query log file.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdLogSink extends BaseFileSink {
 
@@ -196,7 +196,7 @@ public class TsdLogSink extends BaseFileSink {
      *
      * This class is thread safe.
      *
-     * @author Ville Koskela (vkoskela at groupon dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public static class Builder extends BaseFileSink.Builder<TsdLogSink, Builder> {
 

@@ -53,7 +53,7 @@ import java.util.UUID;
 /**
  * Tests for <code>TsdMetrics</code>.
  *
- * @author Ville Koskela (vkoskela at groupon dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public class TsdLogSinkTest {
 
@@ -227,78 +227,78 @@ public class TsdLogSinkTest {
     private static final Map<String, List<Quantity>> TEST_SERIALIZATION_TIMERS = createQuantityMap(
             "timerA",
             "timerB",
-            TsdQuantity.newInstance(Long.valueOf(1L), null),
+            TsdQuantity.newInstance(1L, null),
             "timerC",
-            TsdQuantity.newInstance(Long.valueOf(2L), Units.MILLISECOND),
+            TsdQuantity.newInstance(2L, Units.MILLISECOND),
             "timerD",
-            TsdQuantity.newInstance(Long.valueOf(3L), Units.SECOND),
-            TsdQuantity.newInstance(Long.valueOf(4L), Units.SECOND),
+            TsdQuantity.newInstance(3L, Units.SECOND),
+            TsdQuantity.newInstance(4L, Units.SECOND),
             "timerE",
-            TsdQuantity.newInstance(Long.valueOf(5L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(6L), Units.SECOND),
+            TsdQuantity.newInstance(5L, Units.DAY),
+            TsdQuantity.newInstance(6L, Units.SECOND),
             "timerF",
-            TsdQuantity.newInstance(Long.valueOf(7L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(8L), null),
+            TsdQuantity.newInstance(7L, Units.DAY),
+            TsdQuantity.newInstance(8L, null),
             "timerG",
-            TsdQuantity.newInstance(Long.valueOf(9L), null),
-            TsdQuantity.newInstance(Long.valueOf(10L), null),
+            TsdQuantity.newInstance(9L, null),
+            TsdQuantity.newInstance(10L, null),
             "timerH",
-            TsdQuantity.newInstance(Long.valueOf(11L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(12L), Units.BYTE),
+            TsdQuantity.newInstance(11L, Units.DAY),
+            TsdQuantity.newInstance(12L, Units.BYTE),
             "timerI",
-            TsdQuantity.newInstance(Double.valueOf(1.12), null),
+            TsdQuantity.newInstance(1.12, null),
             "timerJ",
-            TsdQuantity.newInstance(Double.valueOf(2.12), Units.MILLISECOND),
+            TsdQuantity.newInstance(2.12, Units.MILLISECOND),
             "timerK",
-            TsdQuantity.newInstance(Double.valueOf(3.12), Units.SECOND),
-            TsdQuantity.newInstance(Double.valueOf(4.12), Units.SECOND),
+            TsdQuantity.newInstance(3.12, Units.SECOND),
+            TsdQuantity.newInstance(4.12, Units.SECOND),
             "timerL",
-            TsdQuantity.newInstance(Double.valueOf(5.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(6.12), Units.SECOND),
+            TsdQuantity.newInstance(5.12, Units.DAY),
+            TsdQuantity.newInstance(6.12, Units.SECOND),
             "timerM",
-            TsdQuantity.newInstance(Double.valueOf(7.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(8.12), null),
+            TsdQuantity.newInstance(7.12, Units.DAY),
+            TsdQuantity.newInstance(8.12, null),
             "timerN",
-            TsdQuantity.newInstance(Double.valueOf(9.12), null),
-            TsdQuantity.newInstance(Double.valueOf(10.12), null),
+            TsdQuantity.newInstance(9.12, null),
+            TsdQuantity.newInstance(10.12, null),
             "timerO",
-            TsdQuantity.newInstance(Double.valueOf(11.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(12.12), Units.BYTE),
+            TsdQuantity.newInstance(11.12, Units.DAY),
+            TsdQuantity.newInstance(12.12, Units.BYTE),
             "timerP1",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "timerP2",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "timerP3",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .build()),
             "timerP4",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdUnit.Builder()
                             .setScale(BaseScale.KILO)
                             .build()),
             "timerP5",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.BYTE)
                             .addNumeratorUnit(Units.SECOND)
                             .build()),
             "timerP6",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new ComplexCompoundUnit(
                             "CustomByteOverByte",
                             Arrays.asList(Units.BYTE),
@@ -307,71 +307,71 @@ public class TsdLogSinkTest {
     private static final Map<String, List<Quantity>> TEST_SERIALIZATION_COUNTERS = createQuantityMap(
             "counterA",
             "counterB",
-            TsdQuantity.newInstance(Long.valueOf(11L), null),
+            TsdQuantity.newInstance(11L, null),
             "counterC",
-            TsdQuantity.newInstance(Long.valueOf(12L), Units.MILLISECOND),
+            TsdQuantity.newInstance(12L, Units.MILLISECOND),
             "counterD",
-            TsdQuantity.newInstance(Long.valueOf(13L), Units.SECOND),
-            TsdQuantity.newInstance(Long.valueOf(14L), Units.SECOND),
+            TsdQuantity.newInstance(13L, Units.SECOND),
+            TsdQuantity.newInstance(14L, Units.SECOND),
             "counterE",
-            TsdQuantity.newInstance(Long.valueOf(15L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(16L), Units.SECOND),
+            TsdQuantity.newInstance(15L, Units.DAY),
+            TsdQuantity.newInstance(16L, Units.SECOND),
             "counterF",
-            TsdQuantity.newInstance(Long.valueOf(17L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(18L), null),
+            TsdQuantity.newInstance(17L, Units.DAY),
+            TsdQuantity.newInstance(18L, null),
             "counterG",
-            TsdQuantity.newInstance(Long.valueOf(19L), null),
-            TsdQuantity.newInstance(Long.valueOf(110L), null),
+            TsdQuantity.newInstance(19L, null),
+            TsdQuantity.newInstance(110L, null),
             "counterH",
-            TsdQuantity.newInstance(Long.valueOf(111L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(112L), Units.BYTE),
+            TsdQuantity.newInstance(111L, Units.DAY),
+            TsdQuantity.newInstance(112L, Units.BYTE),
             "counterI",
-            TsdQuantity.newInstance(Double.valueOf(11.12), null),
+            TsdQuantity.newInstance(11.12, null),
             "counterJ",
-            TsdQuantity.newInstance(Double.valueOf(12.12), Units.MILLISECOND),
+            TsdQuantity.newInstance(12.12, Units.MILLISECOND),
             "counterK",
-            TsdQuantity.newInstance(Double.valueOf(13.12), Units.SECOND),
-            TsdQuantity.newInstance(Double.valueOf(14.12), Units.SECOND),
+            TsdQuantity.newInstance(13.12, Units.SECOND),
+            TsdQuantity.newInstance(14.12, Units.SECOND),
             "counterL",
-            TsdQuantity.newInstance(Double.valueOf(15.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(16.12), Units.SECOND),
+            TsdQuantity.newInstance(15.12, Units.DAY),
+            TsdQuantity.newInstance(16.12, Units.SECOND),
             "counterM",
-            TsdQuantity.newInstance(Double.valueOf(17.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(18.12), null),
+            TsdQuantity.newInstance(17.12, Units.DAY),
+            TsdQuantity.newInstance(18.12, null),
             "counterN",
-            TsdQuantity.newInstance(Double.valueOf(19.12), null),
-            TsdQuantity.newInstance(Double.valueOf(110.12), null),
+            TsdQuantity.newInstance(19.12, null),
+            TsdQuantity.newInstance(110.12, null),
             "counterO",
-            TsdQuantity.newInstance(Double.valueOf(111.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(112.12), Units.BYTE),
+            TsdQuantity.newInstance(111.12, Units.DAY),
+            TsdQuantity.newInstance(112.12, Units.BYTE),
             "counterP1",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "counterP2",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "counterP3",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .build()),
             "counterP4",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdUnit.Builder()
                             .setScale(BaseScale.KILO)
                             .build()),
             "counterP5",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.BYTE)
                             .addNumeratorUnit(Units.SECOND)
@@ -381,78 +381,78 @@ public class TsdLogSinkTest {
     private static final Map<String, List<Quantity>> TEST_SERIALIZATION_GAUGES = createQuantityMap(
             "gaugeA",
             "gaugeB",
-            TsdQuantity.newInstance(Long.valueOf(21L), null),
+            TsdQuantity.newInstance(21L, null),
             "gaugeC",
-            TsdQuantity.newInstance(Long.valueOf(22L), Units.MILLISECOND),
+            TsdQuantity.newInstance(22L, Units.MILLISECOND),
             "gaugeD",
-            TsdQuantity.newInstance(Long.valueOf(23L), Units.SECOND),
-            TsdQuantity.newInstance(Long.valueOf(24L), Units.SECOND),
+            TsdQuantity.newInstance(23L, Units.SECOND),
+            TsdQuantity.newInstance(24L, Units.SECOND),
             "gaugeE",
-            TsdQuantity.newInstance(Long.valueOf(25L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(26L), Units.SECOND),
+            TsdQuantity.newInstance(25L, Units.DAY),
+            TsdQuantity.newInstance(26L, Units.SECOND),
             "gaugeF",
-            TsdQuantity.newInstance(Long.valueOf(27L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(28L), null),
+            TsdQuantity.newInstance(27L, Units.DAY),
+            TsdQuantity.newInstance(28L, null),
             "gaugeG",
-            TsdQuantity.newInstance(Long.valueOf(29L), null),
-            TsdQuantity.newInstance(Long.valueOf(210L), null),
+            TsdQuantity.newInstance(29L, null),
+            TsdQuantity.newInstance(210L, null),
             "gaugeH",
-            TsdQuantity.newInstance(Long.valueOf(211L), Units.DAY),
-            TsdQuantity.newInstance(Long.valueOf(212L), Units.BYTE),
+            TsdQuantity.newInstance(211L, Units.DAY),
+            TsdQuantity.newInstance(212L, Units.BYTE),
             "gaugeI",
-            TsdQuantity.newInstance(Double.valueOf(21.12), null),
+            TsdQuantity.newInstance(21.12, null),
             "gaugeJ",
-            TsdQuantity.newInstance(Double.valueOf(22.12), Units.MILLISECOND),
+            TsdQuantity.newInstance(22.12, Units.MILLISECOND),
             "gaugeK",
-            TsdQuantity.newInstance(Double.valueOf(23.12), Units.SECOND),
-            TsdQuantity.newInstance(Double.valueOf(24.12), Units.SECOND),
+            TsdQuantity.newInstance(23.12, Units.SECOND),
+            TsdQuantity.newInstance(24.12, Units.SECOND),
             "gaugeL",
-            TsdQuantity.newInstance(Double.valueOf(25.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(26.12), Units.SECOND),
+            TsdQuantity.newInstance(25.12, Units.DAY),
+            TsdQuantity.newInstance(26.12, Units.SECOND),
             "gaugeM",
-            TsdQuantity.newInstance(Double.valueOf(27.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(28.12), null),
+            TsdQuantity.newInstance(27.12, Units.DAY),
+            TsdQuantity.newInstance(28.12, null),
             "gaugeN",
-            TsdQuantity.newInstance(Double.valueOf(29.12), null),
-            TsdQuantity.newInstance(Double.valueOf(210.12), null),
+            TsdQuantity.newInstance(29.12, null),
+            TsdQuantity.newInstance(210.12, null),
             "gaugeO",
-            TsdQuantity.newInstance(Double.valueOf(211.12), Units.DAY),
-            TsdQuantity.newInstance(Double.valueOf(212.12), Units.BYTE),
+            TsdQuantity.newInstance(211.12, Units.DAY),
+            TsdQuantity.newInstance(212.12, Units.BYTE),
             "gaugeP1",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "gaugeP2",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addDenominatorUnit(Units.MILLISECOND)
                             .build()),
             "gaugeP3",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.KILOBYTE)
                             .build()),
             "gaugeP4",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdUnit.Builder()
                             .setScale(BaseScale.KILO)
                             .build()),
             "gaugeP5",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new TsdCompoundUnit.Builder()
                             .addNumeratorUnit(Units.BYTE)
                             .addNumeratorUnit(Units.SECOND)
                             .build()),
             "gaugeP6",
             TsdQuantity.newInstance(
-                    Integer.valueOf(3),
+                    3,
                     new ComplexCompoundUnit(
                             "CustomByteOverByte",
                             Arrays.asList(Units.BYTE),

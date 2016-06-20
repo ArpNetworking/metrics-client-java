@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.20</version>
+    <version>1.0.24</version>
     <relativePath />
   </parent>
 
@@ -50,9 +50,9 @@
     </developer>
     <developer>
       <id>villekoskela</id>
-      <email>vkoskela@groupon.com</email>
-      <organization>Groupon</organization>
-      <organizationUrl>http://www.groupon.com</organizationUrl>
+      <email>ville.koskela@inscopemetrics.com</email>
+      <organization>Inscope Metrics</organization>
+      <organizationUrl>http://www.inscopemetrics.com</organizationUrl>
       <roles>
         <role>developer</role>
       </roles>
@@ -88,19 +88,19 @@
     <!--Dependency versions-->
     <arpnetworking.commons.version>1.3.0</arpnetworking.commons.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
-    <jackson.version>2.7.3</jackson.version>
+    <jackson.version>2.7.4</jackson.version>
     <json-jackson-coreutils.version>1.8</json-jackson-coreutils.version>
     <json-schema-core.version>1.2.5</json-schema-core.version>
     <json-schema-validator.version>2.2.6</json-schema-validator.version>
-    <jsr305.version>3.0.0</jsr305.version>
+    <jsr305.version>3.0.1</jsr305.version>
     <junit.version>4.12</junit.version>
-    <logback.steno.version>1.13.0</logback.steno.version>
-    <logback.version>1.1.3</logback.version>
+    <logback.steno.version>1.15.0</logback.steno.version>
+    <logback.version>1.1.7</logback.version>
     <mockito.version>1.10.19</mockito.version>
-    <slf4j.version>1.7.12</slf4j.version>
+    <slf4j.version>1.7.21</slf4j.version>
 
     <!--Plugin versions-->
-    <maven.shade.plugin.version>2.4.1</maven.shade.plugin.version>
+    <maven.shade.plugin.version>2.4.3</maven.shade.plugin.version>
 
     <!-- Findbugs -->
     <findbugs.exclude>${project.basedir}/findbugs.exclude.xml</findbugs.exclude>
