@@ -13,6 +13,10 @@ MetricsJava Client
     <img src="https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-client.svg"
          alt="Maven Artifact">
 </a>
+<a href="http://www.javadoc.io/doc/com.arpnetworking.metrics/metrics-client">
+    <img src="http://www.javadoc.io/badge/com.arpnetworking.metrics/metrics-client.svg" 
+         alt="Javadocs">
+</a>
 
 Client implementation for publishing metrics from Java applications.
 
