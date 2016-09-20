@@ -21,7 +21,7 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.rolling.RollingFileAppender;
-import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Sink;
 import org.junit.Assert;
@@ -51,7 +51,7 @@ public class BaseFileSinkTest {
         final RollingFileAppender<ILoggingEvent> rollingAppender = (RollingFileAppender<ILoggingEvent>)
                 asyncAppender.getAppender("query-log");
         @SuppressWarnings("unchecked")
-        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (TimeBasedRollingPolicy<ILoggingEvent>)
+        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (SizeAndTimeBasedRollingPolicy<ILoggingEvent>)
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
@@ -62,7 +62,10 @@ public class BaseFileSinkTest {
         Assert.assertTrue(rollingPolicy.getFileNamePattern().endsWith(".gz"));
         Assert.assertTrue(encoder.isImmediateFlush());
         Assert.assertEquals(expectedPath + "query.log", rollingAppender.getFile());
-        Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.log.gz", rollingPolicy.getFileNamePattern());
+        Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.%i.log.gz", rollingPolicy.getFileNamePattern());
+
+        // Not currently implemented by logback
+//        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
     }
 
     @Test
@@ -77,6 +80,7 @@ public class BaseFileSinkTest {
                 .setName("foo")
                 .setExtension(".bar")
                 .setMaxQueueSize(1000)
+                .setMaxFileSize("10MB")
                 .setDropWhenQueueFull(true)
                 .build();
 
@@ -85,7 +89,7 @@ public class BaseFileSinkTest {
         final RollingFileAppender<ILoggingEvent> rollingAppender = (RollingFileAppender<ILoggingEvent>)
                 asyncAppender.getAppender("query-log");
         @SuppressWarnings("unchecked")
-        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (TimeBasedRollingPolicy<ILoggingEvent>)
+        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (SizeAndTimeBasedRollingPolicy<ILoggingEvent>)
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
@@ -96,7 +100,10 @@ public class BaseFileSinkTest {
         Assert.assertEquals(48, rollingPolicy.getMaxHistory());
         Assert.assertFalse(encoder.isImmediateFlush());
         Assert.assertEquals(expectedPath + "foo.bar", rollingAppender.getFile());
-        Assert.assertEquals(expectedPath + "foo.%d{yyyy-MM-dd-HH}.bar", rollingPolicy.getFileNamePattern());
+        Assert.assertEquals(expectedPath + "foo.%d{yyyy-MM-dd-HH}.%i.bar", rollingPolicy.getFileNamePattern());
+
+        // Not currently implemented by logback
+//        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
     }
 
     @Test
@@ -112,6 +119,7 @@ public class BaseFileSinkTest {
                 .setPrudent(null)
                 .setMaxQueueSize(null)
                 .setDropWhenQueueFull(null)
+                .setMaxFileSize(null)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
@@ -119,7 +127,7 @@ public class BaseFileSinkTest {
         final RollingFileAppender<ILoggingEvent> rollingAppender = (RollingFileAppender<ILoggingEvent>)
                 asyncAppender.getAppender("query-log");
         @SuppressWarnings("unchecked")
-        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (TimeBasedRollingPolicy<ILoggingEvent>)
+        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = (SizeAndTimeBasedRollingPolicy<ILoggingEvent>)
                 rollingAppender.getRollingPolicy();
         final PatternLayoutEncoder encoder = (PatternLayoutEncoder) rollingAppender.getEncoder();
 
@@ -129,7 +137,10 @@ public class BaseFileSinkTest {
         Assert.assertEquals(24, rollingPolicy.getMaxHistory());
         Assert.assertTrue(encoder.isImmediateFlush());
         Assert.assertEquals(expectedPath + "query.log", rollingAppender.getFile());
-        Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.log.gz", rollingPolicy.getFileNamePattern());
+        Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.%i.log.gz", rollingPolicy.getFileNamePattern());
+
+        // Not currently implemented by logback
+//        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
 
         Files.deleteIfExists(new File("./query.log").toPath());
     }
