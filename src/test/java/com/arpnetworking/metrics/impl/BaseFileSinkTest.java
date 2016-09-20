@@ -65,7 +65,7 @@ public class BaseFileSinkTest {
         Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.%i.log.gz", rollingPolicy.getFileNamePattern());
 
         // Not currently implemented by logback
-//        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
+//        Assert.assertEquals("100MB", rollingPolicy.getMaxFileSize());
     }
 
     @Test
@@ -140,7 +140,7 @@ public class BaseFileSinkTest {
         Assert.assertEquals(expectedPath + "query.%d{yyyy-MM-dd-HH}.%i.log.gz", rollingPolicy.getFileNamePattern());
 
         // Not currently implemented by logback
-//        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
+//        Assert.assertEquals("100MB", rollingPolicy.getMaxFileSize());
 
         Files.deleteIfExists(new File("./query.log").toPath());
     }
