@@ -66,6 +66,7 @@ public class BaseFileSinkTest {
 
         // Not currently implemented by logback
 //        Assert.assertEquals("100MB", rollingPolicy.getMaxFileSize());
+//        Assert.assertEquals("20GB", rollingPolicy.getTotalSizeCap());
     }
 
     @Test
@@ -81,6 +82,7 @@ public class BaseFileSinkTest {
                 .setExtension(".bar")
                 .setMaxQueueSize(1000)
                 .setMaxFileSize("10MB")
+                .setTotalSizeCap("2GB")
                 .setDropWhenQueueFull(true)
                 .build();
 
@@ -104,6 +106,7 @@ public class BaseFileSinkTest {
 
         // Not currently implemented by logback
 //        Assert.assertEquals("10MB", rollingPolicy.getMaxFileSize());
+//        Assert.assertEquals("2GB", rollingPolicy.getTotalSizeCap());
     }
 
     @Test
@@ -120,6 +123,7 @@ public class BaseFileSinkTest {
                 .setMaxQueueSize(null)
                 .setDropWhenQueueFull(null)
                 .setMaxFileSize(null)
+                .setTotalSizeCap(null)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
@@ -141,6 +145,7 @@ public class BaseFileSinkTest {
 
         // Not currently implemented by logback
 //        Assert.assertEquals("100MB", rollingPolicy.getMaxFileSize());
+//        Assert.assertEquals("20GB", rollingPolicy.getTotalSizeCap());
 
         Files.deleteIfExists(new File("./query.log").toPath());
     }
