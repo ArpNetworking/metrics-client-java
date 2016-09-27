@@ -1,0 +1,23 @@
+# DotCI Jenkins build configuration. Instructions:
+#   https://github.groupondev.com/pages/release-engineering/DotCi
+
+environment:
+  language: java
+  language_versions: 1.8.0_102
+
+build:
+  run:
+  <% if( DOTCI_BRANCH =~ /^(origin\/)?master$/ ) { %>
+    - ./release_build.sh
+#    - ./start_docker_build.sh
+  <% } else { %>
+    - ./mvnw -V clean install -U
+  <% } %>
+
+notifications:
+  <% if( DOTCI_BRANCH =~ /^(origin\/)?master$/ ) { %>
+  - hipchat: 446742
+  - email:
+    - aint-dev@groupon.com
+  <% } %>
+
