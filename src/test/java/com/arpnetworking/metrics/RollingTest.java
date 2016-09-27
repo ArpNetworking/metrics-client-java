@@ -92,7 +92,8 @@ public class RollingTest {
 
     /*  This test does not function correctly for logback 1.0.7 due to the following line of code which protects the most
     *   recent two time periods from being removed (last two days, last two hours, etc).
-    *   <link>https://github.com/qos-ch/logback/blob/2dad0019ebaff91a183200dab54e1e4a94407d5a/logback-core/src/main/java/ch/qos/logback/core/rolling/helper/TimeBasedArchiveRemover.java#L107</link>
+    *   <link>https://github.com/qos-ch/logback/blob/2dad0019ebaff91a183200dab54e1e4a94407d5a/
+    *   logback-core/src/main/java/ch/qos/logback/core/rolling/helper/TimeBasedArchiveRemover.java#L107</link>
     *
     *   As of Sept 27 2016, this line has been removed and this test functions as expected when run using the master
     *   branch of logback.
@@ -140,8 +141,8 @@ public class RollingTest {
                     metrics.incrementCounter("testCounter" + j);
                 }
             }
-            System.out.print("uncapped :" + fileUncapped.list().length);
-            System.out.println("  capped :" + fileCapped.list().length);
+//            System.out.print("uncapped :" + fileUncapped.list().length);
+//            System.out.println("  capped :" + fileCapped.list().length);
             // Give the async file rolling a chance to work
             Thread.sleep(50);
         }
