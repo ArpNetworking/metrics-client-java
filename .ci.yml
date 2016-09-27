@@ -9,7 +9,6 @@ build:
   run:
   <% if( DOTCI_BRANCH =~ /^(origin\/)?master$/ ) { %>
     - ./release_build.sh
-#    - ./start_docker_build.sh
   <% } else { %>
     - ./mvnw -V clean install -U
   <% } %>
@@ -20,4 +19,3 @@ notifications:
   - email:
     - aint-dev@groupon.com
   <% } %>
-
