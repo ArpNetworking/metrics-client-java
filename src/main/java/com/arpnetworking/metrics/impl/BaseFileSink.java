@@ -25,7 +25,10 @@ import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
+import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import ch.qos.logback.core.util.FileSize;
+import com.arpnetworking.logback.SizeAndRandomizedTimeBasedFNATP;
+import com.arpnetworking.logback.SizeAndRandomizedTimeBasedRollingPolicy;
 import com.arpnetworking.metrics.Sink;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +43,7 @@ import java.util.List;
  * application logging.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ryan Ascheman (rascheman at groupon dot com)
  */
 /* package private */ abstract class BaseFileSink implements Sink {
 
@@ -52,21 +56,27 @@ import java.util.List;
         return _metricsLogger;
     }
 
-    private SizeAndTimeBasedRollingPolicy<ILoggingEvent> createRollingPolicy(
+    private TimeBasedRollingPolicy<ILoggingEvent> createRollingPolicy(
             final String extension,
             final String fileNameWithoutExtension,
             final int maxHistory,
             final String maxFileSize,
-            final String totalSizeCap,
             final boolean compress) {
 
-        // TODO(vkoskela): Use LogbackSteno's random compression strategy [MAI-413]
-        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new SizeAndTimeBasedRollingPolicy<>();
+        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy;
+        if (maxFileSize != null) {
+            final SizeAndTimeBasedRollingPolicy<ILoggingEvent> sizeAndTimeBasedRollingPolicy = new SizeAndTimeBasedRollingPolicy<>();
+            sizeAndTimeBasedRollingPolicy.setMaxFileSize(maxFileSize);
+            sizeAndTimeBasedRollingPolicy.setTotalSizeCap(new FileSize(FileSize.valueOf(maxFileSize).getSize() * maxHistory));
+            rollingPolicy = sizeAndTimeBasedRollingPolicy;
+        } else {
+            rollingPolicy = new TimeBasedRollingPolicy<>();
+            rollingPolicy.setTotalSizeCap(DEFAULT_TOTAL_SIZE_CAP);
+        }
+
         rollingPolicy.setContext(_loggerContext);
         rollingPolicy.setMaxHistory(maxHistory);
         rollingPolicy.setCleanHistoryOnStart(true);
-        rollingPolicy.setMaxFileSize(maxFileSize);
-        rollingPolicy.setTotalSizeCap(FileSize.valueOf(totalSizeCap));
         if (compress) {
             rollingPolicy.setFileNamePattern(fileNameWithoutExtension + SIZE_DATE_EXTENSION + extension + GZIP_EXTENSION);
         } else {
@@ -79,7 +89,7 @@ import java.util.List;
     private FileAppender<ILoggingEvent> createRollingAppender(
             final String fileName,
             final boolean prudent,
-            final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy,
+            final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy,
             final Encoder<ILoggingEvent> encoder) {
         final RollingFileAppender<ILoggingEvent> rollingAppender = new RollingFileAppender<>();
         rollingAppender.setContext(_loggerContext);
@@ -133,12 +143,11 @@ import java.util.List;
         _loggerContext = new LoggerContext();
         encoder.setContext(_loggerContext);
 
-        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = createRollingPolicy(
+        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = createRollingPolicy(
                 extension,
                 fileNameWithoutExtension,
                 maxHistory,
                 builder._maxFileSize,
-                builder._totalSizeCap,
                 compress);
         final FileAppender<ILoggingEvent> rollingAppender = createRollingAppender(
                 fileName,
@@ -170,6 +179,7 @@ import java.util.List;
 
     private static final String SIZE_DATE_EXTENSION = ".%d{yyyy-MM-dd-HH}.%i";
     private static final String GZIP_EXTENSION = ".gz";
+    private static final FileSize DEFAULT_TOTAL_SIZE_CAP = FileSize.valueOf("20GB");
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BaseFileSink.class);
 
@@ -340,16 +350,16 @@ import java.util.List;
             return self();
         }
 
-        /**
-         * Set total size cap. Optional; default is 20GB
-         *
-         * @param value The total size cap.
-         * @return This <code>Builder</code> instance.
-         */
-        public B setTotalSizeCap(final String value) {
-            _totalSizeCap = value;
-            return self();
-        }
+//        /**
+//         * Set total size cap. Optional; default is 20GB
+//         *
+//         * @param value The total size cap.
+//         * @return This <code>Builder</code> instance.
+//         */
+//        public B setTotalSizeCap(final String value) {
+//            _totalSizeCap = value;
+//            return self();
+//        }
 
         /**
          * Protected method allows child builder classes to add additional
@@ -392,14 +402,14 @@ import java.util.List;
                 _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
                 LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%s", _maxQueueSize));
             }
-            if (_maxFileSize == null) {
-                _maxFileSize = DEFAULT_MAX_FILE_SIZE;
-                LOGGER.info(String.format("Defaulted null max file size; maxFileSize=%s", _maxFileSize));
-            }
-            if (_totalSizeCap == null) {
-                _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
-                LOGGER.info(String.format("Defaulted null total size cap; totalSizeCap=%s", _totalSizeCap));
-            }
+//            if (_maxFileSize == null) {
+//                _maxFileSize = DEFAULT_MAX_FILE_SIZE;
+//                LOGGER.info(String.format("Defaulted null max file size; maxFileSize=%s", _maxFileSize));
+//            }
+//            if (_totalSizeCap == null) {
+//                _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
+//                LOGGER.info(String.format("Defaulted null total size cap; totalSizeCap=%s", _totalSizeCap));
+//            }
         }
 
         /**
@@ -441,8 +451,8 @@ import java.util.List;
         protected Boolean _prudent = DEFAULT_PRUDENT;
         protected Boolean _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
         protected Integer _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
-        protected String _maxFileSize = DEFAULT_MAX_FILE_SIZE;
-        protected String _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
+        protected String _maxFileSize = null;
+//        protected String _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
 
         private static final File DEFAULT_DIRECTORY = new File("./");
         private static final String DEFAULT_NAME = "query";
@@ -453,7 +463,6 @@ import java.util.List;
         private static final Boolean DEFAULT_PRUDENT = Boolean.FALSE;
         private static final Boolean DEFAULT_DROP_WHEN_QUEUE_FULL = Boolean.FALSE;
         private static final Integer DEFAULT_MAX_QUEUE_SIZE = Integer.valueOf(500);
-        private static final String DEFAULT_MAX_FILE_SIZE = "100MB";
-        private static final String DEFAULT_TOTAL_SIZE_CAP = "20GB";
+//        private static final String DEFAULT_MAX_FILE_SIZE = "100MB";
     }
 }
