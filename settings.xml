@@ -1,13 +1,17 @@
 <settings>
   <servers>
+    <!-- configure login and password for the repositories to deploy to -->
+    <!-- the server information is stored in the project pom or a       -->
+    <!-- parent pom. The id values match e.g. the basepom project.      -->
     <server>
-      <id>ossrh</id>
-      <username>${env.OSSRH_USER}</username>
-      <password>${env.OSSRH_PASS}</password>
+      <id>releases</id>
+      <username>deployment</username>
+      <password>deployment</password>
     </server>
     <server>
-      <id>arpnet</id>
-      <passphrase>${env.GPG_PASS}</passphrase>
+      <id>snapshots</id>
+      <username>deployment</username>
+      <password>deployment</password>
     </server>
   </servers>
 </settings>
