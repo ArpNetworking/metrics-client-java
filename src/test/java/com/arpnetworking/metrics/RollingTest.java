@@ -141,8 +141,7 @@ public class RollingTest {
                     metrics.incrementCounter("testCounter" + j);
                 }
             }
-//            System.out.print("uncapped :" + fileUncapped.list().length);
-//            System.out.println("  capped :" + fileCapped.list().length);
+            
             // Give the async file rolling a chance to work
             Thread.sleep(50);
         }
