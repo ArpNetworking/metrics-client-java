@@ -29,7 +29,7 @@
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
   <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.4.6-SNAPSHOT</version>
+  <version>0.4.6-GRPN.1-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -53,6 +53,14 @@
       <email>ville.koskela@inscopemetrics.com</email>
       <organization>Inscope Metrics</organization>
       <organizationUrl>http://www.inscopemetrics.com</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>rascheman</id>
+      <email>rascheman@groupon.com</email>
+      <organization>Groupon</organization>
       <roles>
         <role>developer</role>
       </roles>
@@ -110,6 +118,18 @@
     <jacoco.check.branch.coverage>1.0</jacoco.check.branch.coverage>
   </properties>
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.scm</groupId>
+        <artifactId>maven-scm-provider-gitexe</artifactId>
+        <version>1.9.4</version>
+      </extension>
+      <extension>
+        <groupId>org.apache.maven.scm</groupId>
+        <artifactId>maven-scm-manager-plexus</artifactId>
+        <version>1.9.4</version>
+      </extension>
+    </extensions>
     <plugins>
       <!-- Enable Inherited Plugins -->
       <plugin>
@@ -351,4 +371,35 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>releases</id>
+      <url>http://nexus-dev/content/repositories/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>snapshots</id>
+      <url>http://nexus-dev/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <repositories>
+    <repository>
+      <releases />
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>releases</id>
+      <name>Releases Repository</name>
+      <url>http://nexus-dev/content/groups/public</url>
+    </repository>
+    <repository>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots />
+      <id>snapshots</id>
+      <name>Snapshots Repository</name>
+      <url>http://nexus-dev/content/groups/public-snapshots</url>
+    </repository>
+  </repositories>
 </project>
