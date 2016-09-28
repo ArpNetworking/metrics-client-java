@@ -29,7 +29,7 @@
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
   <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.4.6-GRPN.2-SNAPSHOT</version>
+  <version>0.4.6-GRPN.3-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -68,9 +68,9 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
-    <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
-    <url>https://github.com/arpnetworking/metrics-client-java</url>
+    <connection>scm:git:git@github.groupondev.com/AINT/metrics-client-java.git</connection>
+    <developerConnection>scm:git:git@github.groupondev.com/AINT/metrics-client-java.git</developerConnection>
+    <url>https://github.groupondev.com/AINT/metrics-client-java</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -131,6 +131,43 @@
       </extension>
     </extensions>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>${maven.gpg.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>${nexus.staging.plugin.version}</version>
+        <executions>
+          <execution>
+            <id>default-deploy</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>deploy</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <skipStaging>true</skipStaging>
+          <serverId>releases</serverId>
+          <nexusUrl>http://nexus-dev/</nexusUrl>
+        </configuration>
+      </plugin>
+
       <!-- Enable Inherited Plugins -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
