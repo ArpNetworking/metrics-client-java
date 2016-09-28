@@ -454,6 +454,7 @@ import java.util.List;
         private static final Boolean DEFAULT_PRUDENT = Boolean.FALSE;
         private static final Boolean DEFAULT_DROP_WHEN_QUEUE_FULL = Boolean.FALSE;
         private static final Integer DEFAULT_MAX_QUEUE_SIZE = Integer.valueOf(500);
+        // This is effectively setting the default to time based rolling w/o having to use two different classes
         private static final String DEFAULT_MAX_FILE_SIZE = "100GB";
         private static final String DEFAULT_TOTAL_SIZE_CAP = "20GB";
     }
