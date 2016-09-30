@@ -11,7 +11,7 @@ build:
 
 notifications:
   <% if( DOTCI_BRANCH =~ /^(origin\/)?master$/ ) { %>
-  - hipchat: 446742
+  - hipchat: 2769153
   - email:
     - aint-dev@groupon.com
   <% } %>
