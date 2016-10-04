@@ -82,7 +82,7 @@ public class BaseFileSinkTest {
                 .setExtension(".bar")
                 .setMaxQueueSize(1000)
                 .setMaxFileSize("10MB")
-                .setTotalSizeCap("2GB")
+//                .setTotalSizeCap("2GB")
                 .setDropWhenQueueFull(true)
                 .build();
 
@@ -123,7 +123,7 @@ public class BaseFileSinkTest {
                 .setMaxQueueSize(null)
                 .setDropWhenQueueFull(null)
                 .setMaxFileSize(null)
-                .setTotalSizeCap(null)
+//                .setTotalSizeCap(null)
                 .build();
 
         final AsyncAppender asyncAppender = (AsyncAppender)
