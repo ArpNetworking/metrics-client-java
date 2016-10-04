@@ -36,7 +36,6 @@ import java.nio.file.Files;
  * Tests for <code>BaseFileSink</code>.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
- * @author Ryan Ascheman (rascheman at groupon dot com)
  */
 public class BaseFileSinkTest {
 
