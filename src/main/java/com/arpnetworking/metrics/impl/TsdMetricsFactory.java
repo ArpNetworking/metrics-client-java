@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
-import com.arpnetworking.commons.hostresolver.CachingHostResolver;
+import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
 import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
@@ -132,11 +132,25 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     @Override
     public Metrics create() {
-        return new TsdMetrics(
-                _serviceName,
-                _clusterName,
-                _hostName,
-                _sinks);
+        try {
+            return new TsdMetrics(
+                    _serviceName,
+                    _clusterName,
+                    _hostResolver.getLocalHostName(),
+                    _sinks);
+        } catch (final UnknownHostException e) {
+            final List<String> failures = Collections.singletonList("Unable to determine hostname");
+            _logger.warn(
+                    String.format(
+                            "Unable to construct TsdMetrics, metrics disabled; failures=%s",
+                            failures),
+                    e);
+            return new TsdMetrics(
+                    _serviceName,
+                    _clusterName,
+                    DEFAULT_HOST_NAME,
+                    Collections.singletonList(new WarningSink(failures)));
+        }
     }
 
     /**
@@ -145,11 +159,11 @@ public class TsdMetricsFactory implements MetricsFactory {
     @Override
     public String toString() {
         return String.format(
-                "TsdMetricsFactory{Sinks=%s, ServiceName=%s, ClusterName=%s, HostName=%s}",
+                "TsdMetricsFactory{Sinks=%s, ServiceName=%s, ClusterName=%s, HostResolver=%s}",
                 _sinks,
                 _serviceName,
                 _clusterName,
-                _hostName);
+                _hostResolver);
     }
 
     /* package private */ List<Sink> getSinks() {
@@ -160,8 +174,8 @@ public class TsdMetricsFactory implements MetricsFactory {
         return _serviceName;
     }
 
-    /* package private */ String getHostName() {
-        return _hostName;
+    /* package private */ HostResolver getHostResolver() {
+        return _hostResolver;
     }
 
     /* package private */ String getClusterName() {
@@ -174,17 +188,31 @@ public class TsdMetricsFactory implements MetricsFactory {
      * @param builder Instance of <code>Builder</code>.
      */
     protected TsdMetricsFactory(final Builder builder) {
+        this(builder, LOGGER);
+    }
+
+    /**
+     * Protected constructor.
+     *
+     * @param builder Instance of <code>Builder</code>.
+     */
+    /* package private */ TsdMetricsFactory(final Builder builder, final Logger logger) {
         _sinks = Collections.unmodifiableList(new ArrayList<>(builder._sinks));
         _serviceName = builder._serviceName;
         _clusterName = builder._clusterName;
-        _hostName = builder._hostName;
+        _hostResolver = builder._hostResolver;
+        _logger = logger;
     }
 
     private final List<Sink> _sinks;
     private final String _serviceName;
     private final String _clusterName;
-    private final String _hostName;
+    private final HostResolver _hostResolver;
+    private final Logger _logger;
 
+    private static final String DEFAULT_SERVICE_NAME = "<SERVICE_NAME>";
+    private static final String DEFAULT_CLUSTER_NAME = "<CLUSTER_NAME>";
+    private static final String DEFAULT_HOST_NAME = "<HOST_NAME>";
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetricsFactory.class);
 
     /**
@@ -238,30 +266,23 @@ public class TsdMetricsFactory implements MetricsFactory {
             final List<String> failures = new ArrayList<>();
 
             // Defaults
-            if (_hostName == null) {
-                try {
-                    _hostName = _hostResolver.getLocalHostName();
-                } catch (final UnknownHostException e) {
-                    failures.add("Unable to determine hostname");
-                }
-            }
             if (_sinks == null) {
                 _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
                 _logger.info(String.format("Defaulted null sinks; sinks=%s", _sinks));
             }
+            if (_hostResolver == null) {
+                _hostResolver = DEFAULT_HOST_RESOLVER;
+                _logger.info(String.format("Defaulted null host resolver; resolver=%s", _hostResolver));
+            }
 
             // Validate
             if (_serviceName == null) {
-                _serviceName = "<SERVICE_NAME>";
+                _serviceName = DEFAULT_SERVICE_NAME;
                 failures.add("ServiceName cannot be null");
             }
             if (_clusterName == null) {
-                _clusterName = "<CLUSTER_NAME>";
+                _clusterName = DEFAULT_CLUSTER_NAME;
                 failures.add("ClusterName cannot be null");
-            }
-            if (_hostName == null) {
-                _hostName = "<HOST_NAME>";
-                failures.add("HostName cannot be null");
             }
 
             // Apply fallback
@@ -313,26 +334,24 @@ public class TsdMetricsFactory implements MetricsFactory {
          * is the host name provided by the provided <code>HostProvider</code>
          * or its default instance if one was not specified. If the
          * <code>HostProvider</code> fails to provide a host name the builder
-         * will fail silently and produce a fake instance of
-         * <code>Metrics</code> on create. This is to ensure the library
-         * remains exception neutral.
+         * will produce a fake instance of <code>Metrics</code> on create. This
+         * is to ensure the library remains exception neutral.
          *
          * @param value The host name to publish as.
          * @return This <code>Builder</code> instance.
          */
         public Builder setHostName(final String value) {
-            _hostName = value;
+            _hostResolver = () -> value;
             return this;
         }
 
-        private final HostResolver _hostResolver;
         private final Logger _logger;
 
         private List<Sink> _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
         private String _serviceName;
         private String _clusterName;
-        private String _hostName;
+        private HostResolver _hostResolver;
 
-        private static final HostResolver DEFAULT_HOST_RESOLVER = new CachingHostResolver(Duration.ofMinutes(1));
+        private static final HostResolver DEFAULT_HOST_RESOLVER = new BackgroundCachingHostResolver(Duration.ofMinutes(1));
     }
 }
