@@ -443,7 +443,7 @@ import java.util.List;
         protected Boolean _prudent = DEFAULT_PRUDENT;
         protected Boolean _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
         protected Integer _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
-        protected String _maxFileSize = null;
+        protected String _maxFileSize = DEFAULT_MAX_FILE_SIZE;
         protected String _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
 
         private static final File DEFAULT_DIRECTORY = new File("./");
