@@ -394,6 +394,14 @@ import java.util.List;
                 _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
                 LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%s", _maxQueueSize));
             }
+            if (_maxFileSize == null) {
+                _maxFileSize = DEFAULT_MAX_FILE_SIZE;
+                LOGGER.info(String.format("Defaulted null max file size; maxFileSize=%s", _maxFileSize));
+            }
+            if (_totalSizeCap == null) {
+                _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
+                LOGGER.info(String.format("Defaulted null total size cap; totalSizeCap=%s", _totalSizeCap));
+            }
         }
 
         /**
