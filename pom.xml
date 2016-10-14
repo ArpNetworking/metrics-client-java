@@ -58,9 +58,10 @@
       </roles>
     </developer>
     <developer>
-      <id>rascheman</id>
+      <id>ryanascheman</id>
       <email>rascheman@groupon.com</email>
       <organization>Groupon</organization>
+      <organizationUrl>http://www.groupon.com</organizationUrl>
       <roles>
         <role>developer</role>
       </roles>
