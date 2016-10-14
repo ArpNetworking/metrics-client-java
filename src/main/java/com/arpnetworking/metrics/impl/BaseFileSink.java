@@ -27,8 +27,6 @@ import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
 import ch.qos.logback.core.util.FileSize;
-import com.arpnetworking.logback.SizeAndRandomizedTimeBasedFNATP;
-import com.arpnetworking.logback.SizeAndRandomizedTimeBasedRollingPolicy;
 import com.arpnetworking.metrics.Sink;
 import org.slf4j.LoggerFactory;
 
@@ -61,19 +59,13 @@ import java.util.List;
             final String fileNameWithoutExtension,
             final int maxHistory,
             final String maxFileSize,
+            final String totalSizeCap,
             final boolean compress) {
 
-        final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy;
-        if (maxFileSize != null) {
-            final SizeAndTimeBasedRollingPolicy<ILoggingEvent> sizeAndTimeBasedRollingPolicy = new SizeAndTimeBasedRollingPolicy<>();
-            sizeAndTimeBasedRollingPolicy.setMaxFileSize(maxFileSize);
-            sizeAndTimeBasedRollingPolicy.setTotalSizeCap(new FileSize(FileSize.valueOf(maxFileSize).getSize() * maxHistory));
-            rollingPolicy = sizeAndTimeBasedRollingPolicy;
-        } else {
-            rollingPolicy = new TimeBasedRollingPolicy<>();
-            rollingPolicy.setTotalSizeCap(DEFAULT_TOTAL_SIZE_CAP);
-        }
-
+        // TODO(vkoskela): Use LogbackSteno's random compression strategy
+        final SizeAndTimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new SizeAndTimeBasedRollingPolicy<>();
+        rollingPolicy.setMaxFileSize(maxFileSize);
+        rollingPolicy.setTotalSizeCap(FileSize.valueOf(totalSizeCap));
         rollingPolicy.setContext(_loggerContext);
         rollingPolicy.setMaxHistory(maxHistory);
         rollingPolicy.setCleanHistoryOnStart(true);
@@ -148,6 +140,7 @@ import java.util.List;
                 fileNameWithoutExtension,
                 maxHistory,
                 builder._maxFileSize,
+                builder._totalSizeCap,
                 compress);
         final FileAppender<ILoggingEvent> rollingAppender = createRollingAppender(
                 fileName,
@@ -179,7 +172,6 @@ import java.util.List;
 
     private static final String SIZE_DATE_EXTENSION = ".%d{yyyy-MM-dd-HH}.%i";
     private static final String GZIP_EXTENSION = ".gz";
-    private static final FileSize DEFAULT_TOTAL_SIZE_CAP = FileSize.valueOf("20GB");
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BaseFileSink.class);
 
@@ -350,16 +342,16 @@ import java.util.List;
             return self();
         }
 
-//        /**
-//         * Set total size cap. Optional; default is 20GB
-//         *
-//         * @param value The total size cap.
-//         * @return This <code>Builder</code> instance.
-//         */
-//        public B setTotalSizeCap(final String value) {
-//            _totalSizeCap = value;
-//            return self();
-//        }
+        /**
+         * Set total size cap. Optional; default is 20GB
+         *
+         * @param value The total size cap.
+         * @return This <code>Builder</code> instance.
+         */
+        public B setTotalSizeCap(final String value) {
+            _totalSizeCap = value;
+            return self();
+        }
 
         /**
          * Protected method allows child builder classes to add additional
@@ -402,14 +394,6 @@ import java.util.List;
                 _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
                 LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%s", _maxQueueSize));
             }
-//            if (_maxFileSize == null) {
-//                _maxFileSize = DEFAULT_MAX_FILE_SIZE;
-//                LOGGER.info(String.format("Defaulted null max file size; maxFileSize=%s", _maxFileSize));
-//            }
-//            if (_totalSizeCap == null) {
-//                _totalSizeCap = DEFAULT_TOTAL_SIZE_CAP;
-//                LOGGER.info(String.format("Defaulted null total size cap; totalSizeCap=%s", _totalSizeCap));
-//            }
         }
 
         /**
