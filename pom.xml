@@ -57,6 +57,15 @@
         <role>developer</role>
       </roles>
     </developer>
+    <developer>
+      <id>ryanascheman</id>
+      <email>rascheman@groupon.com</email>
+      <organization>Groupon</organization>
+      <organizationUrl>http://www.groupon.com</organizationUrl>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
   </developers>
 
   <scm>
