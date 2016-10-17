@@ -24,7 +24,10 @@ import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.FileAppender;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.rolling.RollingPolicy;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
+import ch.qos.logback.core.util.FileSize;
+import com.arpnetworking.logback.SizeAndRandomizedTimeBasedFNATP;
 import com.arpnetworking.metrics.Sink;
 import org.slf4j.LoggerFactory;
 
@@ -55,17 +58,27 @@ import java.util.List;
             final String extension,
             final String fileNameWithoutExtension,
             final int maxHistory,
+            final String maxFileSizeAsString,
             final boolean compress) {
 
-        // TODO(vkoskela): Use LogbackSteno's random compression strategy [MAI-413]
+        final FileSize maxFileSize = FileSize.valueOf(maxFileSizeAsString);
+        final FileSize totalSizeCap = FileSize.valueOf(String.valueOf(maxHistory * maxFileSize.getSize()));
+
+        final SizeAndRandomizedTimeBasedFNATP<ILoggingEvent> triggeringPolicy = new SizeAndRandomizedTimeBasedFNATP<>();
+        triggeringPolicy.setContext(_loggerContext);
+        triggeringPolicy.setMaxOffsetInMillis(MAX_RANDOM_OFFSET_IN_MILLIS);
+        triggeringPolicy.setMaxFileSize(maxFileSizeAsString);
+
         final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
+        rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(triggeringPolicy);
         rollingPolicy.setContext(_loggerContext);
         rollingPolicy.setMaxHistory(maxHistory);
+        rollingPolicy.setTotalSizeCap(totalSizeCap);
         rollingPolicy.setCleanHistoryOnStart(true);
         if (compress) {
-            rollingPolicy.setFileNamePattern(fileNameWithoutExtension + DATE_EXTENSION + extension + GZIP_EXTENSION);
+            rollingPolicy.setFileNamePattern(fileNameWithoutExtension + DATE_AND_INDEX_EXTENSION + extension + GZIP_EXTENSION);
         } else {
-            rollingPolicy.setFileNamePattern(fileNameWithoutExtension + DATE_EXTENSION + extension);
+            rollingPolicy.setFileNamePattern(fileNameWithoutExtension + DATE_AND_INDEX_EXTENSION + extension);
         }
 
         return rollingPolicy;
@@ -73,15 +86,12 @@ import java.util.List;
 
     private FileAppender<ILoggingEvent> createRollingAppender(
             final String fileName,
-            final boolean prudent,
-            final TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy,
+            final RollingPolicy rollingPolicy,
             final Encoder<ILoggingEvent> encoder) {
         final RollingFileAppender<ILoggingEvent> rollingAppender = new RollingFileAppender<>();
         rollingAppender.setContext(_loggerContext);
         rollingAppender.setName("query-log");
         rollingAppender.setFile(fileName);
-        // TODO(vkoskela): Implement prudent mode [MAI-415]
-        //rollingAppender.setPrudent(prudent);
         rollingAppender.setAppend(true);
         rollingAppender.setRollingPolicy(rollingPolicy);
         rollingAppender.setEncoder(encoder);
@@ -112,11 +122,11 @@ import java.util.List;
         final String directory = builder._directory.getPath();
         final String name = builder._name;
         final String extension = builder._extension;
-        final int maxHistory = builder._maxHistory.intValue();
-        final boolean compress = builder._compress.booleanValue();
-        final boolean prudent = builder._prudent.booleanValue();
-        final boolean dropWhenQueueFull = builder._dropWhenQueueFull.booleanValue();
-        final int maxQueueSize = builder._maxQueueSize.intValue();
+        final int maxHistory = builder._maxHistory;
+        final String maxFileSize = builder._maxFileSize;
+        final boolean compress = builder._compress;
+        final boolean dropWhenQueueFull = builder._dropWhenQueueFull;
+        final int maxQueueSize = builder._maxQueueSize;
 
         final StringBuilder fileNameBuilder = new StringBuilder(directory);
         fileNameBuilder.append(File.separator);
@@ -132,10 +142,10 @@ import java.util.List;
                 extension,
                 fileNameWithoutExtension,
                 maxHistory,
+                maxFileSize,
                 compress);
         final FileAppender<ILoggingEvent> rollingAppender = createRollingAppender(
                 fileName,
-                prudent,
                 rollingPolicy,
                 encoder);
         final Appender<ILoggingEvent> asyncAppender = createAsyncAppender(
@@ -161,7 +171,8 @@ import java.util.List;
     private final LoggerContext _loggerContext;
     private final Logger _metricsLogger;
 
-    private static final String DATE_EXTENSION = ".%d{yyyy-MM-dd-HH}";
+    private static final int MAX_RANDOM_OFFSET_IN_MILLIS = 10 * 60 * 1000; // 10 minutes
+    private static final String DATE_AND_INDEX_EXTENSION = ".%d{yyyy-MM-dd-HH}.%i";
     private static final String GZIP_EXTENSION = ".gz";
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(BaseFileSink.class);
@@ -262,6 +273,17 @@ import java.util.List;
         }
 
         /**
+         * Set the max file size. Accepted units are: "KB", "MB" and "GB". Optional; default is "100MB".
+         *
+         * @param value The value for max file size in megabytes.
+         * @return This <code>Builder</code> instance.
+         */
+        public B setMaxFileSize(final String value) {
+            _maxFileSize = value;
+            return self();
+        }
+
+        /**
          * Set whether files are compressed on roll. Optional; default is true.
          *
          * @param value Whether to compress on roll.
@@ -281,19 +303,6 @@ import java.util.List;
          */
         public B setImmediateFlush(final Boolean value) {
             _immediateFlush = value;
-            return self();
-        }
-
-        /**
-         * Set whether logging should be prudent. Set this to true if multiple
-         * <code>Sink</code> instances, even across JVMs, are writing to the
-         * same file. Optional; default is false.
-         *
-         * @param value Whether to be prudent.
-         * @return This <code>Builder</code> instance.
-         */
-        public B setPrudent(final Boolean value) {
-            _prudent = value;
             return self();
         }
 
@@ -341,19 +350,19 @@ import java.util.List;
             }
             if (_maxHistory == null) {
                 _maxHistory = DEFAULT_MAX_HISTORY;
-                LOGGER.info(String.format("Defaulted null max history; maxHistory=%s", _maxHistory));
+                LOGGER.info(String.format("Defaulted null max history; maxHistory=%d", _maxHistory));
+            }
+            if (_maxFileSize == null) {
+                _maxFileSize = DEFAULT_MAX_FILE_SIZE;
+                LOGGER.info(String.format("Defaulted null max file size; maxFileSize=%s", _maxFileSize));
             }
             if (_compress == null) {
                 _compress = DEFAULT_COMPRESS;
-                LOGGER.info(String.format("Defaulted null compress; compress=%s", _compress));
+                LOGGER.info(String.format("Defaulted null compress; compress=%b", _compress));
             }
             if (_immediateFlush == null) {
                 _immediateFlush = DEFAULT_IMMEDIATE_FLUSH;
-                LOGGER.info(String.format("Defaulted null immediate flush; immediateFlush=%s", _immediateFlush));
-            }
-            if (_prudent == null) {
-                _prudent = DEFAULT_PRUDENT;
-                LOGGER.info(String.format("Defaulted null prudent; prudent=%s", _prudent));
+                LOGGER.info(String.format("Defaulted null immediate flush; immediateFlush=%b", _immediateFlush));
             }
             if (_dropWhenQueueFull == null) {
                 _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
@@ -361,7 +370,7 @@ import java.util.List;
             }
             if (_maxQueueSize == null) {
                 _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
-                LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%s", _maxQueueSize));
+                LOGGER.info(String.format("Defaulted null max queue size; maxQueueSize=%d", _maxQueueSize));
             }
         }
 
@@ -399,20 +408,20 @@ import java.util.List;
         protected String _name = DEFAULT_NAME;
         protected String _extension = DEFAULT_EXTENSION;
         protected Integer _maxHistory = DEFAULT_MAX_HISTORY;
+        protected String _maxFileSize = DEFAULT_MAX_FILE_SIZE;
         protected Boolean _compress = DEFAULT_COMPRESS;
         protected Boolean _immediateFlush = DEFAULT_IMMEDIATE_FLUSH;
-        protected Boolean _prudent = DEFAULT_PRUDENT;
         protected Boolean _dropWhenQueueFull = DEFAULT_DROP_WHEN_QUEUE_FULL;
         protected Integer _maxQueueSize = DEFAULT_MAX_QUEUE_SIZE;
 
         private static final File DEFAULT_DIRECTORY = new File("./");
         private static final String DEFAULT_NAME = "query";
         private static final String DEFAULT_EXTENSION = ".log";
-        private static final Integer DEFAULT_MAX_HISTORY = Integer.valueOf(24);
+        private static final Integer DEFAULT_MAX_HISTORY = 24;
+        private static final String DEFAULT_MAX_FILE_SIZE = "100MB";
         private static final Boolean DEFAULT_COMPRESS = Boolean.TRUE;
         private static final Boolean DEFAULT_IMMEDIATE_FLUSH = Boolean.TRUE;
-        private static final Boolean DEFAULT_PRUDENT = Boolean.FALSE;
         private static final Boolean DEFAULT_DROP_WHEN_QUEUE_FULL = Boolean.FALSE;
-        private static final Integer DEFAULT_MAX_QUEUE_SIZE = Integer.valueOf(500);
+        private static final Integer DEFAULT_MAX_QUEUE_SIZE = 500;
     }
 }
