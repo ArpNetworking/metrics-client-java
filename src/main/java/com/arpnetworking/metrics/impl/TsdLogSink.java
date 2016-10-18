@@ -56,10 +56,9 @@ public class TsdLogSink extends BaseFileSink {
         }
     }
 
-    private static Encoder<ILoggingEvent> createEncoder(final boolean immediateFlush) {
+    private static Encoder<ILoggingEvent> createEncoder() {
         final PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setPattern("%msg%n");
-        encoder.setImmediateFlush(immediateFlush);
         return encoder;
     }
 
@@ -74,7 +73,7 @@ public class TsdLogSink extends BaseFileSink {
 
     // NOTE: Package private for testing
     /* package private */ TsdLogSink(final Builder builder, final ObjectMapper objectMapper, final org.slf4j.Logger logger) {
-        super(builder, createEncoder(builder._immediateFlush.booleanValue()));
+        super(builder, createEncoder());
         _objectMapper = objectMapper;
         _logger = logger;
     }

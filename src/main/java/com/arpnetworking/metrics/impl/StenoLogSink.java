@@ -73,7 +73,7 @@ public class StenoLogSink extends BaseFileSink {
         }
     }
 
-    private static Encoder<ILoggingEvent> createEncoder(final boolean immediateFlush) {
+    private static Encoder<ILoggingEvent> createEncoder() {
         final StenoEncoder encoder = new StenoEncoder();
         encoder.setInjectContextClass(false);
         encoder.setInjectContextFile(false);
@@ -85,7 +85,6 @@ public class StenoLogSink extends BaseFileSink {
         encoder.setInjectContextThread(true);
         encoder.setRedactEnabled(true);
         encoder.setRedactNull(true);
-        encoder.setImmediateFlush(immediateFlush);
         return encoder;
     }
 
@@ -100,7 +99,7 @@ public class StenoLogSink extends BaseFileSink {
 
     // NOTE: Package private for testing
     /* package private */ StenoLogSink(final Builder builder, final ObjectMapper objectMapper, final org.slf4j.Logger logger) {
-        super(builder, createEncoder(builder._immediateFlush.booleanValue()));
+        super(builder, createEncoder());
         _objectMapper = objectMapper;
         _logger = logger;
     }
