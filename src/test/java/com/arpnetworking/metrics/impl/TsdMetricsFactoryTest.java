@@ -21,6 +21,7 @@ import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
+import com.arpnetworking.metrics.UuidFactory;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Tests for <code>TsdMetricsFactory</code>.
@@ -297,6 +299,26 @@ public class TsdMetricsFactoryTest {
         Mockito.verify(sink).record(eventArgumentCaptor.capture());
         final Event event = eventArgumentCaptor.getValue();
         Assert.assertEquals("bar.example.com", event.getAnnotations().get("_host"));
+    }
+
+    @Test
+    public void testCustomUuidFactory() throws Exception {
+        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
+        final UuidFactory uuidFactory = Mockito.mock(UuidFactory.class);
+        Mockito.doReturn("MyHost").when(hostResolver).getLocalHostName();
+        Mockito.when(uuidFactory.create()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver)
+                .setUuidFactory(uuidFactory)
+                .setClusterName("MyCluster")
+                .setServiceName("MyService")
+                .build();
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Mockito.verify(uuidFactory, Mockito.times(1)).create();
+        final Metrics metrics2 = metricsFactory.create();
+        Assert.assertNotNull(metrics2);
+        Mockito.verify(uuidFactory, Mockito.times(2)).create();
     }
 
     @Test

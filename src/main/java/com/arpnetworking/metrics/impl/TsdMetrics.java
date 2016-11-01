@@ -437,15 +437,16 @@ public class TsdMetrics implements Metrics {
 
     // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
     /* package private */ TsdMetrics(
-            final String serviceName,
+            final UUID uuid, final String serviceName,
             final String clusterName,
             final String hostName,
             final List<Sink> sinks) {
-        this(serviceName, clusterName, hostName, sinks, Clock.systemUTC(), LOGGER);
+        this(uuid, serviceName, clusterName, hostName, sinks, Clock.systemUTC(), LOGGER);
     }
 
     // NOTE: Package private for testing.
     /* package private */ TsdMetrics(
+            final UUID uuid,
             final String serviceName,
             final String clusterName,
             final String hostName,
@@ -456,7 +457,7 @@ public class TsdMetrics implements Metrics {
         _logger = logger;
         _clock = clock;
         _initialTimestamp = _clock.instant();
-        _annotations.put(ID_KEY, UUID.randomUUID().toString());
+        _annotations.put(ID_KEY, uuid.toString());
         _annotations.put(HOST_KEY, hostName);
         _annotations.put(SERVICE_KEY, serviceName);
         _annotations.put(CLUSTER_KEY, clusterName);

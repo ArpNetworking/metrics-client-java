@@ -20,6 +20,7 @@ import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
+import com.arpnetworking.metrics.UuidFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Default implementation of <code>MetricsFactory</code> for creating
@@ -132,8 +134,10 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     @Override
     public Metrics create() {
+        final UUID uuid = _uuidFactory.create();
         try {
             return new TsdMetrics(
+                    uuid,
                     _serviceName,
                     _clusterName,
                     _hostResolver.getLocalHostName(),
@@ -146,6 +150,7 @@ public class TsdMetricsFactory implements MetricsFactory {
                             failures),
                     e);
             return new TsdMetrics(
+                    uuid,
                     _serviceName,
                     _clusterName,
                     DEFAULT_HOST_NAME,
@@ -198,6 +203,7 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     /* package private */ TsdMetricsFactory(final Builder builder, final Logger logger) {
         _sinks = Collections.unmodifiableList(new ArrayList<>(builder._sinks));
+        _uuidFactory = builder._uuidFactory;
         _serviceName = builder._serviceName;
         _clusterName = builder._clusterName;
         _hostResolver = builder._hostResolver;
@@ -205,6 +211,7 @@ public class TsdMetricsFactory implements MetricsFactory {
     }
 
     private final List<Sink> _sinks;
+    private final UuidFactory _uuidFactory;
     private final String _serviceName;
     private final String _clusterName;
     private final HostResolver _hostResolver;
@@ -308,6 +315,18 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         /**
+         * Set the UuidFactory to be used to create UUIDs assigned to instances of <code>Metrics</code> created by this
+         * <code>MetricsFactory</code>. Cannot be null. Optional. Defaults to using the Java native java.util.UUID.randomUUID().
+         *
+         * @param uuidFactory The UuidFactory instance.
+         * @return This <code>Builder</code> instance.
+         */
+        public Builder setUuidFactory(final UuidFactory uuidFactory) {
+            _uuidFactory = uuidFactory;
+            return this;
+        }
+
+        /**
          * Set the service name to publish as. Cannot be null.
          *
          * @param value The service name to publish as.
@@ -348,6 +367,7 @@ public class TsdMetricsFactory implements MetricsFactory {
         private final Logger _logger;
 
         private List<Sink> _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
+        private UuidFactory _uuidFactory = new NativeRandomUuidFactory();
         private String _serviceName;
         private String _clusterName;
         private HostResolver _hostResolver;
