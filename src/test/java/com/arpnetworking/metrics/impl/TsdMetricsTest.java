@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -931,6 +932,7 @@ public class TsdMetricsTest {
 
     private TsdMetrics createTsdMetrics(final Clock clock, final org.slf4j.Logger logger, final Sink... sinks) {
         return new TsdMetrics(
+                UUID.randomUUID(),
                 "MyService",
                 "MyCluster",
                 "MyHost",
