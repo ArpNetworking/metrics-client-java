@@ -252,7 +252,8 @@ public class TsdMetricsFactory implements MetricsFactory {
         /**
          * Public constructor.
          *
-         * @param hostResolver The <code>HostResolver</code> instance to use to determine the default host name.
+         * @param hostResolver The <code>HostResolver</code> instance to use
+         * to determine the default host name.
          */
         public Builder(final HostResolver hostResolver) {
             this(hostResolver, LOGGER);
@@ -315,10 +316,12 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         /**
-         * Set the UuidFactory to be used to create UUIDs assigned to instances of <code>Metrics</code> created by this
-         * <code>MetricsFactory</code>. Cannot be null. Optional. Defaults to using the Java native java.util.UUID.randomUUID().
+         * Set the UuidFactory to be used to create UUIDs assigned to instances
+         * of <code>Metrics</code> created by this <code>MetricsFactory</code>.
+         * Cannot be null. Optional. Defaults to using the Java native 
+         * <code>java.util.UUID.randomUUID()</code>.
          *
-         * @param uuidFactory The UuidFactory instance.
+         * @param uuidFactory The <code>UuidFactory</code> instance.
          * @return This <code>Builder</code> instance.
          */
         public Builder setUuidFactory(final UuidFactory uuidFactory) {
@@ -367,11 +370,12 @@ public class TsdMetricsFactory implements MetricsFactory {
         private final Logger _logger;
 
         private List<Sink> _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
-        private UuidFactory _uuidFactory = new NativeRandomUuidFactory();
+        private UuidFactory _uuidFactory = DEFAULT_UUID_FACTORY;
         private String _serviceName;
         private String _clusterName;
         private HostResolver _hostResolver;
 
         private static final HostResolver DEFAULT_HOST_RESOLVER = new BackgroundCachingHostResolver(Duration.ofMinutes(1));
+        private static final UuidFactory DEFAULT_UUID_FACTORY = new NativeRandomUuidFactory();
     }
 }
