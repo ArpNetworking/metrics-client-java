@@ -437,7 +437,8 @@ public class TsdMetrics implements Metrics {
 
     // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
     /* package private */ TsdMetrics(
-            final UUID uuid, final String serviceName,
+            final UUID uuid, 
+            final String serviceName,
             final String clusterName,
             final String hostName,
             final List<Sink> sinks) {
