@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Groupon.com
+ * Copyright 2017 Inscope Metrics, Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,33 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.UuidFactory;
 
+import java.util.SplittableRandom;
 import java.util.UUID;
 
 /**
- * Uses the java.util.UUID.randomUUID() to create UUIDs.
+ * Uses a ThreadLocal SplittableRandom to create UUIDs.
  *
- * @author Matthew Hayter (mhayter at groupon dot com)
+ * @author Brandon Arp (brandon dot arp at inscopemetrics dot com)
  */
 public class NativeRandomUuidFactory implements UuidFactory {
     /**
-     * Uses the java.util.UUID.randomUUID() to create UUIDs.
+     * Uses a ThreadLocal SplittableRandom to create UUIDs.
      *
      * @return A UUID.
      */
     @Override
     public UUID create() {
-        return UUID.randomUUID();
+        final SplittableRandom random = _localRandom.get();
+        long gMost = random.nextLong();
+        gMost &= 0xffffffffffff0fffL;
+        gMost |= 0x0000000000004000L;
+
+        long gLeast = random.nextLong();
+        gLeast &= 0x3fffffffffffffffL;
+        gLeast |= 0x8000000000000000L;
+        return new UUID(gMost, gLeast);
     }
+
+    private final SplittableRandom _random = new SplittableRandom();
+    private final ThreadLocal<SplittableRandom> _localRandom = ThreadLocal.withInitial(_random::split);
 }
