@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.26</version>
+    <version>1.0.29</version>
     <relativePath />
   </parent>
 
@@ -86,7 +86,7 @@
     -->
 
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.7.1</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.9.0</arpnetworking.commons.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <jackson.version>2.7.4</jackson.version>
     <json-jackson-coreutils.version>1.8</json-jackson-coreutils.version>
@@ -97,12 +97,13 @@
     <logback.steno.version>1.16.1</logback.steno.version>
     <logback.version>1.1.7</logback.version>
     <mockito.version>1.10.19</mockito.version>
-    <slf4j.version>1.7.21</slf4j.version>
+    <slf4j.version>1.7.22</slf4j.version>
 
     <!--Plugin versions-->
     <maven.shade.plugin.version>2.4.3</maven.shade.plugin.version>
 
     <!-- Findbugs -->
+    <!-- NOTE: Custom version excludes sample code as well -->
     <findbugs.exclude>${project.basedir}/findbugs.exclude.xml</findbugs.exclude>
 
     <!-- Code Coverage -->
@@ -157,7 +158,6 @@
           <artifactSet>
             <excludes />
             <includes>
-              <include>com.arpnetworking.commons</include>
               <include>ch.qos.logback:logback-classic</include>
               <include>ch.qos.logback:logback-core</include>
               <include>com.arpnetworking.logback:logback-steno</include>
@@ -169,16 +169,6 @@
             </includes>
           </artifactSet>
           <filters>
-            <filter>
-              <artifact>com.arpnetworking.commons:commons</artifact>
-              <excludes>
-                <exclude>META-INF/**</exclude>
-                <exclude>LICENSE</exclude>
-              </excludes>
-              <includes>
-                <include>com/arpnetworking/commons/hostresolver/**</include>
-              </includes>
-            </filter>
             <filter>
               <artifact>ch.qos.logback:logback-classic</artifact>
               <excludes>
@@ -233,32 +223,28 @@
           </filters>
           <relocations>
             <relocation>
-              <pattern>com.arpnetworking.commons</pattern>
-              <shadedPattern>com.arpnetworking.metrics.com.arpnetworking.commons</shadedPattern>
-            </relocation>
-            <relocation>
               <pattern>ch.qos.logback</pattern>
-              <shadedPattern>com.arpnetworking.metrics.ch.qos.logback</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.ch.qos.logback</shadedPattern>
             </relocation>
             <relocation>
               <pattern>org.apache.commons</pattern>
-              <shadedPattern>com.arpnetworking.metrics.org.apache.commons</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.org.apache.commons</shadedPattern>
             </relocation>
             <relocation>
               <pattern>com.arpnetworking.logback</pattern>
-              <shadedPattern>com.arpnetworking.metrics.com.arpnetworking.logback</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.com.arpnetworking.logback</shadedPattern>
             </relocation>
             <relocation>
               <pattern>com.arpnetworking.steno</pattern>
-              <shadedPattern>com.arpnetworking.metrics.com.arpnetworking.steno</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.com.arpnetworking.steno</shadedPattern>
             </relocation>
             <relocation>
               <pattern>com.fasterxml.jackson</pattern>
-              <shadedPattern>com.arpnetworking.metrics.com.fasterxml.jackson</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.com.fasterxml.jackson</shadedPattern>
             </relocation>
             <relocation>
               <pattern>org.joda.time</pattern>
-              <shadedPattern>com.arpnetworking.metrics.org.joda.time</shadedPattern>
+              <shadedPattern>com.arpnetworking.metrics.metricsclient.shaded.org.joda.time</shadedPattern>
             </relocation>
           </relocations>
         </configuration>
@@ -272,12 +258,18 @@
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
-    <!-- Application -->
+    <!-- Essential -->
     <dependency>
       <groupId>com.arpnetworking.commons</groupId>
       <artifactId>commons</artifactId>
       <version>${arpnetworking.commons.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.code.findbugs</groupId>
+      <artifactId>jsr305</artifactId>
+      <version>${jsr305.version}</version>
+    </dependency>
+    <!-- Shaded -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -292,6 +284,12 @@
       <groupId>com.arpnetworking.logback</groupId>
       <artifactId>logback-steno</artifactId>
       <version>${logback.steno.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.aspectj</groupId>
+          <artifactId>aspectjrt</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -307,11 +305,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
       <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>${jsr305.version}</version>
     </dependency>
     <!-- Test - General -->
     <dependency>

@@ -17,20 +17,21 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
 import com.arpnetworking.commons.hostresolver.HostResolver;
+import com.arpnetworking.commons.uuidfactory.SplittableRandomUuidFactory;
+import com.arpnetworking.commons.uuidfactory.UuidFactory;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
-import com.arpnetworking.metrics.UuidFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Default implementation of <code>MetricsFactory</code> for creating
@@ -134,15 +135,17 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     @Override
     public Metrics create() {
-        final UUID uuid = _uuidFactory.create();
+        final UUID uuid = _uuidFactory.get();
         try {
             return new TsdMetrics(
                     uuid,
                     _serviceName,
                     _clusterName,
-                    _hostResolver.getLocalHostName(),
+                    _hostResolver.get(),
                     _sinks);
-        } catch (final UnknownHostException e) {
+            // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
+        } catch (final RuntimeException e) {
+            // CHECKSTYLE.ON: IllegalCatch
             final List<String> failures = Collections.singletonList("Unable to determine hostname");
             _logger.warn(
                     String.format(
@@ -179,7 +182,7 @@ public class TsdMetricsFactory implements MetricsFactory {
         return _serviceName;
     }
 
-    /* package private */ HostResolver getHostResolver() {
+    /* package private */ Supplier<String> getHostResolver() {
         return _hostResolver;
     }
 
@@ -211,10 +214,10 @@ public class TsdMetricsFactory implements MetricsFactory {
     }
 
     private final List<Sink> _sinks;
-    private final UuidFactory _uuidFactory;
+    private final Supplier<UUID> _uuidFactory;
     private final String _serviceName;
     private final String _clusterName;
-    private final HostResolver _hostResolver;
+    private final Supplier<String> _hostResolver;
     private final Logger _logger;
 
     private static final String DEFAULT_SERVICE_NAME = "<SERVICE_NAME>";
@@ -260,7 +263,7 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         // NOTE: Package private for testing
-        /* package private */ Builder(final HostResolver hostResolver, final Logger logger) {
+        /* package private */ Builder(final Supplier<String> hostResolver, final Logger logger) {
             _hostResolver = hostResolver;
             _logger = logger;
         }
@@ -370,12 +373,12 @@ public class TsdMetricsFactory implements MetricsFactory {
         private final Logger _logger;
 
         private List<Sink> _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
-        private UuidFactory _uuidFactory = DEFAULT_UUID_FACTORY;
+        private Supplier<UUID> _uuidFactory = DEFAULT_UUID_FACTORY;
         private String _serviceName;
         private String _clusterName;
-        private HostResolver _hostResolver;
+        private Supplier<String> _hostResolver;
 
-        private static final HostResolver DEFAULT_HOST_RESOLVER = new BackgroundCachingHostResolver(Duration.ofMinutes(1));
-        private static final UuidFactory DEFAULT_UUID_FACTORY = new NativeRandomUuidFactory();
+        private static final Supplier<String> DEFAULT_HOST_RESOLVER = new BackgroundCachingHostResolver(Duration.ofMinutes(1));
+        private static final Supplier<UUID> DEFAULT_UUID_FACTORY = new SplittableRandomUuidFactory();
     }
 }
