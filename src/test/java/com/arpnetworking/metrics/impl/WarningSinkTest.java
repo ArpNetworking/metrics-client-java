@@ -16,6 +16,8 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Event;
+import com.arpnetworking.metrics.Sink;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,6 +25,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,7 +43,10 @@ public class WarningSinkTest {
 
         final Logger logger = Mockito.mock(Logger.class);
         final Event event = Mockito.mock(Event.class);
-        final WarningSink sink = new WarningSink(reasons, logger);
+        final Sink sink = new WarningSink.Builder()
+                .setReasons(reasons)
+                .setLogger(logger)
+                .build();
 
         final String asString = sink.toString();
         Assert.assertNotNull(asString);
@@ -52,5 +58,36 @@ public class WarningSinkTest {
 
         Mockito.verifyZeroInteractions(event);
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString(reasons.toString())));
+    }
+
+    @Test
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
+    public void testWarningSinkBuilderNullReasons() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final Event event = Mockito.mock(Event.class);
+        final Sink sink = new WarningSink.Builder()
+                .setReasons(null)
+                .setLogger(logger)
+                .build();
+
+        sink.record(event);
+
+        Mockito.verifyZeroInteractions(event);
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString("Reasons must be a non-null list")));
+    }
+
+    @Test
+    public void testWarningSinkBuilderEmptyReasons() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final Event event = Mockito.mock(Event.class);
+        final Sink sink = new WarningSink.Builder()
+                .setReasons(Collections.emptyList())
+                .setLogger(logger)
+                .build();
+
+        sink.record(event);
+
+        Mockito.verifyZeroInteractions(event);
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString("Reasons must be a non-empty list")));
     }
 }

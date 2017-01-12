@@ -22,16 +22,19 @@ import com.arpnetworking.commons.uuidfactory.UuidFactory;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * Default implementation of <code>MetricsFactory</code> for creating
@@ -47,8 +50,7 @@ import java.util.function.Supplier;
  * {@code
  * final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
  *     "MyService",
- *     "MyService-US-Prod",
- *     new File("/usr/local/var/my-app/logs"));
+ *     "MyService-US-Prod");
  * }
  *
  * To customize the factory instance use the nested <code>Builder</code> class:
@@ -58,19 +60,46 @@ import java.util.function.Supplier;
  *     .setServiceName("MyService")
  *     .setClusterName("MyService-US-Prod")
  *     .setSinks(Collections.singletonList(
- *         new StenoLogSink.Builder().build()));
+ *         new ApacheHttpSink.Builder().build()));
  *     .build();
  * }
  *
- * The above will write metrics to the current working directory in query.log.
- * It is strongly recommended that at least a path be set:
+ * The above will write metrics to http://localhost:7090/metrics/v1/application.
+ * This is the default port and path of the Metrics Aggregator Daemon (MAD). It
+ * is sometimes desirable to customize this path; for example, when running MAD
+ * under Docker:
  *
  * {@code
  * final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
  *     .setServiceName("MyService")
  *     .setClusterName("MyService-US-Prod")
  *     .setSinks(Collections.singletonList(
- *         new StenoLogSink.Builder()
+ *         new ApacheHttpSink.Builder()
+ *             .setUri(URI.create("http://192.168.0.1:1234/metrics/v1/application"))
+ *             .build()));
+ *     .build();
+ * }
+ *
+ * Alternatively, metrics may be written to a file:
+ *
+ * {@code
+ * final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
+ *     .setServiceName("MyService")
+ *     .setClusterName("MyService-US-Prod")
+ *     .setSinks(Collections.singletonList(
+ *         new FileLogSink.Builder().build()));
+ *     .build();
+ * }
+ *
+ * The above will write metrics to query.log in the current directory. It is
+ * advised that at least the directory be set when using the FileLogSink:
+ *
+ * {@code
+ * final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
+ *     .setServiceName("MyService")
+ *     .setClusterName("MyService-US-Prod")
+ *     .setSinks(Collections.singletonList(
+ *         new FileLogSink.Builder()
  *             .setDirectory("/usr/local/var/my-app/logs")
  *             .build()));
  *     .build();
@@ -78,8 +107,8 @@ import java.util.function.Supplier;
  *
  * The above will write metrics to /usr/local/var/my-app/logs in query.log.
  * Additionally, you can customize the base file name and extension for your
- * application. However, if you are using TSDAggregator remember to configure
- * it to match:
+ * application. However, if you are using MAD remember to configure it to
+ * match:
  *
  * {@code
  * final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
@@ -108,25 +137,18 @@ public class TsdMetricsFactory implements MetricsFactory {
 
     /**
      * Static factory. Construct an instance of <code>TsdMetricsFactory</code>
-     * with the default sink writing to the default file name in the specified
-     * directory as the provided service and cluster.
+     * using the first available default <code>Sink</code>.
      *
      * @param serviceName The name of the service/application publishing metrics.
-     * @param clusterName The name of the cluster (e.g. instance) publishign metrics.
-     * @param directory The log directory.
+     * @param clusterName The name of the cluster (e.g. instance) publishing metrics.
      * @return Instance of <code>TsdMetricsFactory</code>.
      */
     public static MetricsFactory newInstance(
             final String serviceName,
-            final String clusterName,
-            final File directory) {
+            final String clusterName) {
         return new Builder()
                 .setClusterName(clusterName)
                 .setServiceName(serviceName)
-                .setSinks(Collections.singletonList(
-                        new StenoLogSink.Builder()
-                            .setDirectory(directory)
-                            .build()))
                 .build();
     }
 
@@ -157,7 +179,10 @@ public class TsdMetricsFactory implements MetricsFactory {
                     _serviceName,
                     _clusterName,
                     DEFAULT_HOST_NAME,
-                    Collections.singletonList(new WarningSink(failures)));
+                    Collections.singletonList(
+                            new WarningSink.Builder()
+                                    .setReasons(failures)
+                                    .build()));
         }
     }
 
@@ -186,8 +211,59 @@ public class TsdMetricsFactory implements MetricsFactory {
         return _hostResolver;
     }
 
+    /* package private */ Supplier<UUID> getUuidFactory() {
+        return _uuidFactory;
+    }
+
     /* package private */ String getClusterName() {
         return _clusterName;
+    }
+
+    /* package private */ static @Nullable List<Sink> createDefaultSinks(final List<String> defaultSinkClassNames) {
+        for (final String sinkClassName : defaultSinkClassNames) {
+            final Optional<Class<? extends Sink>> sinkClass = getSinkClass(sinkClassName);
+            if (sinkClass.isPresent()) {
+                final Optional<Sink> sink = createSink(sinkClass.get());
+                if (sink.isPresent()) {
+                    return Collections.singletonList(sink.get());
+                }
+            }
+        }
+
+        return Collections.unmodifiableList(
+                Collections.singletonList(
+                        new WarningSink.Builder()
+                                .setReasons(Collections.singletonList("No default sink found."))
+                                .build()));
+    }
+
+    @SuppressWarnings("unchecked")
+    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
+    /* package private */ static Optional<Sink> createSink(final Class<? extends Sink> sinkClass) {
+        try {
+            final Class<?> sinkBuilderClass = Class.forName(sinkClass.getName() + "$Builder");
+            final Object sinkBuilder = sinkBuilderClass.newInstance();
+            final Method buildMethod = sinkBuilderClass.getMethod("build");
+            return Optional.of((Sink) buildMethod.invoke(sinkBuilder));
+            // CHECKSTYLE.OFF: IllegalCatch - Much cleaner than catching the half-dozen checked exceptions
+        } catch (final Exception e) {
+            // CHECKSTYLE.ON: IllegalCatch
+            LOGGER.warn(
+                    String.format(
+                            "Unable to load sink; sinkClass=%s",
+                            sinkClass),
+                    e);
+            return Optional.empty();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    /* package private */ static Optional<Class<? extends Sink>> getSinkClass(final String name) {
+        try {
+            return Optional.of((Class<? extends Sink>) Class.forName(name));
+        } catch (final ClassNotFoundException e) {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -223,7 +299,15 @@ public class TsdMetricsFactory implements MetricsFactory {
     private static final String DEFAULT_SERVICE_NAME = "<SERVICE_NAME>";
     private static final String DEFAULT_CLUSTER_NAME = "<CLUSTER_NAME>";
     private static final String DEFAULT_HOST_NAME = "<HOST_NAME>";
+    private static final List<String> DEFAULT_SINK_CLASS_NAMES;
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetricsFactory.class);
+
+    static {
+        final List<String> sinkClassNames = new ArrayList<>();
+        sinkClassNames.add("com.arpnetworking.metrics.impl.ApacheHttpSink");
+        sinkClassNames.add("com.arpnetworking.metrics.impl.FileSink");
+        DEFAULT_SINK_CLASS_NAMES = Collections.unmodifiableList(sinkClassNames);
+    }
 
     /**
      * Builder for <code>TsdMetricsFactory</code>.
@@ -243,7 +327,7 @@ public class TsdMetricsFactory implements MetricsFactory {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static class Builder {
+    public static class Builder implements com.arpnetworking.commons.builder.Builder<MetricsFactory> {
 
         /**
          * Public constructor.
@@ -263,7 +347,7 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         // NOTE: Package private for testing
-        /* package private */ Builder(final Supplier<String> hostResolver, final Logger logger) {
+        /* package private */ Builder(@Nullable final Supplier<String> hostResolver, @Nullable final Logger logger) {
             _hostResolver = hostResolver;
             _logger = logger;
         }
@@ -273,12 +357,13 @@ public class TsdMetricsFactory implements MetricsFactory {
          *
          * @return Instance of <code>MetricsFactory</code>.
          */
+        @Override
         public MetricsFactory build() {
             final List<String> failures = new ArrayList<>();
 
             // Defaults
             if (_sinks == null) {
-                _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
+                _sinks = DEFAULT_SINKS;
                 _logger.info(String.format("Defaulted null sinks; sinks=%s", _sinks));
             }
             if (_hostResolver == null) {
@@ -301,7 +386,10 @@ public class TsdMetricsFactory implements MetricsFactory {
                 _logger.warn(String.format(
                         "Unable to construct TsdMetricsFactory, metrics disabled; failures=%s",
                         failures));
-                _sinks = Collections.<Sink>singletonList(new WarningSink(failures));
+                _sinks = Collections.singletonList(
+                        new WarningSink.Builder()
+                                .setReasons(failures)
+                                .build());
             }
 
             return new TsdMetricsFactory(this);
@@ -313,7 +401,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * @param value The sinks to publish to.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setSinks(final List<Sink> value) {
+        public Builder setSinks(@Nullable final List<Sink> value) {
             _sinks = value;
             return this;
         }
@@ -327,7 +415,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * @param uuidFactory The <code>UuidFactory</code> instance.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setUuidFactory(final UuidFactory uuidFactory) {
+        public Builder setUuidFactory(@Nullable final UuidFactory uuidFactory) {
             _uuidFactory = uuidFactory;
             return this;
         }
@@ -338,7 +426,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * @param value The service name to publish as.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setServiceName(final String value) {
+        public Builder setServiceName(@Nullable final String value) {
             _serviceName = value;
             return this;
         }
@@ -349,7 +437,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * @param value The cluster name to publish as.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setClusterName(final String value) {
+        public Builder setClusterName(@Nullable final String value) {
             _clusterName = value;
             return this;
         }
@@ -365,19 +453,20 @@ public class TsdMetricsFactory implements MetricsFactory {
          * @param value The host name to publish as.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setHostName(final String value) {
+        public Builder setHostName(@Nullable final String value) {
             _hostResolver = () -> value;
             return this;
         }
 
         private final Logger _logger;
 
-        private List<Sink> _sinks = Collections.singletonList(new StenoLogSink.Builder().build());
+        private List<Sink> _sinks = DEFAULT_SINKS;
         private Supplier<UUID> _uuidFactory = DEFAULT_UUID_FACTORY;
         private String _serviceName;
         private String _clusterName;
         private Supplier<String> _hostResolver;
 
+        private static final List<Sink> DEFAULT_SINKS = createDefaultSinks(DEFAULT_SINK_CLASS_NAMES);
         private static final Supplier<String> DEFAULT_HOST_RESOLVER = new BackgroundCachingHostResolver(Duration.ofMinutes(1));
         private static final Supplier<UUID> DEFAULT_UUID_FACTORY = new SplittableRandomUuidFactory();
     }

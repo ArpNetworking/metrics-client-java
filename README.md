@@ -68,9 +68,19 @@ val appDependencies = Seq(
 
 The Maven Central repository is included by default.
 
+#### Sink
+
+Add a dependency on one or more of the sink implementations such as [metrics-apache-http-sink-extra](https://github.com/ArpNetworking/metrics-apache-http-sink-extra)
+or [metrics-file-sink-extra](https://github.com/ArpNetworking/metrics-file-sink-extra). If found the *ApacheHttpSink* is
+used by default (with default settings) or if not found then the *FileSink* is used by default (with default settings). You
+may also specify the sinks to use to the *MetricsFactory.Builder*. If you get warnings in your log "No default sink found." 
+it means that you don't have one of the default sinks available and need to specify one or more to the builder.
+
 #### Vertx
 
-Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package.  The vertx-extra provides the necessary wrappers around the standard Java metrics client to work with the shared data model in Vertx.  Special thanks to Gil Markham for contributing this work.  For more information please see [metrics-vertx-extra/README.md](https://github.com/ArpNetworking/metrics-client-java).
+Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package.  The vertx-extra provides
+the necessary wrappers around the standard Java metrics client to work with the shared data model in Vertx.  Special thanks
+to Gil Markham for contributing this work.  For more information please see [metrics-vertx-extra/README.md](https://github.com/ArpNetworking/metrics-vertx-extra).
 
 ### MetricsFactory
 
@@ -79,8 +89,7 @@ Your application should instantiate a single instance of MetricsFactory.  For ex
 ```java
 final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
     "MyServiceName",            // The name of the service
-    "MyService-US-Prod",        // The name of the cluster or instance
-    new File("/var/logs/"));    // The query log output directory (must already exist)
+    "MyService-US-Prod");       // The name of the cluster or instance
 ```
 
 Alternatively, you can customize construction using the Builder.  For example:

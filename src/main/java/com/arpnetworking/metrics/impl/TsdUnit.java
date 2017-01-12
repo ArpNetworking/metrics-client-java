@@ -97,7 +97,7 @@ public final class TsdUnit implements Unit {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static final class Builder {
+    public static final class Builder implements com.arpnetworking.commons.builder.Builder<Unit> {
 
         /**
          * Create an instance of <code>Unit</code>. The instance may be
@@ -110,7 +110,8 @@ public final class TsdUnit implements Unit {
          *
          * @return Instance of <code>Unit</code>.
          */
-        @Nullable public Unit build() {
+        @Override
+        public @Nullable Unit build() {
             if (_baseScale == null && _baseUnit == null) {
                 return null;
             }

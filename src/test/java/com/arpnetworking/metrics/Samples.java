@@ -15,12 +15,9 @@
  */
 package com.arpnetworking.metrics;
 
-import com.arpnetworking.metrics.impl.TsdLogSink;
 import com.arpnetworking.metrics.impl.TsdMetricsFactory;
 
-import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -35,10 +32,11 @@ public class Samples {
         // Begin sample:
         final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
                 "MyServiceName",            // The name of the service
-                "MyService-US-Prod",        // The name of the cluster or instance
-                new File("/var/logs/"));    // The query log output directory (must already exist)
+                "MyService-US-Prod");       // The name of the cluster or instance
     }
 
+// TODO(ville): Implement me!
+/*
     private void metricsFactoryBuilder() {
         // Begin sample:
         final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
@@ -55,7 +53,7 @@ public class Samples {
                                 .build()))
                 .build();
     }
-
+*/
     private void metrics() {
         final MetricsFactory metricsFactory = createMetricsFactory();
 
@@ -118,8 +116,7 @@ public class Samples {
     private MetricsFactory createMetricsFactory() {
         return TsdMetricsFactory.newInstance(
                 "Samples",
-                "Samples",
-                new File("/var/tmp/"));
+                "Samples");
     }
 
     private Metrics createMetrics(final MetricsFactory metricsFactory) {
