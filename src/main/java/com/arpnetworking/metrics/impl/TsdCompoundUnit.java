@@ -159,7 +159,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
-    public static class Builder {
+    public static class Builder implements com.arpnetworking.commons.builder.Builder<Unit> {
 
         /**
          * Create an instance of <code>Unit</code>. The instance may be
@@ -168,7 +168,8 @@ public final class TsdCompoundUnit implements CompoundUnit {
          *
          * @return Instance of <code>Unit</code>.
          */
-        @Nullable public Unit build() {
+        @Override
+        public @Nullable Unit build() {
             // Defaults
             if (_numeratorUnits == null) {
                 _numeratorUnits = new ArrayList<>();

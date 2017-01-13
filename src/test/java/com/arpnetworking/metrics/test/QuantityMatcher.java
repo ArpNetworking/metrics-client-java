@@ -23,6 +23,8 @@ import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
 import org.hamcrest.core.IsNull;
 
+import javax.annotation.Nullable;
+
 /**
  * Implementation of <code>Matcher</code> which matches a <code>Quantity</code>.
  *
@@ -47,7 +49,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
      */
-    public static Matcher<Quantity> match(final Number expectedValue, final Unit expectedUnit) {
+    public static Matcher<Quantity> match(final Number expectedValue, @Nullable final Unit expectedUnit) {
         if (expectedValue instanceof Double) {
             return new QuantityMatcher(
                     Matchers.closeTo(expectedValue.doubleValue(), 0.001),
@@ -65,7 +67,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
      */
-    public static Matcher<Quantity> match(final long expectedValue, final Unit expectedUnit) {
+    public static Matcher<Quantity> match(final long expectedValue, @Nullable final Unit expectedUnit) {
         return match(Long.valueOf(expectedValue), expectedUnit);
     }
 
@@ -76,7 +78,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
      */
-    public static Matcher<Quantity> match(final double expectedValue, final Unit expectedUnit) {
+    public static Matcher<Quantity> match(final double expectedValue, @Nullable final Unit expectedUnit) {
         return match(Double.valueOf(expectedValue), expectedUnit);
     }
 
@@ -133,7 +135,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      * @param expectedUnit The expected unit.
      * @return new matcher for the expected metrics.
      */
-    public static Matcher<Quantity> match(final Matcher<? extends Number> valueMatcher, final Unit expectedUnit) {
+    public static Matcher<Quantity> match(final Matcher<? extends Number> valueMatcher, @Nullable final Unit expectedUnit) {
         return match(valueMatcher, Matchers.equalTo(expectedUnit));
     }
 

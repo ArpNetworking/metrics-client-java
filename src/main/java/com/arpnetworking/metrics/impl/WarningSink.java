@@ -1,5 +1,5 @@
 /**
- * Copyright 2015 Groupon.com
+ * Copyright 2017 Inscope Metrics, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ import com.arpnetworking.metrics.Sink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of <code>Sink</code> which emits a warning each time an
@@ -29,25 +31,6 @@ import java.util.List;
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class WarningSink implements Sink {
-
-    /**
-     * Public constructor.
-     *
-     * NOTE: This method does <b>not</b> perform a deep copy of the provided
-     * data structures. Callers are expected to <b>not</b> modify these data
-     * structures after passing them to this constructor. This is acceptable
-     * since this class is for internal implementation only.
-     *
-     * @param reasons The reasons for the warning.
-     */
-    /* package private */ WarningSink(final List<String> reasons) {
-        this(reasons, LOGGER);
-    }
-
-    /* package private */ WarningSink(final List<String> reasons, final Logger logger) {
-        _reasons = reasons;
-        _logger = logger;
-    }
 
     /**
      * {@inheritDoc}
@@ -69,8 +52,89 @@ import java.util.List;
                 _reasons);
     }
 
+    private WarningSink(final Builder builder) {
+        _reasons = builder._reasons;
+        _logger = builder._logger;
+    }
+
     private final List<String> _reasons;
     private final Logger _logger;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WarningSink.class);
+
+    /**
+     * Builder for {@link WarningSink}.
+     *
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+     */
+    public static final class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
+
+        /**
+         * Set the list of reasons this warning sink was used. Required.
+         * Cannot be empty.
+         *
+         * @param value The list of reasons.
+         * @return This {@link Builder} instance.
+         */
+        public Builder setReasons(final List<String> value) {
+            _reasons = value;
+            return this;
+        }
+
+        /**
+         * Set the logger to use. Optional.
+         *
+         * @param value The logger to use.
+         * @return This {@link Builder} instance.
+         */
+        public Builder setLogger(@Nullable final Logger value) {
+            _logger = value;
+            return this;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Sink build() {
+            // Defaults
+            applyDefaults();
+
+            // Validate
+            final List<String> failures = new ArrayList<>();
+            validate(failures);
+
+            // Fallback
+            if (!failures.isEmpty()) {
+                final List<String> combinedReasons = new ArrayList<>(failures);
+                if (_reasons != null) {
+                    combinedReasons.addAll(_reasons);
+                }
+                _reasons = combinedReasons;
+            }
+
+            return new WarningSink(this);
+        }
+
+        private void applyDefaults() {
+            if (_logger == null) {
+                _logger = DEFAULT_LOGGER;
+                DEFAULT_LOGGER.info(String.format(
+                        "Defaulted null logger; logger=%s",
+                        _logger));
+            }
+        }
+
+        private void validate(final List<String> failures) {
+            if (_reasons == null) {
+                failures.add("Reasons must be a non-null list");
+            } else if (_reasons.isEmpty()) {
+                failures.add(String.format("Reasons must be a non-empty list; reasons=%s", _reasons));
+            }
+        }
+
+        private List<String> _reasons;
+        private Logger _logger;
+
+        private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(WarningSink.class);
+    }
 }

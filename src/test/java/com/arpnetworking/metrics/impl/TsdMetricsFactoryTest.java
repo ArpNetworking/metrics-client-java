@@ -17,6 +17,7 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
 import com.arpnetworking.commons.hostresolver.HostResolver;
+import com.arpnetworking.commons.uuidfactory.SplittableRandomUuidFactory;
 import com.arpnetworking.commons.uuidfactory.UuidFactory;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
@@ -35,8 +36,10 @@ import org.slf4j.Logger;
 import java.io.File;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -60,15 +63,14 @@ public class TsdMetricsFactoryTest {
     public void testNewInstance() throws UnknownHostException {
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance(
                 "MyService",
-                "MyCluster",
-                new File("./"));
+                "MyCluster");
 
         Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
-                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
@@ -85,11 +87,10 @@ public class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
-                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
@@ -108,11 +109,10 @@ public class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof StenoLogSink
-                || metricsFactory.getSinks().get(0) instanceof TsdLogSink);
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
@@ -132,6 +132,7 @@ public class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -256,6 +257,7 @@ public class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -286,6 +288,7 @@ public class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertNotSame(_mockHostResolver, metricsFactory.getHostResolver());
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -334,8 +337,129 @@ public class TsdMetricsFactoryTest {
         Assert.assertFalse(asString.isEmpty());
     }
 
+    @Test
+    public void testCreateDefaultSinksNone() {
+        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(Collections.emptyList());
+        Assert.assertNotNull(sinks);
+        Assert.assertEquals(1, sinks.size());
+        Assert.assertTrue(sinks.iterator().next() instanceof WarningSink);
+    }
+
+    @Test
+    public void testCreateDefaultSinksInvalid() {
+        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
+                Collections.singletonList("com.arpnetworking.metrics.impl.NonExistentSink"));
+        Assert.assertNotNull(sinks);
+        Assert.assertEquals(1, sinks.size());
+        Assert.assertTrue(sinks.iterator().next() instanceof WarningSink);
+    }
+
+    @Test
+    public void testCreateDefaultSinksValid() {
+        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
+                Collections.singletonList("com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
+        Assert.assertNotNull(sinks);
+        Assert.assertEquals(1, sinks.size());
+        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+    }
+
+    @Test
+    public void testCreateDefaultSinksMultipleUseFirst() {
+        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
+                Arrays.asList(
+                        "com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$ValidDefaultSink",
+                        "com.arpnetworking.metrics.impl.NonExistentSink"));
+        Assert.assertNotNull(sinks);
+        Assert.assertEquals(1, sinks.size());
+        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+    }
+
+    @Test
+    public void testCreateDefaultSinksMultipleSkipInvalid() {
+        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
+                Arrays.asList(
+                        "com.arpnetworking.metrics.impl.NonExistentSink",
+                        "com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$InvalidDefaultSink",
+                        "com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
+        Assert.assertNotNull(sinks);
+        Assert.assertEquals(1, sinks.size());
+        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+    }
+
+    @Test
+    public void testCreateSinkSuccess() {
+        final Optional<Sink> sink = TsdMetricsFactory.createSink(WarningSink.class);
+        Assert.assertTrue(sink.isPresent());
+        Assert.assertTrue(sink.get() instanceof WarningSink);
+    }
+
+    @Test
+    public void testCreateSinkFailure() {
+        final Optional<Sink> sink = TsdMetricsFactory.createSink(InvalidDefaultSink.class);
+        Assert.assertFalse(sink.isPresent());
+    }
+
+    @Test
+    public void testGetSinkExisting() {
+        final Optional<Class<? extends Sink>> sinkClass = TsdMetricsFactory.getSinkClass(
+                "com.arpnetworking.metrics.impl.WarningSink");
+        Assert.assertTrue(sinkClass.isPresent());
+        Assert.assertTrue(WarningSink.class.equals(sinkClass.get()));
+    }
+
+    @Test
+    public void testGetSinkDoesNotExist() {
+        final Optional<Class<? extends Sink>> sinkClass = TsdMetricsFactory.getSinkClass(
+                "com.arpnetworking.metrics.impl.NonExistentSink");
+        Assert.assertFalse(sinkClass.isPresent());
+    }
+
     @Mock
     private HostResolver _mockHostResolver;
     @Mock
     private UuidFactory _mockUuidFactory;
+
+    /**
+     * Invalid default sink. This sink is an invalid default sink because it
+     * lacks a nested builder class. There are other reasons the sink would
+     * be invalid as a default sink, but this is one of them.
+     */
+    public static class InvalidDefaultSink implements Sink {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void record(final Event event) {
+            // Do nothing
+        }
+    }
+
+    /**
+     * Valid default sink.
+     */
+    public static class ValidDefaultSink implements Sink {
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void record(final Event event) {
+            // Do nothing
+        }
+
+        /**
+         * Builder for <code>ValidDefaultSink</code>.
+         */
+        public static class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Sink build() {
+                return new ValidDefaultSink();
+            }
+        }
+    }
 }
