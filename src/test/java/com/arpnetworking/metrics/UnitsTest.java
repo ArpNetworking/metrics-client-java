@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for <code>Units</code>.
@@ -34,5 +36,26 @@ public class UnitsTest {
         Assert.assertTrue(Modifier.isPrivate(constructor.getModifiers()));
         constructor.setAccessible(true);
         constructor.newInstance();
+    }
+
+    @Test
+    public void testFromConversions() {
+        Assert.assertEquals(Units.DAY, Units.from(TimeUnit.DAYS));
+        Assert.assertEquals(Units.HOUR, Units.from(TimeUnit.HOURS));
+        Assert.assertEquals(Units.MINUTE, Units.from(TimeUnit.MINUTES));
+        Assert.assertEquals(Units.SECOND, Units.from(TimeUnit.SECONDS));
+        Assert.assertEquals(Units.MILLISECOND, Units.from(TimeUnit.MILLISECONDS));
+        Assert.assertEquals(Units.MICROSECOND, Units.from(TimeUnit.MICROSECONDS));
+        Assert.assertEquals(Units.NANOSECOND, Units.from(TimeUnit.NANOSECONDS));
+        Assert.assertNull(Units.from((TimeUnit) null));
+
+        Assert.assertEquals(Optional.of(Units.DAY), Units.from(Optional.of(TimeUnit.DAYS)));
+        Assert.assertEquals(Optional.of(Units.HOUR), Units.from(Optional.of(TimeUnit.HOURS)));
+        Assert.assertEquals(Optional.of(Units.MINUTE), Units.from(Optional.of(TimeUnit.MINUTES)));
+        Assert.assertEquals(Optional.of(Units.SECOND), Units.from(Optional.of(TimeUnit.SECONDS)));
+        Assert.assertEquals(Optional.of(Units.MILLISECOND), Units.from(Optional.of(TimeUnit.MILLISECONDS)));
+        Assert.assertEquals(Optional.of(Units.MICROSECOND), Units.from(Optional.of(TimeUnit.MICROSECONDS)));
+        Assert.assertEquals(Optional.of(Units.NANOSECOND), Units.from(Optional.of(TimeUnit.NANOSECONDS)));
+        Assert.assertEquals(Optional.empty(), Units.from(Optional.empty()));
     }
 }

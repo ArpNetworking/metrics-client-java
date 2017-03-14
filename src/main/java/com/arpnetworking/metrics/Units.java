@@ -20,6 +20,12 @@ import com.arpnetworking.metrics.impl.BaseUnit;
 import com.arpnetworking.metrics.impl.TsdCompoundUnit;
 import com.arpnetworking.metrics.impl.TsdUnit;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
+
 /**
  * Units available for recording metrics. The units are used to aggregate values
  * of the same metric published in different units (e.g. bytes and kilobytes).
@@ -32,6 +38,29 @@ import com.arpnetworking.metrics.impl.TsdUnit;
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 public final class Units {
+
+    /**
+     * Converts a {@link TimeUnit} to a {@link Unit}.
+     *
+     * @param timeUnit The {@link TimeUnit} to convert.
+     * @return A {@link Unit} representing the {@link TimeUnit}.
+     */
+    @Nullable public static Unit from(@Nullable final TimeUnit timeUnit) {
+        if (timeUnit == null) {
+            return null;
+        }
+        return TIME_UNIT_MAP.get(timeUnit);
+    }
+
+    /**
+     * Converts a {@link TimeUnit} to a {@link Unit}.
+     *
+     * @param timeUnit The {@link TimeUnit} to convert.
+     * @return A {@link Unit} representing the {@link TimeUnit}.
+     */
+    public static Optional<Unit> from(final Optional<TimeUnit> timeUnit) {
+        return timeUnit.map(Units::from);
+    }
 
     // Time
     /**
@@ -721,4 +750,18 @@ public final class Units {
     public static final Unit FAHRENHEIT = BaseUnit.FAHRENHEIT;
 
     private Units() {}
+
+    // CHECKSTYLE.OFF: IllegalInstantiation - No Guava dependency here.
+    private static final Map<TimeUnit, Unit> TIME_UNIT_MAP = new HashMap<>();
+    // CHECKSTYLE.ON: IllegalInstantiation
+
+    static {
+        TIME_UNIT_MAP.put(TimeUnit.DAYS, Units.DAY);
+        TIME_UNIT_MAP.put(TimeUnit.HOURS, Units.HOUR);
+        TIME_UNIT_MAP.put(TimeUnit.MINUTES, Units.MINUTE);
+        TIME_UNIT_MAP.put(TimeUnit.SECONDS, Units.SECOND);
+        TIME_UNIT_MAP.put(TimeUnit.MILLISECONDS, Units.MILLISECOND);
+        TIME_UNIT_MAP.put(TimeUnit.MICROSECONDS, Units.MICROSECOND);
+        TIME_UNIT_MAP.put(TimeUnit.NANOSECONDS, Units.NANOSECOND);
+    }
 }

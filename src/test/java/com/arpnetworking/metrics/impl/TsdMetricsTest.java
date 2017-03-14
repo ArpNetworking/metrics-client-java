@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
+@SuppressWarnings("deprecation")  // We still want to test deprecated methods
 public class TsdMetricsTest {
 
     @Test
@@ -870,19 +871,6 @@ public class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match("timerObjectB"));
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
-    }
-
-    @Test
-    public void testTimeUnitConversion() {
-        Assert.assertNull(TsdMetrics.fromTimeUnit(null));
-        Assert.assertEquals(Units.NANOSECOND, TsdMetrics.fromTimeUnit(TimeUnit.NANOSECONDS));
-        Assert.assertEquals(Units.MICROSECOND, TsdMetrics.fromTimeUnit(TimeUnit.MICROSECONDS));
-        Assert.assertEquals(Units.MILLISECOND, TsdMetrics.fromTimeUnit(TimeUnit.MILLISECONDS));
-        Assert.assertEquals(Units.SECOND, TsdMetrics.fromTimeUnit(TimeUnit.SECONDS));
-        Assert.assertEquals(Units.MINUTE, TsdMetrics.fromTimeUnit(TimeUnit.MINUTES));
-        Assert.assertEquals(Units.HOUR, TsdMetrics.fromTimeUnit(TimeUnit.HOURS));
-        Assert.assertEquals(Units.DAY, TsdMetrics.fromTimeUnit(TimeUnit.DAYS));
-        Assert.assertEquals(7, TimeUnit.values().length);
     }
 
     @Test
