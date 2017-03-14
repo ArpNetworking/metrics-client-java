@@ -198,10 +198,13 @@ public class TsdMetrics implements Metrics {
 
     /**
      * {@inheritDoc}
+     * @deprecated The use of TimeUnit directly in signatures is deprecated Use
+     * {@link Metrics#setTimer(String, long, Unit)} instead.
      */
     @Override
+    @Deprecated
     public void setTimer(final String name, final long duration, @Nullable final TimeUnit unit) {
-        setTimer(name, duration, fromTimeUnit(unit));
+        setTimer(name, duration, Units.from(unit));
     }
 
     /**
@@ -428,12 +431,6 @@ public class TsdMetrics implements Metrics {
         return clonedSamples;
     }
 
-    /* package private */ @Nullable static Unit fromTimeUnit(@Nullable final TimeUnit timeUnit) {
-        if (timeUnit == null) {
-            return null;
-        }
-        return TIME_UNIT_MAP.get(timeUnit);
-    }
 
     // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
     /* package private */ TsdMetrics(
@@ -490,20 +487,6 @@ public class TsdMetrics implements Metrics {
     private static final String HOST_KEY = "_host";
     private static final String SERVICE_KEY = "_service";
     private static final String CLUSTER_KEY = "_cluster";
-
-    // CHECKSTYLE.OFF: IllegalInstantiation - No Guava dependency here.
-    private static final Map<TimeUnit, Unit> TIME_UNIT_MAP = new HashMap<>();
-    // CHECKSTYLE.ON: IllegalInstantiation
-
-    static {
-        TIME_UNIT_MAP.put(TimeUnit.DAYS, Units.DAY);
-        TIME_UNIT_MAP.put(TimeUnit.HOURS, Units.HOUR);
-        TIME_UNIT_MAP.put(TimeUnit.MINUTES, Units.MINUTE);
-        TIME_UNIT_MAP.put(TimeUnit.SECONDS, Units.SECOND);
-        TIME_UNIT_MAP.put(TimeUnit.MILLISECONDS, Units.MILLISECOND);
-        TIME_UNIT_MAP.put(TimeUnit.MICROSECONDS, Units.MICROSECOND);
-        TIME_UNIT_MAP.put(TimeUnit.NANOSECONDS, Units.NANOSECOND);
-    }
 
     private final class CreateCounterFunction implements BiFunction<String, TsdCounter, TsdCounter> {
 

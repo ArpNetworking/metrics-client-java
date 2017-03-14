@@ -123,7 +123,10 @@ public interface Metrics extends AutoCloseable {
      * @param name The name of the timer.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
+     * @deprecated The use of TimeUnit directly in signatures is deprecated Use
+     * {@link Metrics#setTimer(String, long, Unit)} instead.
      */
+    @Deprecated
     void setTimer(String name, long duration, @Nullable TimeUnit unit);
 
     /**
