@@ -150,9 +150,6 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
         return match(valueMatcher, IsNull.nullValue(Unit.class));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void describeTo(final Description description) {
         description.appendText(" was ")
@@ -161,9 +158,6 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
                 .appendValue(_unitMatcher);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean matchesSafely(
             final Quantity item,

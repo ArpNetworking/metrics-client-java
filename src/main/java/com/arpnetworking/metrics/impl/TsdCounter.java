@@ -44,42 +44,27 @@ import java.util.concurrent.atomic.AtomicLong;
         return new TsdCounter(name, isOpen, DEFAULT_LOGGER);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void increment() {
         increment(1L);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrement() {
         increment(-1L);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void increment(final long value) {
         assertIsOpen();
         _value.addAndGet(value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrement(final long value) {
         increment(-1L * value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(
@@ -90,17 +75,11 @@ import java.util.concurrent.atomic.AtomicLong;
                 _isOpen);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Number getValue() {
         return Long.valueOf(_value.get());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Unit getUnit() {
         return null;

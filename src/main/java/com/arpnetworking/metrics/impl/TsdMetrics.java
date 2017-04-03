@@ -85,25 +85,16 @@ import javax.annotation.Nullable;
  */
 public class TsdMetrics implements Metrics {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Counter createCounter(final String name) {
         return createCounterInternal(name);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void incrementCounter(final String name) {
         incrementCounter(name, 1L);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void incrementCounter(final String name, final long value) {
         if (!assertIsOpen()) {
@@ -114,25 +105,16 @@ public class TsdMetrics implements Metrics {
         counter.increment(value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrementCounter(final String name) {
         incrementCounter(name, -1L);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void decrementCounter(final String name, final long value) {
         incrementCounter(name, -1L * value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void resetCounter(final String name) {
         if (!assertIsOpen()) {
@@ -141,9 +123,6 @@ public class TsdMetrics implements Metrics {
         _counters.put(name, createCounterInternal(name));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Timer createTimer(final String name) {
         if (!assertIsOpen()) {
@@ -158,9 +137,6 @@ public class TsdMetrics implements Metrics {
         return timer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void startTimer(final String name) {
         if (!assertIsOpen()) {
@@ -179,9 +155,6 @@ public class TsdMetrics implements Metrics {
         samples.add(timer);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void stopTimer(final String name) {
         if (!assertIsOpen()) {
@@ -197,7 +170,6 @@ public class TsdMetrics implements Metrics {
     }
 
     /**
-     * {@inheritDoc}
      * @deprecated The use of TimeUnit directly in signatures is deprecated Use
      * {@link Metrics#setTimer(String, long, Unit)} instead.
      */
@@ -207,9 +179,6 @@ public class TsdMetrics implements Metrics {
         setTimer(name, duration, Units.from(unit));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setTimer(final String name, final long duration, @Nullable final Unit unit) {
         if (!assertIsOpen()) {
@@ -219,17 +188,11 @@ public class TsdMetrics implements Metrics {
         samples.add(TsdQuantity.newInstance(Long.valueOf(duration), unit));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final double value) {
         setGauge(name, value, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final double value, @Nullable final Unit unit) {
         if (!assertIsOpen()) {
@@ -239,17 +202,11 @@ public class TsdMetrics implements Metrics {
         list.add(TsdQuantity.newInstance(Double.valueOf(value), unit));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final long value) {
         setGauge(name, value, null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setGauge(final String name, final long value, @Nullable final Unit unit) {
         if (!assertIsOpen()) {
@@ -259,9 +216,6 @@ public class TsdMetrics implements Metrics {
         list.add(TsdQuantity.newInstance(Long.valueOf(value), unit));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAnnotation(final String key, final String value) {
         if (!assertIsOpen()) {
@@ -270,9 +224,6 @@ public class TsdMetrics implements Metrics {
         _annotations.put(key, value);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void addAnnotations(final Map<String, String> map) {
         if (!assertIsOpen()) {
@@ -283,17 +234,11 @@ public class TsdMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isOpen() {
         return _isOpen.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         if (!assertIsOpen(_isOpen.getAndSet(false))) {
@@ -320,27 +265,18 @@ public class TsdMetrics implements Metrics {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Nullable
     public Instant getOpenTime() {
         return _initialTimestamp;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Nullable
     public Instant getCloseTime() {
         return _finalTimestamp;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(

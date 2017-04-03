@@ -48,18 +48,12 @@ public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends
         return new MetricMatcher(arguments);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void describeTo(final Description description) {
         description.appendText(" was ")
                 .appendValue(_expected);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean matchesSafely(
             final Map<? extends String, ? extends List<Quantity>> item,

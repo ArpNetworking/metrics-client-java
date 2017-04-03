@@ -45,9 +45,6 @@ import javax.annotation.Nullable;
  */
 public final class TsdCompoundUnit implements CompoundUnit {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
         return _name.updateAndGet(existingName -> {
@@ -90,25 +87,16 @@ public final class TsdCompoundUnit implements CompoundUnit {
         });
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Unit> getNumeratorUnits() {
         return Collections.unmodifiableList(_numeratorUnits);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Unit> getDenominatorUnits() {
         return Collections.unmodifiableList(_denominatorUnits);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object other) {
         if (this == other) {
@@ -124,17 +112,11 @@ public final class TsdCompoundUnit implements CompoundUnit {
                 && Objects.equals(_denominatorUnits, otherCompoundUnit._denominatorUnits);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_numeratorUnits, _denominatorUnits);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(
@@ -355,9 +337,6 @@ public final class TsdCompoundUnit implements CompoundUnit {
 
     private static final class UnitNameComparator implements Comparator<Unit>, Serializable {
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public int compare(final Unit unit1, final Unit unit2) {
             return unit1.getName().compareTo(unit2.getName());

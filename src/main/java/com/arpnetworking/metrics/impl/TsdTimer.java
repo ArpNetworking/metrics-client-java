@@ -44,17 +44,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
         return new TsdTimer(name, isOpen, DEFAULT_LOGGER);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void stop() {
         close();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         final boolean wasRunning = _isRunning.getAndSet(false);
@@ -71,9 +65,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void abort() {
         final boolean wasAborted = _isAborted.getAndSet(true);
@@ -88,9 +79,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Number getValue() {
         if (_isRunning.get()) {
@@ -99,33 +87,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
         return Long.valueOf(_elapsedTime);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Unit getUnit() {
         return Units.NANOSECOND;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isRunning() {
         return _isRunning.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isAborted() {
         return _isAborted.get();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(
