@@ -152,9 +152,6 @@ public class TsdMetricsFactory implements MetricsFactory {
                 .build();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Metrics create() {
         final UUID uuid = _uuidFactory.get();
@@ -186,9 +183,6 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(

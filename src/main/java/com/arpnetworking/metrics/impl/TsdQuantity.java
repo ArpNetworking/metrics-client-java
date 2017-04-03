@@ -40,26 +40,17 @@ import javax.annotation.Nullable;
         return new TsdQuantity(value, unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Number getValue() {
         return _value;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     @Nullable
     public Unit getUnit() {
         return _unit;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object other) {
         if (this == other) {
@@ -75,17 +66,11 @@ import javax.annotation.Nullable;
                 && Objects.equals(_unit, otherQuantity._unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_value, _unit);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(

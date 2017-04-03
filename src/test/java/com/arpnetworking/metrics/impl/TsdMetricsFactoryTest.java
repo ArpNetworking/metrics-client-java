@@ -426,9 +426,6 @@ public class TsdMetricsFactoryTest {
      */
     public static class InvalidDefaultSink implements Sink {
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void record(final Event event) {
             // Do nothing
@@ -440,9 +437,6 @@ public class TsdMetricsFactoryTest {
      */
     public static class ValidDefaultSink implements Sink {
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public void record(final Event event) {
             // Do nothing
@@ -453,9 +447,6 @@ public class TsdMetricsFactoryTest {
          */
         public static class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
 
-            /**
-             * {@inheritDoc}
-             */
             @Override
             public Sink build() {
                 return new ValidDefaultSink();

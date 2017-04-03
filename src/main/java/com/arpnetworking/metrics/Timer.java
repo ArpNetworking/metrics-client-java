@@ -62,9 +62,6 @@ public interface Timer extends AutoCloseable {
      */
     boolean isAborted();
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     void close();
 }

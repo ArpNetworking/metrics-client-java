@@ -37,17 +37,11 @@ public final class TsdUnit implements Unit {
         return _baseScale;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
         return _baseScale.getName() + _baseUnit.getName();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object other) {
         if (this == other) {
@@ -63,17 +57,11 @@ public final class TsdUnit implements Unit {
                 && Objects.equals(_baseScale, otherUnit._baseScale);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_baseUnit, _baseScale);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(
