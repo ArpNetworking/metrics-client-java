@@ -216,7 +216,7 @@ public class TsdMetrics implements Metrics {
             return;
         }
         final ConcurrentLinkedDeque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
-        samples.add(TsdQuantity.newInstance(Long.valueOf(duration), unit));
+        samples.add(TsdQuantity.newInstance(duration, unit));
     }
 
     /**
@@ -236,7 +236,7 @@ public class TsdMetrics implements Metrics {
             return;
         }
         final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-        list.add(TsdQuantity.newInstance(Double.valueOf(value), unit));
+        list.add(TsdQuantity.newInstance(value, unit));
     }
 
     /**
@@ -256,7 +256,7 @@ public class TsdMetrics implements Metrics {
             return;
         }
         final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-        list.add(TsdQuantity.newInstance(Long.valueOf(value), unit));
+        list.add(TsdQuantity.newInstance(value, unit));
     }
 
     /**
@@ -493,7 +493,7 @@ public class TsdMetrics implements Metrics {
         public CreateCounterFunction() {}
 
         @Override
-        public TsdCounter apply(final String name, final TsdCounter existingValue) {
+        public TsdCounter apply(final String name, @Nullable final TsdCounter existingValue) {
             if (existingValue == null) {
                 final TsdCounter newCounter = TsdCounter.newInstance(name, _isOpen);
                 final ConcurrentLinkedDeque<Quantity> counters = getOrCreateDeque(_counterSamples, name);

@@ -32,7 +32,7 @@ package com.arpnetworking.metrics;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public interface Counter {
+public interface Counter extends Quantity {
 
     /**
      * Increment the counter sample by 1.

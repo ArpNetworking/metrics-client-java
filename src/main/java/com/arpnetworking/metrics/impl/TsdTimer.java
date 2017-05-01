@@ -96,7 +96,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         if (_isRunning.get()) {
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
         }
-        return Long.valueOf(_elapsedTime);
+        return _elapsedTime;
     }
 
     /**
@@ -131,8 +131,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
         return String.format(
                 "TsdTimer{Name=%s, StartTime=%s, ElapsedTime=%s, IsRunning=%s, IsAborted=%s, IsOpen=%s}",
                 _name,
-                Long.valueOf(_startTime),
-                Long.valueOf(_elapsedTime),
+                _startTime,
+                _elapsedTime,
                 _isRunning,
                 _isAborted,
                 _isOpen);
