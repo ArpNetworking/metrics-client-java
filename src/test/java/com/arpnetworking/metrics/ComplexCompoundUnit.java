@@ -42,25 +42,16 @@ public class ComplexCompoundUnit implements CompoundUnit {
         _name = name;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Unit> getNumeratorUnits() {
         return _numeratorUnits;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<Unit> getDenominatorUnits() {
         return _denominatorUnits;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
         return _name;

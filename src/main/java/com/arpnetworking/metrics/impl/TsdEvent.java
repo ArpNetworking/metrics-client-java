@@ -54,41 +54,26 @@ import java.util.Objects;
         _gaugeSamples = gaugeSamples;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Map<String, String> getAnnotations() {
         return Collections.unmodifiableMap(_annotations);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Map<String, List<Quantity>> getTimerSamples() {
         return Collections.unmodifiableMap(_timerSamples);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Map<String, List<Quantity>> getCounterSamples() {
         return Collections.unmodifiableMap(_counterSamples);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Map<String, List<Quantity>> getGaugeSamples() {
         return Collections.unmodifiableMap(_gaugeSamples);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean equals(final Object other) {
         if (this == other) {
@@ -104,17 +89,11 @@ import java.util.Objects;
                 && Objects.equals(_gaugeSamples, otherEvent._gaugeSamples);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_annotations, _counterSamples, _timerSamples, _gaugeSamples);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(

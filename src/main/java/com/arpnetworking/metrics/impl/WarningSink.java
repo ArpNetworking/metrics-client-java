@@ -32,9 +32,6 @@ import javax.annotation.Nullable;
  */
 /* package private */ final class WarningSink implements Sink {
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void record(final Event event) {
         _logger.warn(String.format(
@@ -42,9 +39,6 @@ import javax.annotation.Nullable;
                 _reasons));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String toString() {
         return String.format(
@@ -91,9 +85,6 @@ import javax.annotation.Nullable;
             return this;
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public Sink build() {
             // Defaults

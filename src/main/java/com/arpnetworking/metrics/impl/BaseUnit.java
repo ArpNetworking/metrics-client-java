@@ -84,9 +84,6 @@ public enum BaseUnit implements Unit {
      */
     KELVIN("kelvin");
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public String getName() {
         return _name;
