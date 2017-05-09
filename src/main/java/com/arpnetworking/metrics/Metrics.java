@@ -81,7 +81,8 @@ public interface Metrics extends AutoCloseable {
 
     /**
      * Create a new sample for the counter with value zero. This most commonly used
-     * to record a zero-count for a particular counter. If clients wish to record set
+     * to either record a zero-count for a particular counter or to record multiple
+     * samples of the same counter in one unit of work. If clients wish to record set
      * count metrics then all counters should be reset before conditionally invoking
      * increment and/or decrement.
      *

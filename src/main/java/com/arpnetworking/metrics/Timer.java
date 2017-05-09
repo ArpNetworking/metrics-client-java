@@ -30,7 +30,7 @@ package com.arpnetworking.metrics;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public interface Timer extends AutoCloseable {
+public interface Timer extends AutoCloseable, Quantity {
 
     /**
      * Abort the timer and do not record any timing data in the associated

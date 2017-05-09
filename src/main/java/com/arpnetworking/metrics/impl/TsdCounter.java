@@ -77,7 +77,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
     @Override
     public Number getValue() {
-        return Long.valueOf(_value.get());
+        return _value.get();
     }
 
     @Override
