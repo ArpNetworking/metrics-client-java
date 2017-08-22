@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.metrics.StopWatch;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,6 +79,19 @@ public class TsdTimerTest {
         final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
         timer.close();
         Mockito.verifyZeroInteractions(logger);
+        timer.close();
+        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testAlreadyStoppedRaceCondition() {
+        final AtomicBoolean isOpen = new AtomicBoolean(true);
+        final Logger logger = createSlf4jLoggerMock();
+        final StopWatch stopWatch = Mockito.mock(StopWatch.class);
+        Mockito.doReturn(true).when(stopWatch).isRunning();
+        Mockito.doThrow(new IllegalStateException("Stopwatch already stopped")).when(stopWatch).stop();
+        @SuppressWarnings("resource")
+        final TsdTimer timer = new TsdTimer("timerName", isOpen, stopWatch, logger);
         timer.close();
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
     }
@@ -151,6 +165,8 @@ public class TsdTimerTest {
         Mockito.verify(logger, Mockito.never()).warn(Mockito.argThat(Matchers.any(String.class)));
         timer.getValue();
         Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        timer.getUnit();
+        Mockito.verify(logger, Mockito.times(2)).warn(Mockito.argThat(Matchers.any(String.class)));
     }
 
     @Test
