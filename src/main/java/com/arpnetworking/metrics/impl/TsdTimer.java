@@ -16,6 +16,7 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Quantity;
+import com.arpnetworking.metrics.StopWatch;
 import com.arpnetworking.metrics.Timer;
 import com.arpnetworking.metrics.Unit;
 import com.arpnetworking.metrics.Units;
@@ -51,7 +52,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     @Override
     public void close() {
-        final boolean wasRunning = _isRunning.getAndSet(false);
+        final boolean wasRunning = _stopWatch.isRunning();
         final boolean wasAborted = _isAborted.get();
         if (!_isOpen.get()) {
             _logger.warn(String.format("Timer closed/stopped after metrics instance closed; timer=%s", this));
@@ -61,14 +62,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
         } else if (!wasRunning) {
             _logger.warn(String.format("Timer closed/stopped multiple times; timer=%s", this));
         } else {
-            _elapsedTime = System.nanoTime() - _startTime;
+            try {
+                _stopWatch.stop();
+            } catch (final IllegalStateException e) {
+                _logger.warn(String.format("Timer closed/stopped multiple times; timer=%s", this));
+            }
         }
     }
 
     @Override
     public void abort() {
         final boolean wasAborted = _isAborted.getAndSet(true);
-        final boolean wasRunning = _isRunning.getAndSet(false);
+        final boolean wasRunning = _stopWatch.isRunning();
         if (!_isOpen.get()) {
             _logger.warn(String.format("Timer aborted after metrics instance closed; timer=%s", this));
         }
@@ -81,20 +86,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     @Override
     public Number getValue() {
-        if (_isRunning.get()) {
+        if (_stopWatch.isRunning()) {
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
+            return 0;
         }
-        return _elapsedTime;
+        return _stopWatch.getElapsedTime().getValue();
     }
 
     @Override
     public Unit getUnit() {
-        return Units.NANOSECOND;
+        if (_stopWatch.isRunning()) {
+            _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
+            return Units.NANOSECOND;
+        }
+        return _stopWatch.getElapsedTime().getUnit();
     }
 
     @Override
     public boolean isRunning() {
-        return _isRunning.get();
+        return _stopWatch.isRunning();
     }
 
     @Override
@@ -105,11 +115,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
     @Override
     public String toString() {
         return String.format(
-                "TsdTimer{Name=%s, StartTime=%s, ElapsedTime=%s, IsRunning=%s, IsAborted=%s, IsOpen=%s}",
+                "TsdTimer{Name=%s, StopWatch=%s, IsAborted=%s, IsOpen=%s}",
                 _name,
-                _startTime,
-                _elapsedTime,
-                _isRunning,
+                _stopWatch,
                 _isAborted,
                 _isOpen);
     }
@@ -119,17 +127,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
         _name = name;
         _isOpen = isOpen;
         _logger = logger;
-        _startTime = System.nanoTime();
-        _isRunning = new AtomicBoolean(true);
+        _stopWatch = StopWatch.start();
+        _isAborted = new AtomicBoolean(false);
+    }
+
+    TsdTimer(final String name, final AtomicBoolean isOpen, final StopWatch stopWatch, final Logger logger) {
+        _name = name;
+        _isOpen = isOpen;
+        _logger = logger;
+        _stopWatch = stopWatch;
         _isAborted = new AtomicBoolean(false);
     }
 
     private final String _name;
     private final AtomicBoolean _isOpen;
-    private final AtomicBoolean _isRunning;
     private final AtomicBoolean _isAborted;
-    private final long _startTime;
-    private long _elapsedTime = 0;
+    private final StopWatch _stopWatch;
     private final Logger _logger;
 
     private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(TsdTimer.class);
