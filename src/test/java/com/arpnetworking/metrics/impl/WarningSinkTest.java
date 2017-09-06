@@ -22,6 +22,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.hamcrest.MockitoHamcrest;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -57,7 +58,8 @@ public class WarningSinkTest {
         sink.record(event);
 
         Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString(reasons.toString())));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+                Matchers.containsString(reasons.toString())));
     }
 
     @Test
@@ -73,7 +75,8 @@ public class WarningSinkTest {
         sink.record(event);
 
         Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString("Reasons must be a non-null list")));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+                Matchers.containsString("Reasons must be a non-null list")));
     }
 
     @Test
@@ -88,6 +91,7 @@ public class WarningSinkTest {
         sink.record(event);
 
         Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.containsString("Reasons must be a non-empty list")));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+                Matchers.containsString("Reasons must be a non-empty list")));
     }
 }

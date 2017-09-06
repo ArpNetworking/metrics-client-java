@@ -105,8 +105,8 @@ public class Samples {
         final MetricsFactory metricsFactory = createMetricsFactory();
 
         // Begin sample:
-        try (final Metrics metrics = metricsFactory.create()) {
-            try (final Timer timer = metrics.createTimer("timer")) {
+        try (Metrics metrics = metricsFactory.create()) {
+            try (Timer timer = metrics.createTimer("timer")) {
                 // Time unsafe operation (e.g. this may throw)
                 Thread.sleep(1000);
             }

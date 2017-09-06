@@ -257,11 +257,18 @@ public class TsdMetrics implements Metrics {
         final Map<String, List<Quantity>> gaugeSamples = cloneSamples(_gaugeSamples);
 
         for (final Sink sink : _sinks) {
-            sink.record(new TsdEvent(
-                    annotations,
-                    timerSamples,
-                    counterSamples,
-                    gaugeSamples));
+            try {
+                sink.record(new TsdEvent(
+                        annotations,
+                        timerSamples,
+                        counterSamples,
+                        gaugeSamples));
+                // CHECKSTYLE.OFF: IllegalCatch - Prevent an exception leak; see class Javadoc
+            } catch (final RuntimeException e) {
+                // CHECKSTYLE.ON: IllegalCatch
+                // This is in place of an exception; see class Javadoc
+                _logger.warn(String.format("Metrics sink failed to record; sink=%s", sink.getClass()), e);
+            }
         }
     }
 

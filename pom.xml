@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.0.31</version>
+    <version>1.1.0</version>
     <relativePath />
   </parent>
 
@@ -29,7 +29,7 @@
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
   <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.8.1-SNAPSHOT</version>
+  <version>0.9.0-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -68,16 +68,16 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.9.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.13.0</arpnetworking.commons.version>
     <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <jsr305.version>3.0.1</jsr305.version>
     <junit.version>4.12</junit.version>
-    <mockito.version>1.10.19</mockito.version>
-    <slf4j.version>1.7.22</slf4j.version>
+    <mockito.version>2.7.0</mockito.version>
+    <slf4j.version>1.7.25</slf4j.version>
 
     <!--Plugin versions-->
-    <maven.shade.plugin.version>2.4.3</maven.shade.plugin.version>
+    <maven.shade.plugin.version>3.1.0</maven.shade.plugin.version>
 
     <!-- Findbugs -->
     <!-- NOTE: Custom version excludes sample code as well -->
