@@ -68,7 +68,7 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.13.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.13.1</arpnetworking.commons.version>
     <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
     <hamcrest.version>2.0.0.0</hamcrest.version>
     <jsr305.version>3.0.1</jsr305.version>
