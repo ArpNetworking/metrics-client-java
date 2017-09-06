@@ -211,8 +211,8 @@ Annotations can be used to augment the context of the emitted metric. This can b
 The Metrics interface as well as the Timer and Counter interfaces extend [Closeable](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html) which allows you to use Java 7's try-with-resources pattern.  For example:
 
 ```java
-try (final Metrics metrics = metricsFactory.create()) {
-    try (final Timer timer = metrics.createTimer("timer")) {
+try (Metrics metrics = metricsFactory.create()) {
+    try (Timer timer = metrics.createTimer("timer")) {
         // Time unsafe operation (e.g. this may throw)
         Thread.sleep(1000);
     }

@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.hamcrest.MockitoHamcrest;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -222,7 +223,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         final Counter counter = metrics.createCounter("counter-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
         Assert.assertNotNull(counter);
     }
 
@@ -234,7 +235,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.incrementCounter("counter-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -245,7 +246,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.resetCounter("counter-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -256,7 +257,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.setGauge("gauge-closed", 1.23);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -267,7 +268,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.setGauge("gauge-closed", 10L);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -278,7 +279,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         final Timer timer = metrics.createTimer("timer-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
         Assert.assertNotNull(timer);
     }
 
@@ -290,7 +291,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.setTimer("timer-closed", 1L, TimeUnit.MILLISECONDS);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -301,7 +302,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.startTimer("timer-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -312,7 +313,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.stopTimer("timer-closed");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -323,7 +324,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.addAnnotation("key", "value");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -339,7 +340,7 @@ public class TsdMetricsTest {
         annotations.put("key1", "value1");
         annotations.put("key2", "value2");
         metrics.addAnnotations(annotations);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -351,7 +352,23 @@ public class TsdMetricsTest {
         metrics.close();
         Mockito.verifyZeroInteractions(logger);
         metrics.close();
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testCloseSinkThrows() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final Sink sink = Mockito.mock(Sink.class);
+        Mockito.doThrow(new NullPointerException("Test exception")).when(sink).record(Mockito.any(Event.class));
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        metrics.close();
+        Mockito.verify(sink).record(Mockito.any(Event.class));
+        Mockito.verifyNoMoreInteractions(sink);
+        Mockito.verify(logger).warn(
+                Mockito.startsWith("Metrics sink failed to record; sink="),
+                Mockito.any(NullPointerException.class));
+        Mockito.verifyNoMoreInteractions(logger);
     }
 
     @Test
@@ -361,7 +378,7 @@ public class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.startTimer("timer-already-started");
         metrics.startTimer("timer-already-started");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -370,7 +387,7 @@ public class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.stopTimer("timer-not-started");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -382,13 +399,13 @@ public class TsdMetricsTest {
         metrics.stopTimer("timer-already-stopped");
         Mockito.verifyZeroInteractions(logger);
         metrics.stopTimer("timer-already-stopped");
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testCloseTryWithResource() {
         final Sink sink = Mockito.mock(Sink.class);
-        try (final TsdMetrics metrics = createTsdMetrics(sink)) {
+        try (TsdMetrics metrics = createTsdMetrics(sink)) {
             metrics.incrementCounter("testCloseTryWithResource");
         }
 
@@ -716,10 +733,10 @@ public class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(1L), Units.NANOSECOND),
                         "timerObjectB",
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(2)), Units.NANOSECOND),
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(Long.valueOf(1)), Units.NANOSECOND)));
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(2L), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(1L), Units.NANOSECOND)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }

@@ -19,6 +19,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.hamcrest.MockitoHamcrest;
 import org.slf4j.Logger;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -98,7 +99,7 @@ public class TsdCounterTest {
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
         counter.increment();
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -110,7 +111,7 @@ public class TsdCounterTest {
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
         counter.increment(2L);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -122,7 +123,7 @@ public class TsdCounterTest {
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
         counter.decrement();
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -134,7 +135,7 @@ public class TsdCounterTest {
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
         counter.decrement(2L);
-        Mockito.verify(logger).warn(Mockito.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test

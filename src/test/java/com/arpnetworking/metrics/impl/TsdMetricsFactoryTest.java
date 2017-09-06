@@ -163,7 +163,9 @@ public class TsdMetricsFactoryTest {
 
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
-        Mockito.verify(logger).warn(Mockito.anyString(), Mockito.any(UnknownHostException.class));
+        Mockito.verify(logger).warn(
+                Mockito.eq("Unable to construct TsdMetrics, metrics disabled; failures=[Unable to determine hostname]"),
+                Mockito.any(RuntimeException.class));
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
         metrics.close();
@@ -188,8 +190,8 @@ public class TsdMetricsFactoryTest {
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
         metrics.close();
-        Mockito.verify(sink1).record(org.mockito.Matchers.any(Event.class));
-        Mockito.verify(sink2).record(org.mockito.Matchers.any(Event.class));
+        Mockito.verify(sink1).record(Mockito.any(Event.class));
+        Mockito.verify(sink2).record(Mockito.any(Event.class));
     }
 
     @Test

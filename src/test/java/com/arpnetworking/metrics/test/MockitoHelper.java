@@ -16,7 +16,7 @@
 package com.arpnetworking.metrics.test;
 
 import org.hamcrest.Matcher;
-import org.mockito.Matchers;
+import org.mockito.hamcrest.MockitoHamcrest;
 
 /**
  * Additional helper methods for Mockito.
@@ -37,7 +37,7 @@ public final class MockitoHelper {
      */
     @SuppressWarnings("unchecked")
     public static <T> T argThat(final Matcher<? super T> matcher) {
-        return (T) Matchers.argThat(matcher);
+        return (T) MockitoHamcrest.argThat(matcher);
     }
 
     private MockitoHelper() {}
