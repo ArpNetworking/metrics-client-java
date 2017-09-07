@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of <code>Counter</code>.  This class is thread safe.
@@ -31,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 /* package private */ final class TsdCounter implements Counter, Quantity {
     /**
-     * Package private constructor. All <code>TsdCounter</code> instances should
+     * Package private static factory. All <code>TsdCounter</code> instances should
      * be created through the <code>TsdMetrics</code> instance.
      *
      * @param name The name of the counter.
@@ -81,6 +82,7 @@ import java.util.concurrent.atomic.AtomicLong;
     }
 
     @Override
+    @Nullable
     public Unit getUnit() {
         return null;
     }
