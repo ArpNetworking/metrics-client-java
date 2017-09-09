@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 
 /**
  * Implementation of <code>Timer</code>. This class is thread safe.
@@ -32,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 /* package private */ final class TsdTimer implements Timer, Quantity {
     /**
-     * Package private constructor. All <code>TsdTimer</code> instances should
+     * Package private static factory. All <code>TsdTimer</code> instances should
      * be created through the <code>TsdMetrics</code> instance.
      *
      * @param name The name of the timer.
@@ -41,7 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
      * cyclical dependency between <code>TsdMetrics</code> and
      * <code>TsdTimer</code> which could cause garbage collection delays.
      */
-    /* package private */static TsdTimer newInstance(final String name, final AtomicBoolean isOpen) {
+    /* package private */ static TsdTimer newInstance(final String name, final AtomicBoolean isOpen) {
         return new TsdTimer(name, isOpen, DEFAULT_LOGGER);
     }
 
@@ -94,6 +95,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
     }
 
     @Override
+    @Nullable
     public Unit getUnit() {
         if (_stopWatch.isRunning()) {
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
