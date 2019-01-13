@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.10</version>
     <relativePath />
   </parent>
 
@@ -68,12 +68,12 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.13.1</arpnetworking.commons.version>
+    <arpnetworking.commons.version>1.18.0</arpnetworking.commons.version>
     <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
-    <hamcrest.version>2.0.0.0</hamcrest.version>
-    <jsr305.version>3.0.1</jsr305.version>
+    <hamcrest.version>2.1</hamcrest.version>
+    <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.12</junit.version>
-    <mockito.version>2.7.0</mockito.version>
+    <mockito.version>2.23.4</mockito.version>
     <slf4j.version>1.7.25</slf4j.version>
 
     <!-- Findbugs -->
@@ -140,7 +140,7 @@
     <!-- Test -->
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>java-hamcrest</artifactId>
+      <artifactId>hamcrest</artifactId>
       <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
