@@ -137,17 +137,27 @@
       <artifactId>findbugs-annotations</artifactId>
       <version>${findbugs.annotations.version}</version>
     </dependency>
-    <!-- Test -->
-    <dependency>
-      <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest</artifactId>
-      <version>${hamcrest.version}</version>
-      <scope>test</scope>
-    </dependency>
+
+    <!-- Test dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+      <exclusions>
+        <!-- TODO(ville): Remove once JUnit depends on modern hamcrest; see:
+            http://hamcrest.org/JavaHamcrest/distributables
+        -->
+        <exclusion>
+          <groupId>org.hamcrest</groupId>
+          <artifactId>hamcrest-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>${hamcrest.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
