@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Tests for <code>TsdCompoundUnit</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class TsdCompoundUnitTest {
 

@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * Tests for <code>TsdEvent</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class TsdEventTest {
 

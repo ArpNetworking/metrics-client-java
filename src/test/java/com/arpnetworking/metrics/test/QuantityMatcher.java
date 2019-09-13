@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of <code>Matcher</code> which matches a <code>Quantity</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 

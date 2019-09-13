@@ -32,7 +32,7 @@ import java.util.Set;
  * Implementation of <code>Matcher</code> which matches a map of metrics
  * using the <code>QuantityMatcher</code> for each sample.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends String, ? extends List<Quantity>>> {
 

@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  * Implementation of <code>Sink</code> which emits a warning each time an
  * <code>Event</code> is to recorded.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class WarningSink implements Sink {
 
@@ -58,7 +58,7 @@ import javax.annotation.Nullable;
     /**
      * Builder for {@link WarningSink}.
      *
-     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
      */
     public static final class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
 

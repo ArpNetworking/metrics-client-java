@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 /**
  * Interface for value and unit. This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Quantity {
 

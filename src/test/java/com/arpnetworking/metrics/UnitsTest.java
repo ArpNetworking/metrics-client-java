@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for <code>Units</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class UnitsTest {
 

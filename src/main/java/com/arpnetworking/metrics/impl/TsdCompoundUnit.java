@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
  * Finally, two compound units are considered equal if their components
  * are equal regardless of order (e.g. foot,pounds equals pound,feet).
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class TsdCompoundUnit implements CompoundUnit {
 
@@ -139,7 +139,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
     /**
      * Builder for <code>TsdCompoundUnit</code>.
      *
-     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<Unit> {
 

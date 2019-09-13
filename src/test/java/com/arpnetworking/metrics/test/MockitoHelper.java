@@ -21,7 +21,7 @@ import org.mockito.hamcrest.MockitoHamcrest;
 /**
  * Additional helper methods for Mockito.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class MockitoHelper {
 

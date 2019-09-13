@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
 /**
  * Default implementation of <code>Quantity</code>. This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdQuantity implements Quantity {
 

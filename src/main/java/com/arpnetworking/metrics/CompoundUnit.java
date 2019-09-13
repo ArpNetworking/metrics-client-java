@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * Interface for a compound unit representation.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface CompoundUnit extends Unit {
 

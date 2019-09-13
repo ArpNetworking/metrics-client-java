@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
  * and in another where they do not without having to resort to the use
  * of <code>null</code> or <code>Optional</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class NoOpMetrics implements Metrics {
 

@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for <code>TsdMetrics</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 @SuppressWarnings("deprecation")  // We still want to test deprecated methods
 public final class TsdMetricsTest {

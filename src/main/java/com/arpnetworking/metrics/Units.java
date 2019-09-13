@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
  * have any unit. This library cannot detect such inconsistencies since
  * aggregation can occur across Metric instances, processes and even hosts.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class Units {
 

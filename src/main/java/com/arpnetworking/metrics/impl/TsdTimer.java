@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of <code>Timer</code>. This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdTimer implements Timer, Quantity {
     /**

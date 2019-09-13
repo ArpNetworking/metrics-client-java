@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Simple thread-safe implementation of {@link StopWatch}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class TsdStopWatch implements StopWatch {
 
