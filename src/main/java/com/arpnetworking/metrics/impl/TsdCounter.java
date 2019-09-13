@@ -17,13 +17,11 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Quantity;
-import com.arpnetworking.metrics.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link Counter}.  This class is thread safe.
@@ -79,12 +77,6 @@ import javax.annotation.Nullable;
     @Override
     public Number getValue() {
         return _value.get();
-    }
-
-    @Override
-    @Nullable
-    public Unit getUnit() {
-        return null;
     }
 
     private boolean assertIsOpen() {

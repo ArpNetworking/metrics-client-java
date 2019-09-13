@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.metrics.impl;
 
-import com.arpnetworking.metrics.Units;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,14 +32,6 @@ public final class NoOpTimerTest {
         Assert.assertEquals(0, timer.getValue());
         timer.close();
         Assert.assertEquals(0, timer.getValue());
-    }
-
-    @Test
-    public void testGetUnit() throws InterruptedException {
-        final NoOpTimer timer = new NoOpTimer();
-        Assert.assertEquals(Units.NANOSECOND, timer.getUnit());
-        timer.close();
-        Assert.assertEquals(Units.NANOSECOND, timer.getUnit());
     }
 
     @Test

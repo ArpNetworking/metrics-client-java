@@ -15,8 +15,6 @@
  */
 package com.arpnetworking.metrics;
 
-import javax.annotation.Nullable;
-
 /**
  * Interface for value and unit. This class is thread safe.
  *
@@ -30,11 +28,4 @@ public interface Quantity {
      * @return The magnitude.
      */
     Number getValue();
-
-    /**
-     * Access the units that the magnitude is expressed in.
-     *
-     * @return The units of the magnitude.
-     */
-    @Nullable Unit getUnit();
 }

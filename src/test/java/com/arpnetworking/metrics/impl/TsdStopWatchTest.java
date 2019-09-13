@@ -16,9 +16,10 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.StopWatch;
-import com.arpnetworking.metrics.Units;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests for {@link TsdStopWatch}.
@@ -42,7 +43,7 @@ public final class TsdStopWatchTest {
         Thread.sleep(1000);
         stopWatch.stop();
         final long elapsedTime = System.nanoTime() - startTime;
-        Assert.assertEquals(Units.NANOSECOND, stopWatch.getElapsedTime().getUnit());
+        Assert.assertEquals(TimeUnit.NANOSECONDS, stopWatch.getUnit());
         Assert.assertTrue(stopWatch.getElapsedTime().getValue().doubleValue() <= elapsedTime);
     }
 

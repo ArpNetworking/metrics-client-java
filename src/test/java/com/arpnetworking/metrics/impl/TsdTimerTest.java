@@ -44,13 +44,14 @@ public final class TsdTimerTest {
             Thread.sleep(minimumTimeInMilliseconds);
             resourceTimer.stop();
         }
-        final long elapsedTimeInNanoseconds = System.nanoTime() - startTime;
+        final double elapsedTimeInNanoseconds = System.nanoTime() - startTime;
         Assert.assertThat(
-                (Long) timer.getValue(),
-                Matchers.greaterThanOrEqualTo(TimeUnit.NANOSECONDS.convert(
+                (Double) timer.getValue(),
+                Matchers.greaterThanOrEqualTo(TsdMetrics.convertTimeUnit(
                         minimumTimeInMilliseconds,
-                        TimeUnit.MILLISECONDS)));
-        Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
+                        TimeUnit.MILLISECONDS,
+                        TimeUnit.SECONDS)));
+        Assert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
     }
 
     @Test
@@ -62,13 +63,14 @@ public final class TsdTimerTest {
             Thread.sleep(minimumTimeInMilliseconds);
             timer.stop();
 
-            final long elapsedTimeInNanoseconds = System.nanoTime() - startTime;
+            final double elapsedTimeInNanoseconds = System.nanoTime() - startTime;
             Assert.assertThat(
-                    (Long) timer.getValue(),
-                    Matchers.greaterThanOrEqualTo(TimeUnit.NANOSECONDS.convert(
+                    (Double) timer.getValue(),
+                    Matchers.greaterThanOrEqualTo(TsdMetrics.convertTimeUnit(
                             minimumTimeInMilliseconds,
-                            TimeUnit.MILLISECONDS)));
-            Assert.assertThat((Long) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
+                            TimeUnit.MILLISECONDS,
+                            TimeUnit.SECONDS)));
+            Assert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
         }
     }
 
@@ -166,8 +168,7 @@ public final class TsdTimerTest {
         Mockito.verify(logger, Mockito.never()).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
         timer.getValue();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
-        timer.getUnit();
-        Mockito.verify(logger, Mockito.times(2)).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        Mockito.verify(logger, Mockito.times(1)).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test

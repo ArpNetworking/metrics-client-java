@@ -30,40 +30,32 @@ public final class NoOpCounterTest {
     public void testIncrement() {
         final NoOpCounter counter = new NoOpCounter();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
         counter.increment();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
     }
 
     @Test
     public void testDecrement() {
         final NoOpCounter counter = new NoOpCounter();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
         counter.decrement();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
     }
 
     @Test
     public void testIncrementByValue() {
         final NoOpCounter counter = new NoOpCounter();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
         counter.increment(2);
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
     }
 
     @Test
     public void testDecrementByValue() {
         final NoOpCounter counter = new NoOpCounter();
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
         counter.decrement(2);
         Assert.assertEquals(0L, counter.getValue().longValue());
-        Assert.assertNull(counter.getUnit());
     }
 
     @Test

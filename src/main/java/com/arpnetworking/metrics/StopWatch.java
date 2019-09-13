@@ -17,6 +17,8 @@ package com.arpnetworking.metrics;
 
 import com.arpnetworking.metrics.impl.TsdStopWatch;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Interface for a thread safe stop watch. The stop watch starts on creation
  * and must be stopped to access the elapsed time. Once stopped the instance
@@ -57,4 +59,11 @@ public interface StopWatch {
      * @return the elapsed time as a {@link Quantity}.
      */
     Quantity getElapsedTime();
+
+    /**
+     * Retrieve the elapsed time unit.
+     *
+     * @return the elapsed time unit as a {@link TimeUnit}
+     */
+    TimeUnit getUnit();
 }

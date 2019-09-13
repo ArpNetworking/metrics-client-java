@@ -16,8 +16,6 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Quantity;
-import com.arpnetworking.metrics.Unit;
-import com.arpnetworking.metrics.Units;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -31,41 +29,37 @@ public final class TsdQuantityTest {
     @Test
     public void testQuantity() {
         final Long expectedValue = 1L;
-        final Unit expectedUnit = Units.BYTE;
-        final Quantity q = TsdQuantity.newInstance(expectedValue, expectedUnit);
+        final Quantity q = TsdQuantity.newInstance(expectedValue);
         Assert.assertEquals(expectedValue, q.getValue());
-        Assert.assertEquals(expectedUnit, q.getUnit());
     }
 
     @Test
     public void testEquals() {
-        final Quantity quantity = TsdQuantity.newInstance(1, Units.BYTE);
+        final Quantity quantity = TsdQuantity.newInstance(1);
         Assert.assertTrue(quantity.equals(quantity));
 
         Assert.assertTrue(
-                TsdQuantity.newInstance(1, Units.BYTE).equals(
-                        TsdQuantity.newInstance(1, Units.BYTE)));
+                TsdQuantity.newInstance(1).equals(
+                        TsdQuantity.newInstance(1)));
 
         Assert.assertFalse(quantity.equals(null));
         Assert.assertFalse(quantity.equals("This is a String"));
 
-        final Quantity differentQuantity1 = TsdQuantity.newInstance(1, Units.BIT);
-        final Quantity differentQuantity2 = TsdQuantity.newInstance(2, Units.BYTE);
+        final Quantity differentQuantity = TsdQuantity.newInstance(2);
 
-        Assert.assertFalse(quantity.equals(differentQuantity1));
-        Assert.assertFalse(quantity.equals(differentQuantity2));
+        Assert.assertFalse(quantity.equals(differentQuantity));
     }
 
     @Test
     public void testHashCode() {
         Assert.assertEquals(
-                TsdQuantity.newInstance(1, Units.BYTE).hashCode(),
-                TsdQuantity.newInstance(1, Units.BYTE).hashCode());
+                TsdQuantity.newInstance(1).hashCode(),
+                TsdQuantity.newInstance(1).hashCode());
     }
 
     @Test
     public void testToString() {
-        final String asString = TsdQuantity.newInstance(1, Units.BYTE).toString();
+        final String asString = TsdQuantity.newInstance(1).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
     }

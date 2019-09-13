@@ -17,11 +17,8 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
-import com.arpnetworking.metrics.Units;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
 
 /**
  * No operation implementation of {@link Timer}. This class is thread safe.
@@ -55,12 +52,6 @@ import javax.annotation.Nullable;
     @Override
     public Number getValue() {
         return 0;
-    }
-
-    @Override
-    @Nullable
-    public Unit getUnit() {
-        return Units.NANOSECOND;
     }
 
     @Override

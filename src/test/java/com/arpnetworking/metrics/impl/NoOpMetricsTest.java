@@ -16,7 +16,6 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Metrics;
-import com.arpnetworking.metrics.Units;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -107,13 +106,6 @@ public final class NoOpMetricsTest {
     }
 
     @Test
-    public void testSetTimerUnit() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setTimer("aTimer", 1, Units.SECOND);
-        // Does not throw.
-    }
-
-    @Test
     public void testSetGaugeDouble() {
         final Metrics metrics = new NoOpMetrics();
         metrics.setGauge("aGauge", 1.23d);
@@ -121,23 +113,9 @@ public final class NoOpMetricsTest {
     }
 
     @Test
-    public void testSetGaugeDoubleUnit() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setGauge("aGauge", 1.23d, Units.BITS_PER_SECOND);
-        // Does not throw.
-    }
-
-    @Test
     public void testSetGaugeLong() {
         final Metrics metrics = new NoOpMetrics();
         metrics.setGauge("aGauge", 123L);
-        // Does not throw.
-    }
-
-    @Test
-    public void testSetGaugeLongUnit() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setGauge("aGauge", 123L, Units.BITS_PER_SECOND);
         // Does not throw.
     }
 
