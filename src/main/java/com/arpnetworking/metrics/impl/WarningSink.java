@@ -25,8 +25,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of <code>Sink</code> which emits a warning each time an
- * <code>Event</code> is to recorded.
+ * Implementation of {@link Sink} which emits a warning each time an
+ * {@link Event} is to recorded.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

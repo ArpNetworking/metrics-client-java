@@ -17,17 +17,17 @@ package com.arpnetworking.metrics;
 
 /**
  * Interface for counter. Instances are initialized to zero on creation. The
- * zero-value sample is recorded when the <code>Metrics</code> instance is 
- * closed if no other actions are taken on the <code>Counter</code>.
+ * zero-value sample is recorded when the {@link Metrics} instance is
+ * closed if no other actions are taken on the {@link Counter}.
  * 
- * Modifying the <code>Counter</code> instance's value modifies the single 
- * sample value. When the associated <code>Metrics</code> instance is closed
+ * Modifying the {@link Counter} instance's value modifies the single
+ * sample value. When the associated {@link Metrics} instance is closed
  * whatever value the sample has is recorded. To create another sample you
- * create a new <code>Counter</code> instance with the same name. 
+ * create a new {@link Counter} instance with the same name.
  * 
- * Each counter instance is bound to a <code>Metrics</code> instance. After the
- * <code>Metrics</code> instance is closed any modifications to the  
- * <code>Counter</code> instances bound to that <code>Metrics</code> instance
+ * Each counter instance is bound to a {@link Metrics} instance. After the
+ * {@link Metrics} instance is closed any modifications to the
+ * {@link Counter} instances bound to that {@link Metrics} instance
  * will be ignored. 
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)

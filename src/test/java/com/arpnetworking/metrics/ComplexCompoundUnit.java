@@ -30,8 +30,8 @@ public class ComplexCompoundUnit implements CompoundUnit {
      * Public constructor.
      *
      * @param name The name of the complex compound unit.
-     * @param numeratorUnits The <code>List</code> of numerator <code>Unit</code> instances.
-     * @param denominatorUnits The <code>List</code> of denominator <code>Unit</code> instances.
+     * @param numeratorUnits The {@link List} of numerator {@link Unit} instances.
+     * @param denominatorUnits The {@link List} of denominator {@link Unit} instances.
      */
     public ComplexCompoundUnit(
             final String name,

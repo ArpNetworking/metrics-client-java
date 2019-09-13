@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tests for <code>TsdEvent</code>.
+ * Tests for {@link TsdEvent}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

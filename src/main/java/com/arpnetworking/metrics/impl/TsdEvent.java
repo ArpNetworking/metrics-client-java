@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Default implementation of <code>Event</code>.
+ * Default implementation of {@link Event}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

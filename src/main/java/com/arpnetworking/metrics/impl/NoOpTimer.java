@@ -24,14 +24,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
- * No operation implementation of <code>Timer</code>. This class is thread safe.
+ * No operation implementation of {@link Timer}. This class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 /* package private */ final class NoOpTimer implements Timer, Quantity {
     /**
-     * Package private constructor. All <code>NoOpTimer</code> instances should
-     * be created through the <code>NoOpMetrics</code> instance.
+     * Package private constructor. All {@link NoOpTimer} instances should
+     * be created through the {@link NoOpMetrics} instance.
      */
     /* package private */ NoOpTimer() {
         // Do nothing

@@ -31,11 +31,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
- * Default implementation of <code>CompoundUnit</code> a subtype of
- * <code>Unit</code> which is expressed with a <code>List</code> of
- * numerator and denominator <code>Unit</code> instances. It is
- * permissible to build a <code>TsdCompoundUnit</code> from other
- * <code>CompoundUnit</code> instances; however, this representation
+ * Default implementation of {@link CompoundUnit} a subtype of
+ * {@link Unit} which is expressed with a {@link List} of
+ * numerator and denominator {@link Unit} instances. It is
+ * permissible to build a {@link TsdCompoundUnit} from other
+ * {@link CompoundUnit} instances; however, this representation
  * will flatten on build. Consequently, any redundant units are removed
  * which could result in an empty compound unit (e.g. Unit.NO_UNIT).
  * Finally, two compound units are considered equal if their components
@@ -137,18 +137,18 @@ public final class TsdCompoundUnit implements CompoundUnit {
     private static final Comparator<Unit> UNIT_COMPARATOR = new UnitNameComparator();
 
     /**
-     * Builder for <code>TsdCompoundUnit</code>.
+     * Builder for {@link TsdCompoundUnit}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<Unit> {
 
         /**
-         * Create an instance of <code>Unit</code>. The instance may be
-         * <code>null</code> if the <code>Unit</code> reduces to a constant
+         * Create an instance of {@link Unit}. The instance may be
+         * {@code null} if the {@link Unit} reduces to a constant
          * (e.g. Byte / Byte).
          *
-         * @return Instance of <code>Unit</code>.
+         * @return Instance of {@link Unit}.
          */
         @Override
         public @Nullable Unit build() {
@@ -209,7 +209,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
          * Set the numerator units.
          *
          * @param value The numerator units.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setNumeratorUnits(final List<Unit> value) {
             _numeratorUnits = new ArrayList<>(value);
@@ -220,7 +220,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
          * Add a numerator unit. Helper for merging units.
          *
          * @param values The numerator unit(s) to add.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addNumeratorUnit(final Unit... values) {
             if (_numeratorUnits == null) {
@@ -236,7 +236,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
          * Set the denominator units.
          *
          * @param value The denominator units.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setDenominatorUnits(final List<Unit> value) {
             _denominatorUnits = new ArrayList<>(value);
@@ -247,7 +247,7 @@ public final class TsdCompoundUnit implements CompoundUnit {
          * Add a denominator unit. Helper for merging units.
          *
          * @param values The denominator unit(s) to add.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder addDenominatorUnit(final Unit... values) {
             if (_denominatorUnits == null) {

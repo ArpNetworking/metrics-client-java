@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Tests for <code>WarningSink</code>.
+ * Tests for {@link WarningSink}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

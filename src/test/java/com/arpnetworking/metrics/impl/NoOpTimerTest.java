@@ -21,7 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for <code>NoOpTimer</code>.
+ * Tests for {@link NoOpTimer}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

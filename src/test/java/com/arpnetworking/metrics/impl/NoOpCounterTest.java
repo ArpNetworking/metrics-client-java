@@ -20,7 +20,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for <code>NoOpCounter</code>.
+ * Tests for {@link NoOpCounter}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

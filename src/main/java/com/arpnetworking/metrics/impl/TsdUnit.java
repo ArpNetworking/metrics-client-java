@@ -23,7 +23,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Default implementation of <code>Unit</code>.
+ * Default implementation of {@link Unit}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -81,22 +81,17 @@ public final class TsdUnit implements Unit {
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdUnit.class);
 
     /**
-     * Builder for <code>TsdScaledUnit</code>.
+     * Builder for {@link TsdUnit}.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
      */
     public static final class Builder implements com.arpnetworking.commons.builder.Builder<Unit> {
 
         /**
-         * Create an instance of <code>Unit</code>. The instance may be
-         * <code>null</code> if no base unit is specified.
+         * Create an instance of {@link Unit}. The instance may be
+         * {@code null} if no base unit is specified.
          *
-         * <code>Optional</code> is empty if the <code>Unit</code> reduces to
-         * a constant (e.g. Byte / Byte).
-         *
-         * Create an instance of <code>Unit</code>.
-         *
-         * @return Instance of <code>Unit</code>.
+         * @return Instance of {@link Unit}.
          */
         @Override
         public @Nullable Unit build() {
@@ -118,7 +113,7 @@ public final class TsdUnit implements Unit {
          * Set the base unit.
          *
          * @param value The base unit.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setBaseUnit(final BaseUnit value) {
             _baseUnit = value;
@@ -129,7 +124,7 @@ public final class TsdUnit implements Unit {
          * Set the base scale.
          *
          * @param value The base scale.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setScale(final BaseScale value) {
             _baseScale = value;

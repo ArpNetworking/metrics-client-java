@@ -21,7 +21,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for <code>TsdStopWatch</code>.
+ * Tests for {@link TsdStopWatch}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */

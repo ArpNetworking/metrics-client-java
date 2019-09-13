@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Tests for <code>TsdMetricsFactory</code>.
+ * Tests for {@link TsdMetricsFactory}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
@@ -445,7 +445,7 @@ public class TsdMetricsFactoryTest {
         }
 
         /**
-         * Builder for <code>ValidDefaultSink</code>.
+         * Builder for {@link ValidDefaultSink}.
          */
         public static class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
 

@@ -28,11 +28,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of <code>Metrics</code> that provides safe interactions
+ * Implementation of {@link Metrics} that provides safe interactions
  * but does not actually publish any metrics. This is useful for merging
- * codepaths where in one clients provide a <code>Metrics</code> instance
+ * codepaths where in one clients provide a {@link Metrics} instance
  * and in another where they do not without having to resort to the use
- * of <code>null</code> or <code>Optional</code>.
+ * of {@code null} or {@code Optional}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
