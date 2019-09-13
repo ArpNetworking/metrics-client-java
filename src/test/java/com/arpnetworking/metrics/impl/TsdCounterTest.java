@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Tests for {@link TsdCounter}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdCounterTest {
+public final class TsdCounterTest {
 
     @Test
     public void testIncrement() {

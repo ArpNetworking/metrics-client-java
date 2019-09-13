@@ -32,9 +32,9 @@ import java.util.List;
 /**
  * Tests for {@link WarningSink}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class WarningSinkTest {
+public final class WarningSinkTest {
 
     @Test
     public void testWarningSink() {

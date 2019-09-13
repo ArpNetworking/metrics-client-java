@@ -29,9 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Tests for {@link TsdTimer}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdTimerTest {
+public final class TsdTimerTest {
 
     @Test
     public void testClose() throws InterruptedException {

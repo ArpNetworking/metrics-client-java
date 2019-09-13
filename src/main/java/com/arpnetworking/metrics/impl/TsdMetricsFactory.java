@@ -131,7 +131,7 @@ import javax.annotation.Nullable;
  *
  * This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class TsdMetricsFactory implements MetricsFactory {
 
@@ -319,7 +319,7 @@ public class TsdMetricsFactory implements MetricsFactory {
      *
      * This class is thread safe.
      *
-     * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+     * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<MetricsFactory> {
 

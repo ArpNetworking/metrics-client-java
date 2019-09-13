@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of {@link Timer}. This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdTimer implements Timer, Quantity {
     /**

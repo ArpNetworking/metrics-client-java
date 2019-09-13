@@ -21,9 +21,9 @@ import org.junit.Test;
 /**
  * Tests for {@link BaseUnit}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class BaseUnitTest {
+public final class BaseUnitTest {
 
     @Test
     public void testEnumeration() {

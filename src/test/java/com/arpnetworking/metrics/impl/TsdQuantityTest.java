@@ -24,9 +24,9 @@ import org.junit.Test;
 /**
  * Tests for {@link TsdQuantity}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdQuantityTest {
+public final class TsdQuantityTest {
 
     @Test
     public void testQuantity() {

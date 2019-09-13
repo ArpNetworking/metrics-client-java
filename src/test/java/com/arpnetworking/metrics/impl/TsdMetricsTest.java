@@ -48,10 +48,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for {@link TsdMetrics}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 @SuppressWarnings("deprecation")  // We still want to test deprecated methods
-public class TsdMetricsTest {
+public final class TsdMetricsTest {
 
     @Test
     public void testEmptySingleSink() {

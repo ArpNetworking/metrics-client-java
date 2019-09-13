@@ -26,7 +26,7 @@ import java.util.Objects;
 /**
  * Default implementation of {@link Event}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdEvent implements Event {
 

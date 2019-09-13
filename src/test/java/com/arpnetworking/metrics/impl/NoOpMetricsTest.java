@@ -29,9 +29,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * Tests for {@link NoOpMetrics}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class NoOpMetricsTest {
+public final class NoOpMetricsTest {
 
     @Test
     public void testCreateCounter() {

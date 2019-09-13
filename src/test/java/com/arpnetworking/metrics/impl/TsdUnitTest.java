@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Tests for {@link TsdUnit}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdUnitTest {
+public final class TsdUnitTest {
 
     @Test
     public void testAccessors() {

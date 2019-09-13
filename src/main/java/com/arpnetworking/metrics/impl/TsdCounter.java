@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of {@link Counter}.  This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdCounter implements Counter, Quantity {
     /**

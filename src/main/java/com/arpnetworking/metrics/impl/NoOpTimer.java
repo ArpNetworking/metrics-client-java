@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 /**
  * No operation implementation of {@link Timer}. This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class NoOpTimer implements Timer, Quantity {
     /**

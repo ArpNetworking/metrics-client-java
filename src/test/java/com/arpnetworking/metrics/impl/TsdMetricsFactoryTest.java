@@ -45,9 +45,9 @@ import java.util.UUID;
 /**
  * Tests for {@link TsdMetricsFactory}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdMetricsFactoryTest {
+public final class TsdMetricsFactoryTest {
 
     @Before
     public void setUp() {
@@ -426,7 +426,7 @@ public class TsdMetricsFactoryTest {
      * lacks a nested builder class. There are other reasons the sink would
      * be invalid as a default sink, but this is one of them.
      */
-    public static class InvalidDefaultSink implements Sink {
+    public static final class InvalidDefaultSink implements Sink {
 
         @Override
         public void record(final Event event) {
@@ -437,7 +437,7 @@ public class TsdMetricsFactoryTest {
     /**
      * Valid default sink.
      */
-    public static class ValidDefaultSink implements Sink {
+    public static final class ValidDefaultSink implements Sink {
 
         @Override
         public void record(final Event event) {
@@ -447,7 +447,7 @@ public class TsdMetricsFactoryTest {
         /**
          * Builder for {@link ValidDefaultSink}.
          */
-        public static class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
+        public static final class Builder implements com.arpnetworking.commons.builder.Builder<Sink> {
 
             @Override
             public Sink build() {

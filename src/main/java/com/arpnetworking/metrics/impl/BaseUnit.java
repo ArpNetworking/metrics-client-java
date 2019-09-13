@@ -20,7 +20,7 @@ import com.arpnetworking.metrics.Unit;
 /**
  * Base units.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public enum BaseUnit implements Unit {
 

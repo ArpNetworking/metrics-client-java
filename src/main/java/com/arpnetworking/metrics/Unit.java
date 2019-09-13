@@ -19,7 +19,7 @@ package com.arpnetworking.metrics;
  * Interface for a basic unit representation.  User defined implementations of
  * this interface are not supported at this time.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Unit {
 

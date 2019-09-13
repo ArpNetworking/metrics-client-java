@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of {@link Matcher} which matches a {@link Quantity}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 

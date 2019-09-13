@@ -29,9 +29,9 @@ import java.util.Map;
 /**
  * Tests for {@link TsdEvent}.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdEventTest {
+public final class TsdEventTest {
 
     @Test
     public void test() {
