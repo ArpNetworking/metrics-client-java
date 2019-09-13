@@ -25,7 +25,7 @@ import org.junit.Test;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class NoOpTimerTest {
+public final class NoOpTimerTest {
 
     @Test
     public void testGetValue() throws InterruptedException {

@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdCompoundUnitTest {
+public final class TsdCompoundUnitTest {
 
     @Test
     public void testBaseUnitCreation() {
@@ -587,7 +587,7 @@ public class TsdCompoundUnitTest {
         Assert.assertTrue(units.remove(Units.SECOND));
     }
 
-    private static class MyCompoundUnitA implements CompoundUnit {
+    private static final class MyCompoundUnitA implements CompoundUnit {
         @Override
         public List<Unit> getNumeratorUnits() {
             return Collections.singletonList(
@@ -612,7 +612,7 @@ public class TsdCompoundUnitTest {
         }
     }
 
-    private static class MyCompoundUnitB implements CompoundUnit {
+    private static final class MyCompoundUnitB implements CompoundUnit {
         @Override
         public List<Unit> getNumeratorUnits() {
             return Collections.singletonList(

@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdCounterTest {
+public final class TsdCounterTest {
 
     @Test
     public void testIncrement() {
