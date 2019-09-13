@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Quantity;
 
@@ -47,11 +48,13 @@ import java.util.Objects;
             final Map<String, String> annotations,
             final Map<String, List<Quantity>> timerSamples,
             final Map<String, List<Quantity>> counterSamples,
-            final Map<String, List<Quantity>> gaugeSamples) {
+            final Map<String, List<Quantity>> gaugeSamples,
+            final List<AggregatedData> aggregatedData) {
         _annotations = annotations;
         _timerSamples = timerSamples;
         _counterSamples = counterSamples;
         _gaugeSamples = gaugeSamples;
+        _aggregatedData = aggregatedData;
     }
 
     @Override
@@ -75,6 +78,11 @@ import java.util.Objects;
     }
 
     @Override
+    public List<AggregatedData> getAggregatedData() {
+        return Collections.unmodifiableList(_aggregatedData);
+    }
+
+    @Override
     public boolean equals(final Object other) {
         if (this == other) {
             return true;
@@ -86,26 +94,29 @@ import java.util.Objects;
         return Objects.equals(_annotations, otherEvent._annotations)
                 && Objects.equals(_counterSamples, otherEvent._counterSamples)
                 && Objects.equals(_timerSamples, otherEvent._timerSamples)
-                && Objects.equals(_gaugeSamples, otherEvent._gaugeSamples);
+                && Objects.equals(_gaugeSamples, otherEvent._gaugeSamples)
+                && Objects.equals(_aggregatedData, otherEvent._aggregatedData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_annotations, _counterSamples, _timerSamples, _gaugeSamples);
+        return Objects.hash(_annotations, _counterSamples, _timerSamples, _gaugeSamples, _aggregatedData);
     }
 
     @Override
     public String toString() {
         return String.format(
-                "TsdEvent{Annotations=%s, TimerSamples=%s, CounterSamples=%s, GaugeSamples=%s}",
+                "TsdEvent{Annotations=%s, TimerSamples=%s, CounterSamples=%s, GaugeSamples=%s, AggregatedData=%s}",
                 _annotations,
                 _timerSamples,
                 _counterSamples,
-                _gaugeSamples);
+                _gaugeSamples,
+                _aggregatedData);
     }
 
     private final Map<String, String> _annotations;
     private final Map<String, List<Quantity>> _timerSamples;
     private final Map<String, List<Quantity>> _counterSamples;
     private final Map<String, List<Quantity>> _gaugeSamples;
+    private final List<AggregatedData> _aggregatedData;
 }

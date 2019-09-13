@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.metrics;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -52,4 +53,11 @@ public interface Event {
      * @return Gauge samples by gauge name for UOW.
      */
     Map<String, List<Quantity>> getGaugeSamples();
+
+    /**
+     * Accessor for UOW aggregated data.
+     *
+     * @return Aggregated data for UOW.
+     */
+    Collection<AggregatedData> getAggregatedData();
 }

@@ -35,6 +35,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -167,6 +168,51 @@ public final class TsdMetricsTest {
                 MetricMatcher.match(
                         "gauge",
                         QuantityMatcher.match(1.23)));
+    }
+
+    @Test
+    public void testAggregatedDataOnly() {
+        final Sink sink = Mockito.mock(Sink.class);
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<Double, Integer> histogram = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        double sum = 0.0;
+        for (int i = 1; i < 10; ++i) {
+            histogram.put(AugmentedHistogramTest.toKey((double) i), i);
+            sum += i * i;
+        }
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(sink);
+        metrics.recordAggregatedData(
+                Collections.singletonList(
+                        new AugmentedHistogram.Builder()
+                                .setHistogram(histogram)
+                                .setPrecision(7)
+                                .setMinimum(1.0)
+                                .setMaximum(10.0)
+                                .setSum(sum)
+                                .build()
+                ));
+        metrics.close();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertEquals(
+                actualEvent.getAggregatedData(),
+                Collections.singletonList(
+                        new AugmentedHistogram.Builder()
+                                .setHistogram(histogram)
+                                .setPrecision(7)
+                                .setMinimum(1.0)
+                                .setMaximum(10.0)
+                                .setSum(sum)
+                                .build()));
     }
 
     @Test
@@ -350,6 +396,35 @@ public final class TsdMetricsTest {
         metrics.close();
         Mockito.verifyZeroInteractions(logger);
         metrics.close();
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+    }
+
+    @Test
+    public void testAggregatedDataNotOpen() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final Sink sink = Mockito.mock(Sink.class);
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<Double, Integer> histogram = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        double sum = 0.0;
+        for (int i = 1; i < 10; ++i) {
+            histogram.put(AugmentedHistogramTest.toKey((double) i), i);
+            sum += i * i;
+        }
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        metrics.close();
+        metrics.recordAggregatedData(
+                Collections.singletonList(
+                        new AugmentedHistogram.Builder()
+                                .setHistogram(histogram)
+                                .setPrecision(7)
+                                .setMinimum(1.0)
+                                .setMaximum(10.0)
+                                .setSum(sum)
+                                .build()
+                ));
+
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 

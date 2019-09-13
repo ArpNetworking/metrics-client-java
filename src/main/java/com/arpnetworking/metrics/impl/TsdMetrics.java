@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Quantity;
@@ -237,11 +238,13 @@ public class TsdMetrics implements Metrics {
 
         for (final Sink sink : _sinks) {
             try {
-                sink.record(new TsdEvent(
-                        annotations,
-                        timerSamples,
-                        counterSamples,
-                        gaugeSamples));
+                sink.record(
+                        new TsdEvent(
+                                annotations,
+                                timerSamples,
+                                counterSamples,
+                                gaugeSamples,
+                                new ArrayList<>(_aggregatedData)));
                 // CHECKSTYLE.OFF: IllegalCatch - Prevent an exception leak; see class Javadoc
             } catch (final RuntimeException e) {
                 // CHECKSTYLE.ON: IllegalCatch
@@ -272,6 +275,22 @@ public class TsdMetrics implements Metrics {
                 _annotations.get(CLUSTER_KEY),
                 _annotations.get(HOST_KEY));
 
+    }
+
+    /**
+     * Record aggregated data against this metrics instance.
+     *
+     * <u><b>WARNING:</b></u> This method is not part of the {@link Metrics} interface
+     * and therefore not officially supported by the client outside the scope of change
+     * described by the semantic version of this package.
+     *
+     * @param aggregatedData collection of aggregated data instances to record
+     */
+    public void recordAggregatedData(final Collection<? extends AggregatedData> aggregatedData) {
+        if (!assertIsOpen()) {
+            return;
+        }
+        _aggregatedData.addAll(aggregatedData);
     }
 
     // NOTE: Package private for testing
@@ -403,6 +422,7 @@ public class TsdMetrics implements Metrics {
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _timerSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _gaugeSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, String> _annotations = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedDeque<AggregatedData> _aggregatedData = new ConcurrentLinkedDeque<>();
     private final BiFunction<String, TsdCounter, TsdCounter> _createCounterBiFunction = new CreateCounterFunction();
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
