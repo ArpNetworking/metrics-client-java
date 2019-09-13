@@ -18,7 +18,7 @@ package com.arpnetworking.metrics;
 /**
  * Interface representing a destination to record metrics to.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Sink {
 

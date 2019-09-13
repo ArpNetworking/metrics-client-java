@@ -22,7 +22,7 @@ import com.arpnetworking.metrics.MetricsFactory;
  * No operation implementation of <code>MetricsFactory</code>. This class is
  * thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class NoOpMetricsFactory implements MetricsFactory {
 

@@ -22,7 +22,7 @@ import java.util.List;
  * simplify its numerator and denominator. It is used in testing to verify
  * that the sinks simplify even complex compound units.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class ComplexCompoundUnit implements CompoundUnit {
 

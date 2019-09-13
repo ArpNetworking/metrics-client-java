@@ -32,7 +32,7 @@ import java.util.List;
 /**
  * Tests for <code>WarningSink</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class WarningSinkTest {
 

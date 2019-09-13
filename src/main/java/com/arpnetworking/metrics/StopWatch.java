@@ -26,7 +26,7 @@ import com.arpnetworking.metrics.impl.TsdStopWatch;
  * However, it is possible to build a stateful timer around this but you
  * will need to add stricter synchronization or else give up thread safety.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface StopWatch {
 

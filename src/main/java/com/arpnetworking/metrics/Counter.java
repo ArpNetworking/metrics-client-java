@@ -30,7 +30,7 @@ package com.arpnetworking.metrics;
  * <code>Counter</code> instances bound to that <code>Metrics</code> instance
  * will be ignored. 
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Counter extends Quantity {
 

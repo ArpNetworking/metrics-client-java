@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
 /**
  * Implementation of <code>Counter</code>.  This class is thread safe.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdCounter implements Counter, Quantity {
     /**

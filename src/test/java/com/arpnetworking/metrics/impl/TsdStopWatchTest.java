@@ -23,7 +23,7 @@ import org.junit.Test;
 /**
  * Tests for <code>TsdStopWatch</code>.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class TsdStopWatchTest {
 

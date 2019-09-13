@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
  * instance. After the <code>close()</code> method is invoked the instance
  * cannot be used to record further metrics and should be discarded.
  *
- * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
+ * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Metrics extends AutoCloseable {
 
