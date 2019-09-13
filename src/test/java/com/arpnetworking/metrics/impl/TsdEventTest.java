@@ -21,7 +21,6 @@ import com.arpnetworking.metrics.Quantity;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,8 +47,8 @@ public final class TsdEventTest {
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final List<AggregatedData> aggregatedData = new ArrayList<>();
-        aggregatedData.add(NoOpAggregatedData.getInstance());
+        final Map<String, List<AggregatedData>> aggregatedData = new HashMap<>();
+        aggregatedData.put("aggregatedMetric", Collections.singletonList(NoOpAggregatedData.getInstance()));
         // CHECKSTYLE.ON: IllegalInstantiation
         final Event event = new TsdEvent(
                 annotations,
@@ -79,8 +78,8 @@ public final class TsdEventTest {
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final List<AggregatedData> aggregatedData = new ArrayList<>();
-        aggregatedData.add(NoOpAggregatedData.getInstance());
+        final Map<String, List<AggregatedData>> aggregatedData = new HashMap<>();
+        aggregatedData.put("aggregatedMetric", Collections.singletonList(NoOpAggregatedData.getInstance()));
         // CHECKSTYLE.ON: IllegalInstantiation
         final Event event = new TsdEvent(
                 annotations,
@@ -106,7 +105,8 @@ public final class TsdEventTest {
         final Map<String, List<Quantity>> differentGaugeSamples = new HashMap<>();
         differentGaugeSamples.put("gauge2", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final List<AggregatedData> differentAggregatedData = new ArrayList<>();
+        final Map<String, List<AggregatedData>> differentAggregatedData = new HashMap<>();
+        aggregatedData.put("aggregatedMetric2", Collections.singletonList(NoOpAggregatedData.getInstance()));
         // CHECKSTYLE.ON: IllegalInstantiation
 
         final Event differentEvent1 = new TsdEvent(
@@ -165,8 +165,8 @@ public final class TsdEventTest {
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final List<AggregatedData> aggregatedData = new ArrayList<>();
-        aggregatedData.add(NoOpAggregatedData.getInstance());
+        final Map<String, List<AggregatedData>> aggregatedData = new HashMap<>();
+        aggregatedData.put("aggregatedMetric", Collections.singletonList(NoOpAggregatedData.getInstance()));
         // CHECKSTYLE.ON: IllegalInstantiation
 
         Assert.assertEquals(
@@ -198,8 +198,8 @@ public final class TsdEventTest {
         final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
         gaugeSamples.put("gauge", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final List<AggregatedData> aggregatedData = new ArrayList<>();
-        aggregatedData.add(NoOpAggregatedData.getInstance());
+        final Map<String, List<AggregatedData>> aggregatedData = new HashMap<>();
+        aggregatedData.put("aggregatedMetric", Collections.singletonList(NoOpAggregatedData.getInstance()));
         // CHECKSTYLE.ON: IllegalInstantiation
         final String asString = new TsdEvent(
                 annotations,

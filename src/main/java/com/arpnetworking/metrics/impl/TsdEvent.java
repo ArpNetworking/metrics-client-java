@@ -49,7 +49,7 @@ import java.util.Objects;
             final Map<String, List<Quantity>> timerSamples,
             final Map<String, List<Quantity>> counterSamples,
             final Map<String, List<Quantity>> gaugeSamples,
-            final List<AggregatedData> aggregatedData) {
+            final Map<String, List<AggregatedData>> aggregatedData) {
         _annotations = annotations;
         _timerSamples = timerSamples;
         _counterSamples = counterSamples;
@@ -78,8 +78,8 @@ import java.util.Objects;
     }
 
     @Override
-    public List<AggregatedData> getAggregatedData() {
-        return Collections.unmodifiableList(_aggregatedData);
+    public Map<String, List<AggregatedData>> getAggregatedData() {
+        return Collections.unmodifiableMap(_aggregatedData);
     }
 
     @Override
@@ -118,5 +118,5 @@ import java.util.Objects;
     private final Map<String, List<Quantity>> _timerSamples;
     private final Map<String, List<Quantity>> _counterSamples;
     private final Map<String, List<Quantity>> _gaugeSamples;
-    private final List<AggregatedData> _aggregatedData;
+    private final Map<String, List<AggregatedData>> _aggregatedData;
 }

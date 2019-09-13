@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.metrics;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -59,5 +58,5 @@ public interface Event {
      *
      * @return Aggregated data for UOW.
      */
-    Collection<AggregatedData> getAggregatedData();
+    Map<String, List<AggregatedData>> getAggregatedData();
 }

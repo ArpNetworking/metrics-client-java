@@ -184,15 +184,14 @@ public final class TsdMetricsTest {
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
         metrics.recordAggregatedData(
-                Collections.singletonList(
-                        new AugmentedHistogram.Builder()
-                                .setHistogram(histogram)
-                                .setPrecision(7)
-                                .setMinimum(1.0)
-                                .setMaximum(10.0)
-                                .setSum(sum)
-                                .build()
-                ));
+                "aggregatedMetric",
+                new AugmentedHistogram.Builder()
+                        .setHistogram(histogram)
+                        .setPrecision(7)
+                        .setMinimum(1.0)
+                        .setMaximum(10.0)
+                        .setSum(sum)
+                        .build());
         metrics.close();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
@@ -205,14 +204,16 @@ public final class TsdMetricsTest {
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertEquals(
                 actualEvent.getAggregatedData(),
-                Collections.singletonList(
-                        new AugmentedHistogram.Builder()
-                                .setHistogram(histogram)
-                                .setPrecision(7)
-                                .setMinimum(1.0)
-                                .setMaximum(10.0)
-                                .setSum(sum)
-                                .build()));
+                Collections.singletonMap(
+                        "aggregatedMetric",
+                        Collections.singletonList(
+                                new AugmentedHistogram.Builder()
+                                    .setHistogram(histogram)
+                                    .setPrecision(7)
+                                    .setMinimum(1.0)
+                                    .setMaximum(10.0)
+                                    .setSum(sum)
+                                    .build())));
     }
 
     @Test
@@ -415,15 +416,14 @@ public final class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
         metrics.recordAggregatedData(
-                Collections.singletonList(
-                        new AugmentedHistogram.Builder()
-                                .setHistogram(histogram)
-                                .setPrecision(7)
-                                .setMinimum(1.0)
-                                .setMaximum(10.0)
-                                .setSum(sum)
-                                .build()
-                ));
+        "aggregatedMetric",
+                new AugmentedHistogram.Builder()
+                        .setHistogram(histogram)
+                        .setPrecision(7)
+                        .setMinimum(1.0)
+                        .setMaximum(10.0)
+                        .setSum(sum)
+                        .build());
 
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }

@@ -235,6 +235,7 @@ public class TsdMetrics implements Metrics {
                 PREDICATE_NON_ABORTED_TIMERS);
         final Map<String, List<Quantity>> counterSamples = cloneSamples(_counterSamples);
         final Map<String, List<Quantity>> gaugeSamples = cloneSamples(_gaugeSamples);
+        final Map<String, List<AggregatedData>> aggregatedData = cloneAggregatedData(_aggregatedData);
 
         for (final Sink sink : _sinks) {
             try {
@@ -244,7 +245,7 @@ public class TsdMetrics implements Metrics {
                                 timerSamples,
                                 counterSamples,
                                 gaugeSamples,
-                                new ArrayList<>(_aggregatedData)));
+                                aggregatedData));
                 // CHECKSTYLE.OFF: IllegalCatch - Prevent an exception leak; see class Javadoc
             } catch (final RuntimeException e) {
                 // CHECKSTYLE.ON: IllegalCatch
@@ -278,19 +279,21 @@ public class TsdMetrics implements Metrics {
     }
 
     /**
-     * Record aggregated data against this metrics instance.
+     * Record aggregated data for a metric against this metrics instance.
      *
      * <u><b>WARNING:</b></u> This method is not part of the {@link Metrics} interface
      * and therefore not officially supported by the client outside the scope of change
      * described by the semantic version of this package.
      *
+     * @param name the name of the metric
      * @param aggregatedData collection of aggregated data instances to record
      */
-    public void recordAggregatedData(final Collection<? extends AggregatedData> aggregatedData) {
+    public void recordAggregatedData(final String name, final AggregatedData aggregatedData) {
         if (!assertIsOpen()) {
             return;
         }
-        _aggregatedData.addAll(aggregatedData);
+        final ConcurrentLinkedDeque<AggregatedData> data = getOrCreateDeque(_aggregatedData, name);
+        data.add(aggregatedData);
     }
 
     // NOTE: Package private for testing
@@ -358,7 +361,7 @@ public class TsdMetrics implements Metrics {
         // CHECKSTYLE.ON: IllegalInstantiation
         for (final Map.Entry<String, ? extends Collection<? extends Quantity>> entry : samples.entrySet()) {
             final List<Quantity> quantities = new ArrayList<>(entry.getValue().size());
-            clonedSamples.put(entry.getKey(), quantities);
+            clonedSamples.put(entry.getKey(), Collections.unmodifiableList(quantities));
             for (final Quantity quantity : entry.getValue()) {
                 final List<Predicate<Quantity>> rejections = new ArrayList<>();
                 for (Predicate<Quantity> predicate : predicates) {
@@ -377,7 +380,20 @@ public class TsdMetrics implements Metrics {
                 }
             }
         }
-        return clonedSamples;
+        return Collections.unmodifiableMap(clonedSamples);
+    }
+
+    private Map<String, List<AggregatedData>> cloneAggregatedData(
+            final ConcurrentMap<String, ConcurrentLinkedDeque<AggregatedData>> aggregatedData) {
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<String, List<AggregatedData>> clonedAggregatedData =
+                new HashMap<>((int) (aggregatedData.size() / DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
+        // CHECKSTYLE.ON: IllegalInstantiation
+        for (final Map.Entry<String, ? extends Collection<? extends AggregatedData>> entry : aggregatedData.entrySet()) {
+            final List<AggregatedData> data = new ArrayList<>(entry.getValue());
+            clonedAggregatedData.put(entry.getKey(), Collections.unmodifiableList(data));
+        }
+        return Collections.unmodifiableMap(clonedAggregatedData);
     }
 
 
@@ -421,8 +437,8 @@ public class TsdMetrics implements Metrics {
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _counterSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _timerSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _gaugeSamples = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, ConcurrentLinkedDeque<AggregatedData>> _aggregatedData = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, String> _annotations = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedDeque<AggregatedData> _aggregatedData = new ConcurrentLinkedDeque<>();
     private final BiFunction<String, TsdCounter, TsdCounter> _createCounterBiFunction = new CreateCounterFunction();
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
