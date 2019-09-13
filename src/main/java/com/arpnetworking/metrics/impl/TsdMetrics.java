@@ -46,19 +46,19 @@ import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /**
- * Default implementation of <code>Metrics</code> that publishes metrics as
+ * Default implementation of {@link Metrics} that publishes metrics as
  * time series data (TSD).
  *
  * This class does not throw exceptions if it is used improperly or if the
  * underlying IO subsystem fails to write the metrics. An example of improper
  * use would be if the user invokes stop on a timer without calling start. To
  * prevent breaking the client application no exception is thrown; instead a
- * warning is logged using the SLF4J <code>LoggerFactory</code> for this class.
+ * warning is logged using the SLF4J {@link LoggerFactory} for this class.
  *
  * Another example would be if the disk is full or fails to record the metrics
- * when <code>close</code> is invoked the library will not throw an exception.
+ * when {@link TsdMetrics#close} is invoked the library will not throw an exception.
  * However, it will attempt to write a warning using the SLF4J
- * <code>LoggerFactory</code> for this class; although this is likely to fail
+ * {@link LoggerFactory} for this class; although this is likely to fail
  * if the underlying hardware is experiencing problems.
  *
  * If clients desire an intrusive failure propagation strategy or prefer to
@@ -66,8 +66,8 @@ import javax.annotation.Nullable;
  * such an alternative strategy. Please contact us with your feature request.
  *
  * For more information about the semantics of this class and its methods please
- * refer to the <code>Metrics</code> interface documentation. To create an
- * instance of this class use <code>TsdMetricsFactory</code>.
+ * refer to the {@link Metrics} interface documentation. To create an
+ * instance of this class use {@link TsdMetricsFactory}.
  *
  * This class is thread safe; however, it makes no effort to order
  * operations on the same data. For example, it is safe for two threads to
@@ -79,7 +79,7 @@ import javax.annotation.Nullable;
  * metrics after closing and starting but never stopping a timer; however, in
  * a multithreaded environment it is not guaranteed that these warnings are
  * emitted. It is up to clients to ensure that multithreaded use of the same
- * <code>TsdMetrics</code> instance is correct.
+ * {@link TsdMetrics} instance is correct.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

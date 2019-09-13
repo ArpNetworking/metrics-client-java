@@ -19,7 +19,7 @@ import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 
 /**
- * No operation implementation of <code>MetricsFactory</code>. This class is
+ * No operation implementation of {@link MetricsFactory}. This class is
  * thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)

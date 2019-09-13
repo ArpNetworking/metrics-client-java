@@ -23,8 +23,8 @@ package com.arpnetworking.metrics;
 public interface Sink {
 
     /**
-     * Invoked by <code>Metrics</code> to record unit of work metrics data to
-     * this <code>Sink</code>.
+     * Invoked by {@link Metrics} to record unit of work metrics data to
+     * this {@link Sink}.
      *
      * @param event The metrics data for the unit of work.
      */

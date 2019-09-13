@@ -24,7 +24,7 @@ import org.junit.Test;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Tests for <code>TsdUnit</code>.
+ * Tests for {@link TsdUnit}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

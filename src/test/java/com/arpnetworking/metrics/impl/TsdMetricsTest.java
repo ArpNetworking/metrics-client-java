@@ -46,7 +46,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for <code>TsdMetrics</code>.
+ * Tests for {@link TsdMetrics}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

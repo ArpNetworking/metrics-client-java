@@ -37,15 +37,15 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * Default implementation of <code>MetricsFactory</code> for creating
- * <code>Metrics</code> instances for publication of time series data (TSD).
+ * Default implementation of {@link MetricsFactory} for creating
+ * {@link Metrics} instances for publication of time series data (TSD).
  *
  * For more information about the semantics of this class and its methods
- * please refer to the <code>MetricsFactory</code> interface documentation.
+ * please refer to the {@link MetricsFactory} interface documentation.
  *
  * The simplest way to create an instance of this class is to use the
- * <code>newInstance</code> static factory method. This method will use
- * default settings where possible.
+ * {@link TsdMetricsFactory#newInstance(String, String)} static factory method.
+ * This method will use default settings where possible.
  *
  * {@code
  * final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
  *     "MyService-US-Prod");
  * }
  *
- * To customize the factory instance use the nested <code>Builder</code> class:
+ * To customize the factory instance use the nested {@link Builder} class:
  *
  * {@code
  * final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
@@ -136,12 +136,12 @@ import javax.annotation.Nullable;
 public class TsdMetricsFactory implements MetricsFactory {
 
     /**
-     * Static factory. Construct an instance of <code>TsdMetricsFactory</code>
-     * using the first available default <code>Sink</code>.
+     * Static factory. Construct an instance of {@link TsdMetricsFactory}
+     * using the first available default {@link Sink}.
      *
      * @param serviceName The name of the service/application publishing metrics.
      * @param clusterName The name of the cluster (e.g. instance) publishing metrics.
-     * @return Instance of <code>TsdMetricsFactory</code>.
+     * @return Instance of {@link TsdMetricsFactory}.
      */
     public static MetricsFactory newInstance(
             final String serviceName,
@@ -263,7 +263,7 @@ public class TsdMetricsFactory implements MetricsFactory {
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     protected TsdMetricsFactory(final Builder builder) {
         this(builder, LOGGER);
@@ -272,7 +272,7 @@ public class TsdMetricsFactory implements MetricsFactory {
     /**
      * Protected constructor.
      *
-     * @param builder Instance of <code>Builder</code>.
+     * @param builder Instance of {@link Builder}.
      */
     /* package private */ TsdMetricsFactory(final Builder builder, final Logger logger) {
         _sinks = Collections.unmodifiableList(new ArrayList<>(builder._sinks));
@@ -304,18 +304,18 @@ public class TsdMetricsFactory implements MetricsFactory {
     }
 
     /**
-     * Builder for <code>TsdMetricsFactory</code>.
+     * Builder for {@link TsdMetricsFactory}.
      *
      * This class does not throw exceptions if it is used improperly. An
      * example of improper use would be if the constraints on a field are
      * not satisfied. To prevent breaking the client application no
      * exception is thrown; instead a warning is logged using the SLF4J
-     * <code>LoggerFactory</code> for this class.
+     * {@link LoggerFactory} for this class.
      *
-     * Further, the constructed <code>TsdMetricsFactory</code> will operate
+     * Further, the constructed {@link TsdMetricsFactory} will operate
      * normally except that instead of publishing metrics to the sinks it
-     * will log a warning each time <code>close()</code> is invoked on the
-     * <code>Metrics</code> instance.
+     * will log a warning each time {@link Metrics#close()} is invoked on the
+     * {@link Metrics} instance.
      *
      * This class is thread safe.
      *
@@ -333,7 +333,7 @@ public class TsdMetricsFactory implements MetricsFactory {
         /**
          * Public constructor.
          *
-         * @param hostResolver The <code>HostResolver</code> instance to use
+         * @param hostResolver The {@link HostResolver} instance to use
          * to determine the default host name.
          */
         public Builder(final HostResolver hostResolver) {
@@ -347,9 +347,9 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         /**
-         * Create an instance of <code>MetricsFactory</code>.
+         * Create an instance of {@link MetricsFactory}.
          *
-         * @return Instance of <code>MetricsFactory</code>.
+         * @return Instance of {@link MetricsFactory}.
          */
         @Override
         public MetricsFactory build() {
@@ -393,7 +393,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * Set the sinks to publish to. Cannot be null.
          *
          * @param value The sinks to publish to.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSinks(@Nullable final List<Sink> value) {
             _sinks = value;
@@ -402,12 +402,12 @@ public class TsdMetricsFactory implements MetricsFactory {
 
         /**
          * Set the UuidFactory to be used to create UUIDs assigned to instances
-         * of <code>Metrics</code> created by this <code>MetricsFactory</code>.
+         * of {@link Metrics} created by this {@link MetricsFactory}.
          * Cannot be null. Optional. Defaults to using the Java native 
-         * <code>java.util.UUID.randomUUID()</code>.
+         * {@link java.util.UUID#randomUUID()}.
          *
-         * @param uuidFactory The <code>UuidFactory</code> instance.
-         * @return This <code>Builder</code> instance.
+         * @param uuidFactory The {@link UuidFactory} instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setUuidFactory(@Nullable final UuidFactory uuidFactory) {
             _uuidFactory = uuidFactory;
@@ -418,7 +418,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * Set the service name to publish as. Cannot be null.
          *
          * @param value The service name to publish as.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setServiceName(@Nullable final String value) {
             _serviceName = value;
@@ -429,7 +429,7 @@ public class TsdMetricsFactory implements MetricsFactory {
          * Set the cluster name to publish as. Cannot be null.
          *
          * @param value The cluster name to publish as.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setClusterName(@Nullable final String value) {
             _clusterName = value;
@@ -438,14 +438,14 @@ public class TsdMetricsFactory implements MetricsFactory {
 
         /**
          * Set the host name to publish as. Cannot be null. Optional. Default
-         * is the host name provided by the provided <code>HostProvider</code>
+         * is the host name provided by the provided {@code hostResolver}
          * or its default instance if one was not specified. If the
-         * <code>HostProvider</code> fails to provide a host name the builder
-         * will produce a fake instance of <code>Metrics</code> on create. This
+         * {@code hostResolver} fails to provide a host name the builder
+         * will produce a fake instance of {@link Metrics} on create. This
          * is to ensure the library remains exception neutral.
          *
          * @param value The host name to publish as.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setHostName(@Nullable final String value) {
             _hostResolver = () -> value;

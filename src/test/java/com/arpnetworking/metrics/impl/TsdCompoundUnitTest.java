@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Tests for <code>TsdCompoundUnit</code>.
+ * Tests for {@link TsdCompoundUnit}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

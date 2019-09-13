@@ -23,8 +23,8 @@ import javax.annotation.Nullable;
 /**
  * Interface for logging metrics: timers, counters and gauges. Clients should
  * create one instance of an implementing class for each unit of work. At the
- * end of the unit of work the client should invoke <code>close()</code> on that
- * instance. After the <code>close()</code> method is invoked the instance
+ * end of the unit of work the client should invoke {@link Metrics#close()} on that
+ * instance. After the {@link Metrics#close()} method is invoked the instance
  * cannot be used to record further metrics and should be discarded.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
@@ -33,18 +33,18 @@ public interface Metrics extends AutoCloseable {
 
     /**
      * Create and initialize a counter sample. It is valid to create multiple
-     * <code>Counter</code> instances with the same name, even concurrently,
+     * {@link Counter} instances with the same name, even concurrently,
      * each will record a unique sample for the counter of the specified name.
      *
      * @param name The name of the counter.
-     * @return <code>Counter</code> instance for recording a counter sample.
+     * @return {@link Counter} instance for recording a counter sample.
      */
     Counter createCounter(String name);
 
     /**
      * Increment the specified counter by 1. All counters are initialized to
      * zero. Creates a sample if one does not exist. To create a new sample
-     * invoke <code>resetCounter</code>.
+     * invoke {@link Metrics#resetCounter(String)}.
      *
      * @param name The name of the counter.
      */
@@ -53,7 +53,7 @@ public interface Metrics extends AutoCloseable {
     /**
      * Increment the specified counter by the specified amount. All counters are
      * initialized to zero. Creates a sample if one does not exist. To create a new
-     * sample invoke <code>resetCounter</code>.
+     * sample invoke {@link Metrics#resetCounter(String)}.
      *
      * @param name The name of the counter.
      * @param value The amount to increment by.
@@ -63,7 +63,7 @@ public interface Metrics extends AutoCloseable {
     /**
      * Decrement the specified counter by 1. All counters are initialized to
      * zero. Creates a sample if one does not exist. To create a new sample
-     * invoke <code>resetCounter</code>.
+     * invoke {@link Metrics#resetCounter(String)}.
      *
      * @param name The name of the counter.
      */
@@ -72,7 +72,7 @@ public interface Metrics extends AutoCloseable {
     /**
      * Decrement the specified counter by the specified amount. All counters are
      * initialized to zero. Creates a sample if one does not exist. To create a new
-     * sample invoke <code>resetCounter</code>.
+     * sample invoke {@link Metrics#resetCounter(String)}.
      *
      * @param name The name of the counter.
      * @param value The amount to decrement by.
@@ -91,17 +91,17 @@ public interface Metrics extends AutoCloseable {
     void resetCounter(String name);
 
     /**
-     * Create and start a timer. It is valid to create multiple <code>Timer</code>
+     * Create and start a timer. It is valid to create multiple {@link Timer}
      * instances with the same name, even concurrently, each will record a
      * unique sample for the timer of the specified name.
      *
      * @param name The name of the timer.
-     * @return <code>Timer</code> instance for recording a timing sample.
+     * @return {@link Timer} instance for recording a timing sample.
      */
     Timer createTimer(String name);
 
     /**
-     * Start measurement of a sample for the specified timer. Use <code>createTimer</code>
+     * Start measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
      * to make multiple concurrent measurements.
      *
      * @param name The name of the timer.
@@ -109,7 +109,7 @@ public interface Metrics extends AutoCloseable {
     void startTimer(String name);
 
     /**
-     * Stop measurement of a sample for the specified timer. Use <code>createTimer</code>
+     * Stop measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
      * to make multiple concurrent measurements.
      *
      * @param name The name of the timer.
@@ -186,15 +186,15 @@ public interface Metrics extends AutoCloseable {
     /**
      * Add attributes that describe the captured metrics or context.
      *
-     * @param map The <code>Map</code> of attribute names to attribute values.
+     * @param map The {@link Map} of attribute names to attribute values.
      */
     void addAnnotations(Map<String, String> map);
 
     /**
-     * Accessor to determine if this <code>Metrics</code> instance is open or
+     * Accessor to determine if this {@link Metrics} instance is open or
      * closed. Once closed an instance will not record new data.
      *
-     * @return True if and only if this <code>Metrics</code> instance is open.
+     * @return True if and only if this {@link Metrics} instance is open.
      */
     boolean isOpen();
 
@@ -207,23 +207,23 @@ public interface Metrics extends AutoCloseable {
     void close();
 
     /**
-     * Returns <code>Instant</code> this <code>Metrics</code> instance was
-     * opened. Commonly <code>Metrics</code> instances are opened on creation;
+     * Returns {@link Instant} this {@link Metrics} instance was
+     * opened. Commonly {@link Metrics} instances are opened on creation;
      * however, that is not required. If this instance has not been opened the
-     * returned <code>Instant</code> will be null.
+     * returned {@link Instant} will be null.
      *
-     * @return The <code>Instant</code> this <code>Metrics</code> instance was
+     * @return The {@link Instant} this {@link Metrics} instance was
      * opened.
      */
     @Nullable
     Instant getOpenTime();
 
     /**
-     * Returns <code>Instant</code> this <code>Metrics</code> instance was
+     * Returns {@link Instant} this {@link Metrics} instance was
      * closed. If this instance has not been closed the returned
-     * <code>Instant</code> will be null.
+     * {@link Instant} will be null.
      *
-     * @return The <code>Instant</code> this <code>Metrics</code> instance was
+     * @return The {@link Instant} this {@link Metrics} instance was
      * closed.
      */
     @Nullable

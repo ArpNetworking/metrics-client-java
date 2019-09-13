@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Tests for <code>TsdTimer</code>.
+ * Tests for {@link TsdTimer}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

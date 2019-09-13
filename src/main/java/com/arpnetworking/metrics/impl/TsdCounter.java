@@ -26,20 +26,20 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of <code>Counter</code>.  This class is thread safe.
+ * Implementation of {@link Counter}.  This class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdCounter implements Counter, Quantity {
     /**
-     * Package private static factory. All <code>TsdCounter</code> instances should
-     * be created through the <code>TsdMetrics</code> instance.
+     * Package private static factory. All {@link TsdCounter} instances should
+     * be created through the {@link TsdMetrics} instance.
      *
      * @param name The name of the counter.
-     * @param isOpen Reference to state of containing <code>TsdMetrics</code>
+     * @param isOpen Reference to state of containing {@link TsdMetrics}
      * instance. This is provided as a separate parameter to avoid creating a
-     * cyclical dependency between <code>TsdMetrics</code> and
-     * <code>TsdCounter</code> which could cause garbage collection delays.
+     * cyclical dependency between {@link TsdMetrics} and
+     * {@link TsdCounter} which could cause garbage collection delays.
      */
     /* package private */ static TsdCounter newInstance(final String name, final AtomicBoolean isOpen) {
         return new TsdCounter(name, isOpen, DEFAULT_LOGGER);

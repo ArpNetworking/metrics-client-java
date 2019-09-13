@@ -16,12 +16,12 @@
 package com.arpnetworking.metrics;
 
 /**
- * Interface for classes which create <code>Metrics</code> instances. Clients
+ * Interface for classes which create {@link Metrics} instances. Clients
  * should create a single instance of an implementing class for the entire
  * life of the application. Frameworks such as  
  * <a href="http://projects.spring.io/spring-framework/">Spring/</a> and 
  * <a href="https://code.google.com/p/google-guice/">Guice</a> may be used to inject the
- * <code>MetricsFactory</code> instance into various components within the 
+ * {@link MetricsFactory} instance into various components within the
  * application.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
@@ -29,9 +29,9 @@ package com.arpnetworking.metrics;
 public interface MetricsFactory {
 
     /**
-     * Return an instance of <code>Metrics</code>.
+     * Return an instance of {@link Metrics}.
      * 
-     * @return An instance of <code>Metrics</code>.
+     * @return An instance of {@link Metrics}.
      */
     Metrics create();
 }

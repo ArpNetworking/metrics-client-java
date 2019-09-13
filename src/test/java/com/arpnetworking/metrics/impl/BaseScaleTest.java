@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for <code>BaseScaleTest</code>.
+ * Tests for {@link BaseScaleTest}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

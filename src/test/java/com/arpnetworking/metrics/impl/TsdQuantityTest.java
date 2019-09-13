@@ -22,7 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests for <code>TsdQuantity</code>.
+ * Tests for {@link TsdQuantity}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

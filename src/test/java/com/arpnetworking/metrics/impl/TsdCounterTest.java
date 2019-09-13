@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Tests for <code>TsdCounter</code>.
+ * Tests for {@link TsdCounter}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

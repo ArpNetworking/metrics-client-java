@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Implementation of <code>Matcher</code> which matches a map of metrics
- * using the <code>QuantityMatcher</code> for each sample.
+ * Implementation of {@link Matcher} which matches a map of metrics
+ * using the {@link QuantityMatcher} for each sample.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
@@ -40,8 +40,8 @@ public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends
      * Create a new matcher for the expected metrics.
      *
      * @param arguments Array of variable length tuples where each tuple begins
-     * with a <code>String</code> for the metric name followed by zero or more
-     * samples as <code>QuantityMatcher</code> instances.
+     * with a {@link String} for the metric name followed by zero or more
+     * samples as {@link QuantityMatcher} instances.
      * @return new matcher for the expected metrics.
      */
     public static Matcher<Map<? extends String, ? extends List<Quantity>>> match(final Object... arguments) {

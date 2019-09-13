@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for <code>Units</code>.
+ * Tests for {@link Units}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

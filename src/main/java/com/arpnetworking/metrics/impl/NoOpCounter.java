@@ -22,14 +22,14 @@ import com.arpnetworking.metrics.Unit;
 import javax.annotation.Nullable;
 
 /**
- * No operation implementation of <code>Counter</code>.  This class is thread safe.
+ * No operation implementation of {@link Counter}.  This class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class NoOpCounter implements Counter, Quantity {
     /**
-     * Package private constructor. All <code>NoOpCounter</code> instances should
-     * be created through the <code>NoOpMetrics</code> instance.
+     * Package private constructor. All {@link NoOpCounter} instances should
+     * be created through the {@link NoOpMetrics} instance.
      */
     /* package private */ NoOpCounter() {
         // Do nothing

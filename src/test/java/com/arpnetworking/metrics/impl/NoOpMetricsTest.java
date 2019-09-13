@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for <code>NoOpMetrics</code>.
+ * Tests for {@link NoOpMetrics}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */

@@ -22,19 +22,19 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Default implementation of <code>Quantity</code>. This class is thread safe.
+ * Default implementation of {@link Quantity}. This class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 /* package private */ final class TsdQuantity implements Quantity {
 
     /**
-     * Package private static factory. All <code>TsdCounter</code> instances
-     * should be created through the <code>TsdMetrics</code> instance.
+     * Package private static factory. All {@link TsdCounter} instances
+     * should be created through the {@link TsdMetrics} instance.
      *
      * @param value The value.
      * @param unit The units of the value.
-     * @return New instance of <code>TsdQuantity</code>.
+     * @return New instance of {@link TsdQuantity}.
      */
     /* package private */ static TsdQuantity newInstance(final Number value, @Nullable final Unit unit) {
         return new TsdQuantity(value, unit);

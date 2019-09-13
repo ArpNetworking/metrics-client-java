@@ -26,16 +26,16 @@ import org.hamcrest.core.IsNull;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of <code>Matcher</code> which matches a <code>Quantity</code>.
+ * Implementation of {@link Matcher} which matches a {@link Quantity}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
-     * @param expected The expected <code>Quantity</code>.
+     * @param expected The expected {@link Quantity}.
      * @return new matcher for the expected metrics.
      */
     public static Matcher<Quantity> match(final Quantity expected) {
@@ -43,7 +43,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
@@ -61,7 +61,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
@@ -72,7 +72,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @param expectedUnit The expected unit.
@@ -83,7 +83,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
@@ -96,7 +96,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
@@ -106,7 +106,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for the expected <code>Quantity</code>.
+     * Create a new matcher for the expected {@link Quantity}.
      *
      * @param expectedValue The expected value.
      * @return new matcher for the expected metrics.
@@ -116,7 +116,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for a <code>Quantity</code> with a matcher for the
+     * Create a new matcher for a {@link Quantity} with a matcher for the
      * value and unit.
      *
      * @param valueMatcher The expected value matcher.
@@ -128,7 +128,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for a <code>Quantity</code> with a matcher for the
+     * Create a new matcher for a {@link Quantity} with a matcher for the
      * value.
      *
      * @param valueMatcher The expected value matcher.
@@ -140,7 +140,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
     }
 
     /**
-     * Create a new matcher for a <code>Quantity</code> with a matcher for the
+     * Create a new matcher for a {@link Quantity} with a matcher for the
      * value.
      *
      * @param valueMatcher The expected value matcher.
