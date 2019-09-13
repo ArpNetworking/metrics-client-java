@@ -26,7 +26,7 @@ import java.util.List;
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
 @SuppressWarnings(value = {"resource", "try"})
-public class Samples {
+public final class Samples {
 
     private void metricsFactoryStaticFactory() {
         // Begin sample:

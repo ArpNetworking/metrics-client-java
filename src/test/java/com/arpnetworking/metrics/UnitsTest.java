@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class UnitsTest {
+public final class UnitsTest {
 
     @Test
     public void testConstructorIsPrivate() throws Exception {

@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class TsdEventTest {
+public final class TsdEventTest {
 
     @Test
     public void test() {

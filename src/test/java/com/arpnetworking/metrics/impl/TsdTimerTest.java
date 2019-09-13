@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class TsdTimerTest {
+public final class TsdTimerTest {
 
     @Test
     public void testClose() throws InterruptedException {
