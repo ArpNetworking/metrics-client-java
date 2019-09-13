@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class WarningSinkTest {
+public final class WarningSinkTest {
 
     @Test
     public void testWarningSink() {

@@ -23,7 +23,7 @@ import org.junit.Test;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class BaseUnitTest {
+public final class BaseUnitTest {
 
     @Test
     public void testEnumeration() {

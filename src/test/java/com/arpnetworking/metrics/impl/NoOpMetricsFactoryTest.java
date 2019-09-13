@@ -25,7 +25,7 @@ import org.junit.Test;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class NoOpMetricsFactoryTest {
+public final class NoOpMetricsFactoryTest {
 
     @Test
     public void testCreate() {

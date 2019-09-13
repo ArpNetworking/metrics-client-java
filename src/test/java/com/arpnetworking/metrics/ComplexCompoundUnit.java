@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot com)
  */
-public class ComplexCompoundUnit implements CompoundUnit {
+public final class ComplexCompoundUnit implements CompoundUnit {
 
     /**
      * Public constructor.
