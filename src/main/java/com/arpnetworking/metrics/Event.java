@@ -58,5 +58,5 @@ public interface Event {
      *
      * @return Aggregated data for UOW.
      */
-    Map<String, List<AggregatedData>> getAggregatedData();
+    Map<String, AggregatedData> getAggregatedData();
 }

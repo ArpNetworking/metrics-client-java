@@ -206,14 +206,70 @@ public final class TsdMetricsTest {
                 actualEvent.getAggregatedData(),
                 Collections.singletonMap(
                         "aggregatedMetric",
-                        Collections.singletonList(
-                                new AugmentedHistogram.Builder()
-                                    .setHistogram(histogram)
-                                    .setPrecision(7)
-                                    .setMinimum(1.0)
-                                    .setMaximum(10.0)
-                                    .setSum(sum)
-                                    .build())));
+                        new AugmentedHistogram.Builder()
+                            .setHistogram(histogram)
+                            .setPrecision(7)
+                            .setMinimum(1.0)
+                            .setMaximum(10.0)
+                            .setSum(sum)
+                            .build()));
+    }
+
+    @Test
+    public void testAggregatedDataDuplicate() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final Sink sink = Mockito.mock(Sink.class);
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<Double, Integer> histogram = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        double sum = 0.0;
+        for (int i = 1; i < 10; ++i) {
+            histogram.put(AugmentedHistogramTest.toKey((double) i), i);
+            sum += i * i;
+        }
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        metrics.recordAggregatedData(
+                "aggregatedMetric",
+                new AugmentedHistogram.Builder()
+                        .setHistogram(histogram)
+                        .setPrecision(7)
+                        .setMinimum(1.0)
+                        .setMaximum(10.0)
+                        .setSum(sum)
+                        .build());
+        metrics.recordAggregatedData(
+                "aggregatedMetric",
+                new AugmentedHistogram.Builder()
+                        .setHistogram(histogram)
+                        .setPrecision(7)
+                        .setMinimum(2.0)
+                        .setMaximum(20.0)
+                        .setSum(sum)
+                        .build());
+        metrics.close();
+
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getAnnotations(),
+                standardAnnotationsMatcher());
+        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertEquals(
+                actualEvent.getAggregatedData(),
+                Collections.singletonMap(
+                        "aggregatedMetric",
+                        new AugmentedHistogram.Builder()
+                                .setHistogram(histogram)
+                                .setPrecision(7)
+                                .setMinimum(1.0)
+                                .setMaximum(10.0)
+                                .setSum(sum)
+                                .build()));
     }
 
     @Test
