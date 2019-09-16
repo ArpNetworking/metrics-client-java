@@ -16,14 +16,10 @@
 package com.arpnetworking.metrics.test;
 
 import com.arpnetworking.metrics.Quantity;
-import com.arpnetworking.metrics.Unit;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
-import org.hamcrest.core.IsNull;
-
-import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link Matcher} which matches a {@link Quantity}.
@@ -39,47 +35,7 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      * @return new matcher for the expected metrics.
      */
     public static Matcher<Quantity> match(final Quantity expected) {
-        return match(expected.getValue(), expected.getUnit());
-    }
-
-    /**
-     * Create a new matcher for the expected {@link Quantity}.
-     *
-     * @param expectedValue The expected value.
-     * @param expectedUnit The expected unit.
-     * @return new matcher for the expected metrics.
-     */
-    public static Matcher<Quantity> match(final Number expectedValue, @Nullable final Unit expectedUnit) {
-        if (expectedValue instanceof Double) {
-            return new QuantityMatcher(
-                    Matchers.closeTo(expectedValue.doubleValue(), 0.001),
-                    Matchers.equalTo(expectedUnit));
-        }
-        return new QuantityMatcher(
-                Matchers.equalTo(expectedValue),
-                Matchers.equalTo(expectedUnit));
-    }
-
-    /**
-     * Create a new matcher for the expected {@link Quantity}.
-     *
-     * @param expectedValue The expected value.
-     * @param expectedUnit The expected unit.
-     * @return new matcher for the expected metrics.
-     */
-    public static Matcher<Quantity> match(final long expectedValue, @Nullable final Unit expectedUnit) {
-        return match(Long.valueOf(expectedValue), expectedUnit);
-    }
-
-    /**
-     * Create a new matcher for the expected {@link Quantity}.
-     *
-     * @param expectedValue The expected value.
-     * @param expectedUnit The expected unit.
-     * @return new matcher for the expected metrics.
-     */
-    public static Matcher<Quantity> match(final double expectedValue, @Nullable final Unit expectedUnit) {
-        return match(Double.valueOf(expectedValue), expectedUnit);
+        return match(expected.getValue());
     }
 
     /**
@@ -90,9 +46,11 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
      */
     public static Matcher<Quantity> match(final Number expectedValue) {
         if (expectedValue instanceof Double) {
-            return match(Matchers.closeTo(expectedValue.doubleValue(), 0.001));
+            return new QuantityMatcher(
+                    Matchers.closeTo(expectedValue.doubleValue(), 0.001));
         }
-        return match(Matchers.equalTo(expectedValue));
+        return new QuantityMatcher(
+                Matchers.equalTo(expectedValue));
     }
 
     /**
@@ -117,45 +75,19 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
 
     /**
      * Create a new matcher for a {@link Quantity} with a matcher for the
-     * value and unit.
-     *
-     * @param valueMatcher The expected value matcher.
-     * @param unitMatcher The expected unit matcher.
-     * @return new matcher for the expected metrics.
-     */
-    public static Matcher<Quantity> match(final Matcher<? extends Number> valueMatcher, final Matcher<Unit> unitMatcher) {
-        return new QuantityMatcher(valueMatcher, unitMatcher);
-    }
-
-    /**
-     * Create a new matcher for a {@link Quantity} with a matcher for the
-     * value.
-     *
-     * @param valueMatcher The expected value matcher.
-     * @param expectedUnit The expected unit.
-     * @return new matcher for the expected metrics.
-     */
-    public static Matcher<Quantity> match(final Matcher<? extends Number> valueMatcher, @Nullable final Unit expectedUnit) {
-        return match(valueMatcher, Matchers.equalTo(expectedUnit));
-    }
-
-    /**
-     * Create a new matcher for a {@link Quantity} with a matcher for the
      * value.
      *
      * @param valueMatcher The expected value matcher.
      * @return new matcher for the expected metrics.
      */
     public static Matcher<Quantity> match(final Matcher<? extends Number> valueMatcher) {
-        return match(valueMatcher, IsNull.nullValue(Unit.class));
+        return new QuantityMatcher(valueMatcher);
     }
 
     @Override
     public void describeTo(final Description description) {
         description.appendText(" was ")
-                .appendValue(_valueMatcher)
-                .appendText(" in ")
-                .appendValue(_unitMatcher);
+                .appendValue(_valueMatcher);
     }
 
     @Override
@@ -170,21 +102,12 @@ public final class QuantityMatcher extends TypeSafeDiagnosingMatcher<Quantity> {
                     item.getValue()));
             matches = false;
         }
-        if (!_valueMatcher.matches(item.getValue())) {
-            mismatchDescription.appendText(String.format(
-                    "unit differs: expected=%s, actual=%s",
-                    _unitMatcher,
-                    item.getUnit()));
-            matches = false;
-        }
         return matches;
     }
 
-    private QuantityMatcher(final Matcher<? extends Number> valueMatcher, final Matcher<Unit> unitMatcher) {
+    private QuantityMatcher(final Matcher<? extends Number> valueMatcher) {
         _valueMatcher = valueMatcher;
-        _unitMatcher = unitMatcher;
     }
 
     private final Matcher<? extends Number> _valueMatcher;
-    private final Matcher<Unit> _unitMatcher;
 }

@@ -20,8 +20,6 @@ import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
-import com.arpnetworking.metrics.Units;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,51 +167,32 @@ public class TsdMetrics implements Metrics {
         timer.stop();
     }
 
-    /**
-     * @deprecated The use of TimeUnit directly in signatures is deprecated Use
-     * {@link Metrics#setTimer(String, long, Unit)} instead.
-     */
     @Override
-    @Deprecated
-    public void setTimer(final String name, final long duration, @Nullable final TimeUnit unit) {
-        setTimer(name, duration, Units.from(unit));
-    }
-
-    @Override
-    public void setTimer(final String name, final long duration, @Nullable final Unit unit) {
+    public void setTimer(final String name, final long duration, final TimeUnit unit) {
         if (!assertIsOpen()) {
             return;
         }
         final ConcurrentLinkedDeque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
-        samples.add(TsdQuantity.newInstance(duration, unit));
+        samples.add(TsdQuantity.newInstance(convertTimeUnit(duration, unit, TimeUnit.SECONDS)));
     }
+
 
     @Override
     public void setGauge(final String name, final double value) {
-        setGauge(name, value, null);
-    }
-
-    @Override
-    public void setGauge(final String name, final double value, @Nullable final Unit unit) {
         if (!assertIsOpen()) {
             return;
         }
         final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-        list.add(TsdQuantity.newInstance(value, unit));
+        list.add(TsdQuantity.newInstance(value));
     }
 
     @Override
     public void setGauge(final String name, final long value) {
-        setGauge(name, value, null);
-    }
-
-    @Override
-    public void setGauge(final String name, final long value, @Nullable final Unit unit) {
         if (!assertIsOpen()) {
             return;
         }
         final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-        list.add(TsdQuantity.newInstance(value, unit));
+        list.add(TsdQuantity.newInstance(value));
     }
 
     @Override
@@ -342,6 +321,14 @@ public class TsdMetrics implements Metrics {
         return isOpen;
     }
 
+    static double convertTimeUnit(final double valueFrom, final TimeUnit unitFrom, final TimeUnit unitTo) {
+        final long conversionRateTo = unitTo.convert(1, unitFrom);
+        if (conversionRateTo == 0) {
+            return valueFrom / unitFrom.convert(1, unitTo);
+        }
+        return valueFrom * conversionRateTo;
+    }
+
     @SafeVarargs
     // CHECKSTYLE.OFF: RedundantModifier - Required for @SafeVarargs
     private final Map<String, List<Quantity>> cloneSamples(
@@ -361,7 +348,7 @@ public class TsdMetrics implements Metrics {
                     }
                 }
                 if (rejections.isEmpty()) {
-                    quantities.add(TsdQuantity.newInstance(quantity.getValue(), quantity.getUnit()));
+                    quantities.add(TsdQuantity.newInstance(quantity.getValue()));
                 } else {
                     _logger.warn(String.format(
                             "Sample rejected; name=%s, sample=%s, rejections=%s",

@@ -17,9 +17,6 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Quantity;
-import com.arpnetworking.metrics.Unit;
-
-import javax.annotation.Nullable;
 
 /**
  * No operation implementation of {@link Counter}.  This class is thread safe.
@@ -63,11 +60,5 @@ import javax.annotation.Nullable;
     @Override
     public Number getValue() {
         return 0;
-    }
-
-    @Override
-    @Nullable
-    public Unit getUnit() {
-        return null;
     }
 }

@@ -19,7 +19,6 @@ import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Units;
 import com.arpnetworking.metrics.test.MetricMatcher;
 import com.arpnetworking.metrics.test.QuantityMatcher;
 import org.hamcrest.Matcher;
@@ -50,7 +49,6 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-@SuppressWarnings("deprecation")  // We still want to test deprecated methods
 public final class TsdMetricsTest {
 
     @Test
@@ -143,7 +141,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timer",
-                        QuantityMatcher.match(1, Units.MILLISECOND)));
+                        QuantityMatcher.match(0.001)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -168,7 +166,7 @@ public final class TsdMetricsTest {
                 actualEvent.getGaugeSamples(),
                 MetricMatcher.match(
                         "gauge",
-                        QuantityMatcher.match(1.23, null)));
+                        QuantityMatcher.match(1.23)));
     }
 
     @Test
@@ -191,7 +189,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timer",
-                        QuantityMatcher.match(1L, Units.MILLISECOND)));
+                        QuantityMatcher.match(0.001)));
         Assert.assertThat(
                 actualEvent.getCounterSamples(),
                 MetricMatcher.match(
@@ -201,7 +199,7 @@ public final class TsdMetricsTest {
                 actualEvent.getGaugeSamples(),
                 MetricMatcher.match(
                         "gauge",
-                        QuantityMatcher.match(1.23, null)));
+                        QuantityMatcher.match(1.23)));
     }
 
     @Test
@@ -457,15 +455,15 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerA",
-                        QuantityMatcher.match(100, Units.MILLISECOND),
+                        QuantityMatcher.match(0.1),
                         "timerB",
-                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.any(Number.class)),
                         "timerC",
-                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
-                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.any(Number.class)),
+                        QuantityMatcher.match(Matchers.any(Number.class)),
                         "timerD",
-                        QuantityMatcher.match(Matchers.any(Number.class), Units.NANOSECOND),
-                        QuantityMatcher.match(1, Units.MILLISECOND)));
+                        QuantityMatcher.match(Matchers.any(Number.class)),
+                        QuantityMatcher.match(0.001)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -630,16 +628,6 @@ public final class TsdMetricsTest {
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
-        metrics.setGauge("bySize", 21L, Units.BYTE);
-        metrics.setGauge("bySize", 22L, Units.KILOBYTE);
-        metrics.setGauge("bySize", 23L, Units.MEGABYTE);
-        metrics.setGauge("bySize", 24L, Units.GIGABYTE);
-
-        // You should never do this but the library cannot prevent it because
-        // values are combined across instances, processes and hosts:
-        metrics.setGauge("mixedUnit", 1.23, Units.BYTE);
-        metrics.setGauge("mixedUnit", 2.07, Units.SECOND);
-
         metrics.setTimer("withTimeUnit", 11L, TimeUnit.NANOSECONDS);
         metrics.setTimer("withTimeUnit", 12L, TimeUnit.MICROSECONDS);
         metrics.setTimer("withTimeUnit", 13L, TimeUnit.MILLISECONDS);
@@ -647,14 +635,6 @@ public final class TsdMetricsTest {
         metrics.setTimer("withTimeUnit", 15L, TimeUnit.MINUTES);
         metrics.setTimer("withTimeUnit", 16L, TimeUnit.HOURS);
         metrics.setTimer("withTimeUnit", 17L, TimeUnit.DAYS);
-
-        metrics.setTimer("withTsdUnit", 1L, Units.NANOSECOND);
-        metrics.setTimer("withTsdUnit", 2L, Units.MICROSECOND);
-        metrics.setTimer("withTsdUnit", 3L, Units.MILLISECOND);
-        metrics.setTimer("withTsdUnit", 4L, Units.SECOND);
-        metrics.setTimer("withTsdUnit", 5L, Units.MINUTE);
-        metrics.setTimer("withTsdUnit", 6L, Units.HOUR);
-        metrics.setTimer("withTsdUnit", 7L, Units.DAY);
 
         metrics.close();
 
@@ -668,33 +648,15 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "withTimeUnit",
-                        QuantityMatcher.match(11, Units.NANOSECOND),
-                        QuantityMatcher.match(12, Units.MICROSECOND),
-                        QuantityMatcher.match(13, Units.MILLISECOND),
-                        QuantityMatcher.match(14, Units.SECOND),
-                        QuantityMatcher.match(15, Units.MINUTE),
-                        QuantityMatcher.match(16, Units.HOUR),
-                        QuantityMatcher.match(17, Units.DAY),
-                        "withTsdUnit",
-                        QuantityMatcher.match(1, Units.NANOSECOND),
-                        QuantityMatcher.match(2, Units.MICROSECOND),
-                        QuantityMatcher.match(3, Units.MILLISECOND),
-                        QuantityMatcher.match(4, Units.SECOND),
-                        QuantityMatcher.match(5, Units.MINUTE),
-                        QuantityMatcher.match(6, Units.HOUR),
-                        QuantityMatcher.match(7, Units.DAY)));
+                        QuantityMatcher.match(0.000000011),
+                        QuantityMatcher.match(0.000012),
+                        QuantityMatcher.match(0.013),
+                        QuantityMatcher.match(14.0),
+                        QuantityMatcher.match(900.0),
+                        QuantityMatcher.match(57600.0),
+                        QuantityMatcher.match(1468800.0)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertThat(
-                actualEvent.getGaugeSamples(),
-                MetricMatcher.match(
-                        "bySize",
-                        QuantityMatcher.match(21, Units.BYTE),
-                        QuantityMatcher.match(22, Units.KILOBYTE),
-                        QuantityMatcher.match(23, Units.MEGABYTE),
-                        QuantityMatcher.match(24, Units.GIGABYTE),
-                        "mixedUnit",
-                        QuantityMatcher.match(1.23, Units.BYTE),
-                        QuantityMatcher.match(2.07, Units.SECOND)));
+        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -733,10 +695,10 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(1L), Units.NANOSECOND),
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.001)),
                         "timerObjectB",
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(2L), Units.NANOSECOND),
-                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(1L), Units.NANOSECOND)));
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.002)),
+                        QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.001))));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -761,7 +723,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(1, Units.SECOND)));
+                        QuantityMatcher.match(1.0)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -786,7 +748,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(1, Units.SECOND),
+                        QuantityMatcher.match(1.0),
                         "timerObjectB"));
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -835,7 +797,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(1, Units.SECOND)));
+                        QuantityMatcher.match(1.0)));
         Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
@@ -861,7 +823,7 @@ public final class TsdMetricsTest {
                 actualEvent.getTimerSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
-                        QuantityMatcher.match(1, Units.SECOND),
+                        QuantityMatcher.match(1.0),
                         "timerObjectB"));
         Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }

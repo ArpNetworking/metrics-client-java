@@ -18,13 +18,11 @@ package com.arpnetworking.metrics.impl;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.StopWatch;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
-import com.arpnetworking.metrics.Units;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
 
 /**
  * Implementation of {@link Timer}. This class is thread safe.
@@ -91,17 +89,10 @@ import javax.annotation.Nullable;
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
             return 0;
         }
-        return _stopWatch.getElapsedTime().getValue();
-    }
-
-    @Override
-    @Nullable
-    public Unit getUnit() {
-        if (_stopWatch.isRunning()) {
-            _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
-            return Units.NANOSECOND;
-        }
-        return _stopWatch.getElapsedTime().getUnit();
+        return TsdMetrics.convertTimeUnit(
+                _stopWatch.getElapsedTime().getValue().longValue(),
+                _stopWatch.getUnit(),
+                TimeUnit.SECONDS);
     }
 
     @Override

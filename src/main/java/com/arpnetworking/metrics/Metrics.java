@@ -119,27 +119,13 @@ public interface Metrics extends AutoCloseable {
     /**
      * Set the timer to the specified value. This is most commonly used to
      * record timers from external sources that are not directly integrated with
-     * metrics.
+     * metrics. All timers are internally represented in seconds.
      *
      * @param name The name of the timer.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
-     * @deprecated The use of TimeUnit directly in signatures is deprecated Use
-     * {@link Metrics#setTimer(String, long, Unit)} instead.
      */
-    @Deprecated
     void setTimer(String name, long duration, @Nullable TimeUnit unit);
-
-    /**
-     * Set the timer to the specified value. This is most commonly used to
-     * record timers from external sources that are not directly integrated with
-     * metrics.
-     *
-     * @param name The name of the timer.
-     * @param duration The duration of the timer.
-     * @param unit The time unit of the timer.
-     */
-    void setTimer(String name, long duration, @Nullable Unit unit);
 
     /**
      * Set the specified gauge reading.
@@ -150,30 +136,12 @@ public interface Metrics extends AutoCloseable {
     void setGauge(String name, double value);
 
     /**
-     * Set the specified gauge reading with a well-known unit.
-     *
-     * @param name The name of the gauge.
-     * @param value The reading on the gauge
-     * @param unit The unit of the value.
-     */
-    void setGauge(String name, double value, @Nullable Unit unit);
-
-    /**
      * Set the specified gauge reading.
      *
      * @param name The name of the gauge.
      * @param value The reading on the gauge
      */
     void setGauge(String name, long value);
-
-    /**
-     * Set the specified gauge reading with a well-known unit.
-     *
-     * @param name The name of the gauge.
-     * @param value The reading on the gauge
-     * @param unit The unit of the value.
-     */
-    void setGauge(String name, long value, @Nullable Unit unit);
 
     /**
      * Add an attribute that describes the captured metrics or context.

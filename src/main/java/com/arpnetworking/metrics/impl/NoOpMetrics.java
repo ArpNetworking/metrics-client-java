@@ -18,7 +18,6 @@ package com.arpnetworking.metrics.impl;
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Timer;
-import com.arpnetworking.metrics.Unit;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -83,18 +82,8 @@ public class NoOpMetrics implements Metrics {
         // Do nothing
     }
 
-    /**
-     * @deprecated The use of TimeUnit directly in signatures is deprecated Use
-     * {@link Metrics#setTimer(String, long, Unit)} instead.
-     */
     @Override
-    @Deprecated
     public void setTimer(final String name, final long duration, @Nullable final TimeUnit unit) {
-        // Do nothing
-    }
-
-    @Override
-    public void setTimer(final String name, final long duration, @Nullable final Unit unit) {
         // Do nothing
     }
 
@@ -104,17 +93,7 @@ public class NoOpMetrics implements Metrics {
     }
 
     @Override
-    public void setGauge(final String name, final double value, @Nullable final Unit unit) {
-        // Do nothing
-    }
-
-    @Override
     public void setGauge(final String name, final long value) {
-        // Do nothing
-    }
-
-    @Override
-    public void setGauge(final String name, final long value, @Nullable final Unit unit) {
         // Do nothing
     }
 

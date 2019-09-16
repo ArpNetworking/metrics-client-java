@@ -17,12 +17,12 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.StopWatch;
-import com.arpnetworking.metrics.Units;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Simple thread-safe implementation of {@link StopWatch}.
+ * Simple thread-safe implementation of nanosecond {@link StopWatch}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
@@ -38,7 +38,7 @@ public final class TsdStopWatch implements StopWatch {
         if (!_isRunning.getAndSet(false)) {
             throw new IllegalStateException("StopWatch is not running.");
         }
-        _elapsedNanoSeconds = TsdQuantity.newInstance(System.nanoTime() - _startedAtNanoSeconds, Units.NANOSECOND);
+        _elapsedNanoSeconds = TsdQuantity.newInstance(System.nanoTime() - _startedAtNanoSeconds);
     }
 
     @Override
@@ -47,6 +47,11 @@ public final class TsdStopWatch implements StopWatch {
             throw new IllegalStateException("StopWatch is still running.");
         }
         return _elapsedNanoSeconds;
+    }
+
+    @Override
+    public TimeUnit getUnit() {
+        return TimeUnit.NANOSECONDS;
     }
 
     @Override

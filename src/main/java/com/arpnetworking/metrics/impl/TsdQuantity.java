@@ -16,10 +16,8 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.Quantity;
-import com.arpnetworking.metrics.Unit;
 
 import java.util.Objects;
-import javax.annotation.Nullable;
 
 /**
  * Default implementation of {@link Quantity}. This class is thread safe.
@@ -33,22 +31,15 @@ import javax.annotation.Nullable;
      * should be created through the {@link TsdMetrics} instance.
      *
      * @param value The value.
-     * @param unit The units of the value.
      * @return New instance of {@link TsdQuantity}.
      */
-    /* package private */ static TsdQuantity newInstance(final Number value, @Nullable final Unit unit) {
-        return new TsdQuantity(value, unit);
+    /* package private */ static TsdQuantity newInstance(final Number value) {
+        return new TsdQuantity(value);
     }
 
     @Override
     public Number getValue() {
         return _value;
-    }
-
-    @Override
-    @Nullable
-    public Unit getUnit() {
-        return _unit;
     }
 
     @Override
@@ -62,29 +53,25 @@ import javax.annotation.Nullable;
         }
 
         final TsdQuantity otherQuantity = (TsdQuantity) other;
-        return Objects.equals(_value, otherQuantity._value)
-                && Objects.equals(_unit, otherQuantity._unit);
+        return Objects.equals(_value, otherQuantity._value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_value, _unit);
+        return Objects.hash(_value);
     }
 
     @Override
     public String toString() {
         return String.format(
-                "TsdQuantity{id=%s, Value=%s, Unit=%s}",
+                "TsdQuantity{id=%s, Value=%s}",
                 Integer.toHexString(System.identityHashCode(this)),
-                _value,
-                _unit);
+                _value);
     }
 
-    private TsdQuantity(final Number value, @Nullable final Unit unit) {
+    private TsdQuantity(final Number value) {
         _value = value;
-        _unit = unit;
     }
 
     private final Number _value;
-    @Nullable private final Unit _unit;
 }
