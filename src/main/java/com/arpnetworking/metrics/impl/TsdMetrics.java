@@ -322,11 +322,11 @@ public class TsdMetrics implements Metrics {
     }
 
     static double convertTimeUnit(final double valueFrom, final TimeUnit unitFrom, final TimeUnit unitTo) {
-        if (unitFrom.ordinal() < unitTo.ordinal()) {
+        final long conversionRateTo = unitTo.convert(1, unitFrom);
+        if (conversionRateTo == 0) {
             return valueFrom / unitFrom.convert(1, unitTo);
-        } else {
-            return valueFrom * unitTo.convert(1, unitFrom);
         }
+        return valueFrom * conversionRateTo;
     }
 
     @SafeVarargs

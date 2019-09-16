@@ -168,7 +168,6 @@ public final class TsdTimerTest {
         Mockito.verify(logger, Mockito.never()).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
         timer.getValue();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
-        Mockito.verify(logger, Mockito.times(1)).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
