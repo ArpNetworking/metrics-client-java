@@ -29,7 +29,7 @@
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
   <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.11.0-SNAPSHOT</version>
+  <version>0.11.0</version>
 
   <licenses>
     <license>
@@ -63,7 +63,7 @@
     <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
     <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
     <url>https://github.com/arpnetworking/metrics-client-java</url>
-    <tag>HEAD</tag>
+    <tag>metrics-client-0.11.0</tag>
   </scm>
 
   <properties>
