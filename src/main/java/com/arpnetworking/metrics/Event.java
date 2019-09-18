@@ -52,4 +52,11 @@ public interface Event {
      * @return Gauge samples by gauge name for UOW.
      */
     Map<String, List<Quantity>> getGaugeSamples();
+
+    /**
+     * Accessor for UOW aggregated data.
+     *
+     * @return Aggregated data for UOW.
+     */
+    Map<String, AggregatedData> getAggregatedData();
 }
