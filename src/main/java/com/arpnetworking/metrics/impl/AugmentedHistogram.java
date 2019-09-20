@@ -32,6 +32,20 @@ import javax.annotation.Nullable;
  * with supporting data capturing the minimum, maximum and sum of the
  * aggregated measurements.
  *
+ * The histogram keys should be truncated from the sample value being
+ * inserted. The amount of truncation is controlled by the precision.
+ * Specifically, given {@code precision} and {@code sampleValue} the
+ * key in the histogram is computed like this:
+ *
+ * {@code
+ * final int MANTISSA_BITS = 52;
+ * final int EXPONENT_BITS = 11;
+ * final long BASE_MASK = (1L << (MANTISSA_BITS + EXPONENT_BITS)) >> EXPONENT_BITS;
+ *
+ * final long truncateMask = BASE_MASK >> precision;
+ * final double histogramKey = Double.longBitsToDouble(Double.doubleToRawLongBits(sampleValue) & truncateMask)
+ * }
+ *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public final class AugmentedHistogram implements AggregatedData {
@@ -183,7 +197,8 @@ public final class AugmentedHistogram implements AggregatedData {
          * <u><b>IMPORTANT:</b></u>
          * The keys in the histogram must be computed with the specified precision
          * and match the key computation logic in the other components of the Inscope
-         * Metrics software stack.
+         * Metrics software stack. Please refer to class Javadoc on {@link AugmentedHistogram}
+         * for details on truncation process.
          *
          * @param value The histogram.
          * @return This <code>Builder</code> instance.
