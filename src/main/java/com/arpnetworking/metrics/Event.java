@@ -15,48 +15,49 @@
  */
 package com.arpnetworking.metrics;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Interface representing one unit of work's metrics data.
+ * Interface representing one span's metrics data.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Event {
 
     /**
-     * Accessor for UOW annotations.
+     * Accessor for start time.
      *
-     * @return Annotations for UOW.
+     * @return the start time
      */
-    Map<String, String> getAnnotations();
+    Instant getStartTime();
 
     /**
-     * Accessor for UOW timer samples.
+     * Accessor for end time.
      *
-     * @return Timer samples by timer name for UOW.
+     * @return the end time
      */
-    Map<String, List<Quantity>> getTimerSamples();
+    Instant getEndTime();
 
     /**
-     * Accessor for UOW counter samples.
+     * Accessor for dimensions.
      *
-     * @return Counter samples by counter name for UOW.
+     * @return the dimensions
      */
-    Map<String, List<Quantity>> getCounterSamples();
+    Map<String, String> getDimensions();
 
     /**
-     * Accessor for UOW gauge samples.
+     * Accessor for samples.
      *
-     * @return Gauge samples by gauge name for UOW.
+     * @return the samples by metric name
      */
-    Map<String, List<Quantity>> getGaugeSamples();
+    Map<String, List<Quantity>> getSamples();
 
     /**
-     * Accessor for UOW aggregated data.
+     * Accessor for aggregated data.
      *
-     * @return Aggregated data for UOW.
+     * @return the aggregated data by metric name.
      */
     Map<String, AggregatedData> getAggregatedData();
 }

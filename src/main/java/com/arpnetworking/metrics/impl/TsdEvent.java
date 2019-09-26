@@ -19,6 +19,7 @@ import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Quantity;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,42 +40,43 @@ import java.util.Objects;
      * structures after passing them to this constructor. This is acceptable
      * since this class is for internal implementation only.
      *
-     * @param annotations The annotations.
-     * @param timerSamples The timer samples.
-     * @param counterSamples The counter samples.
-     * @param gaugeSamples The gauge samples.
+     * @param startTime the start time
+     * @param endTime the end time
+     * @param dimensions the annotations
+     * @param samples the samples
+     * @param aggregatedData the aggregated data
      */
     /* package private */ TsdEvent(
-            final Map<String, String> annotations,
-            final Map<String, List<Quantity>> timerSamples,
-            final Map<String, List<Quantity>> counterSamples,
-            final Map<String, List<Quantity>> gaugeSamples,
+            final Instant startTime,
+            final Instant endTime,
+            final Map<String, String> dimensions,
+            final Map<String, List<Quantity>> samples,
             final Map<String, AggregatedData> aggregatedData) {
-        _annotations = annotations;
-        _timerSamples = timerSamples;
-        _counterSamples = counterSamples;
-        _gaugeSamples = gaugeSamples;
+        _startTime = startTime;
+        _endTime = endTime;
+        _dimensions = dimensions;
+        _samples = samples;
         _aggregatedData = aggregatedData;
     }
 
     @Override
-    public Map<String, String> getAnnotations() {
-        return Collections.unmodifiableMap(_annotations);
+    public Instant getStartTime() {
+        return _startTime;
     }
 
     @Override
-    public Map<String, List<Quantity>> getTimerSamples() {
-        return Collections.unmodifiableMap(_timerSamples);
+    public Instant getEndTime() {
+        return _endTime;
     }
 
     @Override
-    public Map<String, List<Quantity>> getCounterSamples() {
-        return Collections.unmodifiableMap(_counterSamples);
+    public Map<String, String> getDimensions() {
+        return Collections.unmodifiableMap(_dimensions);
     }
 
     @Override
-    public Map<String, List<Quantity>> getGaugeSamples() {
-        return Collections.unmodifiableMap(_gaugeSamples);
+    public Map<String, List<Quantity>> getSamples() {
+        return Collections.unmodifiableMap(_samples);
     }
 
     @Override
@@ -91,32 +93,32 @@ import java.util.Objects;
             return false;
         }
         final TsdEvent otherEvent = (TsdEvent) other;
-        return Objects.equals(_annotations, otherEvent._annotations)
-                && Objects.equals(_counterSamples, otherEvent._counterSamples)
-                && Objects.equals(_timerSamples, otherEvent._timerSamples)
-                && Objects.equals(_gaugeSamples, otherEvent._gaugeSamples)
+        return Objects.equals(_startTime, otherEvent._startTime)
+                && Objects.equals(_endTime, otherEvent._endTime)
+                && Objects.equals(_dimensions, otherEvent._dimensions)
+                && Objects.equals(_samples, otherEvent._samples)
                 && Objects.equals(_aggregatedData, otherEvent._aggregatedData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_annotations, _counterSamples, _timerSamples, _gaugeSamples, _aggregatedData);
+        return Objects.hash(_startTime, _endTime, _dimensions, _samples, _aggregatedData);
     }
 
     @Override
     public String toString() {
         return String.format(
-                "TsdEvent{Annotations=%s, TimerSamples=%s, CounterSamples=%s, GaugeSamples=%s, AggregatedData=%s}",
-                _annotations,
-                _timerSamples,
-                _counterSamples,
-                _gaugeSamples,
+                "TsdEvent{StartTime=%s, EndTime=%s, Dimensions=%s, Samples=%s, AggregatedData=%s}",
+                _startTime,
+                _endTime,
+                _dimensions,
+                _samples,
                 _aggregatedData);
     }
 
-    private final Map<String, String> _annotations;
-    private final Map<String, List<Quantity>> _timerSamples;
-    private final Map<String, List<Quantity>> _counterSamples;
-    private final Map<String, List<Quantity>> _gaugeSamples;
+    private final Instant _startTime;
+    private final Instant _endTime;
+    private final Map<String, String> _dimensions;
+    private final Map<String, List<Quantity>> _samples;
     private final Map<String, AggregatedData> _aggregatedData;
 }

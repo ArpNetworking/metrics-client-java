@@ -17,6 +17,7 @@ package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Counter;
+import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.Sink;
@@ -26,8 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +41,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -225,26 +225,32 @@ public class TsdMetrics implements Metrics {
             return;
         }
         _finalTimestamp = _clock.instant();
-        _annotations.put(INITIAL_TIMESTAMP_KEY, DATE_TIME_FORMATTER.format(_initialTimestamp));
-        _annotations.put(FINAL_TIMESTAMP_KEY, DATE_TIME_FORMATTER.format(_finalTimestamp));
 
-        final Map<String, String> annotations = Collections.unmodifiableMap(_annotations);
-        final Map<String, List<Quantity>> timerSamples = cloneSamples(
+        final int maxMetricsCount = _timerSamples.size() + _counterSamples.size() + _gaugeSamples.size();
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<String, List<Quantity>> clonedSamples = new HashMap<>((int) (maxMetricsCount / DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
+        // CHECKSTYLE.ON: IllegalInstantiation
+        cloneSamples(
                 _timerSamples,
+                clonedSamples,
                 PREDICATE_STOPPED_TIMERS,
                 PREDICATE_NON_ABORTED_TIMERS);
-        final Map<String, List<Quantity>> counterSamples = cloneSamples(_counterSamples);
-        final Map<String, List<Quantity>> gaugeSamples = cloneSamples(_gaugeSamples);
+        cloneSamples(_counterSamples, clonedSamples);
+        cloneSamples(_gaugeSamples, clonedSamples);
+
+        final Event event = new TsdEvent(
+                _initialTimestamp,
+                _finalTimestamp,
+                Collections.unmodifiableMap(_annotations),
+                clonedSamples.entrySet().stream().collect(
+                        Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> Collections.unmodifiableList(e.getValue()))),
+                Collections.unmodifiableMap(_aggregatedData));
 
         for (final Sink sink : _sinks) {
             try {
-                sink.record(
-                        new TsdEvent(
-                                annotations,
-                                timerSamples,
-                                counterSamples,
-                                gaugeSamples,
-                                Collections.unmodifiableMap(_aggregatedData)));
+                sink.record(event);
                 // CHECKSTYLE.OFF: IllegalCatch - Prevent an exception leak; see class Javadoc
             } catch (final RuntimeException e) {
                 // CHECKSTYLE.ON: IllegalCatch
@@ -359,19 +365,26 @@ public class TsdMetrics implements Metrics {
     }
 
     @SafeVarargs
-    // CHECKSTYLE.OFF: RedundantModifier - Required for @SafeVarargs
-    private final Map<String, List<Quantity>> cloneSamples(
+    // CHECKSTYLE.OFF: RedundantModifier - Final modifier required for @SafeVarargs
+    private final void cloneSamples(
             final Map<String, ? extends Collection<? extends Quantity>> samples,
+            final Map<String, List<Quantity>> clonedSamples,
             final Predicate<Quantity>... predicates) {
-        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, List<Quantity>> clonedSamples = new HashMap<>((int) (samples.size() / DEFAULT_LOAD_FACTOR), DEFAULT_LOAD_FACTOR);
-        // CHECKSTYLE.ON: IllegalInstantiation
+        // CHECKSTYLE.ON: RedundantModifier
         for (final Map.Entry<String, ? extends Collection<? extends Quantity>> entry : samples.entrySet()) {
-            final List<Quantity> quantities = new ArrayList<>(entry.getValue().size());
-            clonedSamples.put(entry.getKey(), Collections.unmodifiableList(quantities));
+            List<Quantity> quantities = clonedSamples.get(entry.getKey());
+            if (quantities != null) {
+                _logger.warn(String.format(
+                        "Metric recorded as two or more of counter, timer, gauge; name=%s",
+                        entry.getKey()));
+            } else {
+                quantities = new ArrayList<>(entry.getValue().size());
+                clonedSamples.put(entry.getKey(), quantities);
+            }
+
             for (final Quantity quantity : entry.getValue()) {
                 final List<Predicate<Quantity>> rejections = new ArrayList<>();
-                for (Predicate<Quantity> predicate : predicates) {
+                for (final Predicate<Quantity> predicate : predicates) {
                     if (!predicate.apply(quantity)) {
                         rejections.add(predicate);
                     }
@@ -387,7 +400,6 @@ public class TsdMetrics implements Metrics {
                 }
             }
         }
-        return Collections.unmodifiableMap(clonedSamples);
     }
 
     // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
@@ -434,14 +446,10 @@ public class TsdMetrics implements Metrics {
     private final ConcurrentMap<String, String> _annotations = new ConcurrentHashMap<>();
     private final BiFunction<String, TsdCounter, TsdCounter> _createCounterBiFunction = new CreateCounterFunction();
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ").withZone(ZoneId.of("UTC"));
     private static final Predicate<Quantity> PREDICATE_STOPPED_TIMERS = new StoppedTimersPredicate();
     private static final Predicate<Quantity> PREDICATE_NON_ABORTED_TIMERS = new NonAbortedTimersPredicate();
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetrics.class);
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
-    private static final String FINAL_TIMESTAMP_KEY = "_end";
-    private static final String INITIAL_TIMESTAMP_KEY = "_start";
     private static final String ID_KEY = "_id";
     private static final String HOST_KEY = "_host";
     private static final String SERVICE_KEY = "_service";
@@ -449,7 +457,7 @@ public class TsdMetrics implements Metrics {
 
     private final class CreateCounterFunction implements BiFunction<String, TsdCounter, TsdCounter> {
 
-        public CreateCounterFunction() {}
+        CreateCounterFunction() {}
 
         @Override
         public TsdCounter apply(final String name, @Nullable final TsdCounter existingValue) {

@@ -29,14 +29,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,47 +53,48 @@ public final class TsdMetricsTest {
     public void testEmptySingleSink() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
+        final Instant before = Instant.now();
         final TsdMetrics metrics = createTsdMetrics(sink);
         metrics.close();
+        final Instant after = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getSamples().isEmpty());
+        assertTimestamps(before, after, actualEvent);
     }
 
     @Test
     public void testEmptyMultipleSinks() {
         final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink1");
         final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink2");
+        final Instant before = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink1, sink2);
         metrics.close();
+        final Instant after = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture1 = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink1).record(eventCapture1.capture());
         final Event actualEvent1 = eventCapture1.getValue();
         Assert.assertThat(
-                actualEvent1.getAnnotations(),
+                actualEvent1.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent1.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent1.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent1.getGaugeSamples().isEmpty());
+        Assert.assertTrue(actualEvent1.getSamples().isEmpty());
+        assertTimestamps(before, after, actualEvent1);
 
         final ArgumentCaptor<Event> eventCapture2 = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink2).record(eventCapture2.capture());
         final Event actualEvent2 = eventCapture2.getValue();
         Assert.assertThat(
-                actualEvent2.getAnnotations(),
+                actualEvent2.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent2.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent2.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent2.getGaugeSamples().isEmpty());
+        Assert.assertTrue(actualEvent2.getSamples().isEmpty());
+        assertTimestamps(before, after, actualEvent2);
 
         Assert.assertEquals(actualEvent1, actualEvent2);
     }
@@ -113,15 +111,13 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
         Assert.assertThat(
-                actualEvent.getCounterSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "counter",
                         QuantityMatcher.match(1)));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -136,15 +132,13 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timer",
                         QuantityMatcher.match(0.001)));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -159,12 +153,10 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
         Assert.assertThat(
-                actualEvent.getGaugeSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "gauge",
                         QuantityMatcher.match(1.23)));
@@ -198,10 +190,9 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getSamples().isEmpty());
         Assert.assertEquals(
                 actualEvent.getAggregatedData(),
                 Collections.singletonMap(
@@ -255,10 +246,9 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        Assert.assertTrue(actualEvent.getSamples().isEmpty());
         Assert.assertEquals(
                 actualEvent.getAggregatedData(),
                 Collections.singletonMap(
@@ -286,23 +276,46 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timer",
-                        QuantityMatcher.match(0.001)));
-        Assert.assertThat(
-                actualEvent.getCounterSamples(),
-                MetricMatcher.match(
+                        QuantityMatcher.match(0.001),
                         "counter",
-                        QuantityMatcher.match(1)));
-        Assert.assertThat(
-                actualEvent.getGaugeSamples(),
-                MetricMatcher.match(
+                        QuantityMatcher.match(1),
                         "gauge",
                         QuantityMatcher.match(1.23)));
+    }
+
+    @Test
+    public void testTimerCounterGaugeSameName() {
+        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final Sink sink = Mockito.mock(Sink.class);
+        @SuppressWarnings("resource")
+        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        metrics.incrementCounter("badName");
+        metrics.setTimer("badName", 1L, TimeUnit.MILLISECONDS);
+        metrics.setGauge("badName", 1.23);
+        metrics.close();
+
+        final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
+        Mockito.verify(sink).record(eventCapture.capture());
+        final Event actualEvent = eventCapture.getValue();
+        Assert.assertThat(
+                actualEvent.getDimensions(),
+                standardAnnotationsMatcher());
+        Assert.assertThat(
+                actualEvent.getSamples(),
+                MetricMatcher.match(
+                        "badName",
+                        QuantityMatcher.match(0.001),
+                        QuantityMatcher.match(1),
+                        QuantityMatcher.match(1.23)));
+
+        Mockito.verify(logger, Mockito.atLeastOnce()).warn(
+                Mockito.startsWith("Metric recorded as two or more of counter, timer, gauge; name=badName"));
     }
 
     @Test
@@ -542,21 +555,19 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
         Assert.assertThat(
-                actualEvent.getCounterSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "testCloseTryWithResource",
                         QuantityMatcher.match(1)));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
-    public void testTimerMetrics() throws ParseException, InterruptedException {
+    public void testTimerMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
-        final Date earliestStartDate = new Date();
+        final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -573,17 +584,17 @@ public final class TsdMetricsTest {
 
         Thread.sleep(10);
         metrics.close();
-        final Date latestEndDate = new Date();
+        final Instant latestEndDate = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerA",
                         QuantityMatcher.match(0.1),
@@ -595,14 +606,12 @@ public final class TsdMetricsTest {
                         "timerD",
                         QuantityMatcher.match(Matchers.any(Number.class)),
                         QuantityMatcher.match(0.001)));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
-    public void testCounterMetrics() throws ParseException, InterruptedException {
+    public void testCounterMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
-        final Date earliestStartDate = new Date();
+        final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -620,18 +629,17 @@ public final class TsdMetricsTest {
 
         Thread.sleep(10);
         metrics.close();
-        final Date latestEndDate = new Date();
+        final Instant latestEndDate = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
-                actualEvent.getCounterSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "counterA",
                         QuantityMatcher.match(1),
@@ -647,13 +655,12 @@ public final class TsdMetricsTest {
                         QuantityMatcher.match(0),
                         QuantityMatcher.match(1),
                         QuantityMatcher.match(2)));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
-    public void testGaugeMetrics() throws ParseException, InterruptedException {
+    public void testGaugeMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
-        final Date earliestStartDate = new Date();
+        final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -666,19 +673,17 @@ public final class TsdMetricsTest {
 
         Thread.sleep(10);
         metrics.close();
-        final Date latestEndDate = new Date();
+        final Instant latestEndDate = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
-        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
-                actualEvent.getGaugeSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "gaugeA",
                         QuantityMatcher.match(10),
@@ -693,9 +698,9 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testAddAnnotationMetrics() throws ParseException, InterruptedException {
+    public void testAddAnnotationMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
-        final Date earliestStartDate = new Date();
+        final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -705,26 +710,24 @@ public final class TsdMetricsTest {
 
         Thread.sleep(10);
         metrics.close();
-        final Date latestEndDate = new Date();
+        final Instant latestEndDate = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher(
                         Matchers.hasEntry("foo", "bar"),
                         Matchers.hasEntry("dup", "dog")));
-        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
+        Assert.assertTrue(actualEvent.getSamples().isEmpty());
     }
 
     @Test
-    public void testAddAnnotationsMetrics() throws ParseException, InterruptedException {
+    public void testAddAnnotationsMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
-        final Date earliestStartDate = new Date();
+        final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -737,20 +740,18 @@ public final class TsdMetricsTest {
 
         Thread.sleep(10);
         metrics.close();
-        final Date latestEndDate = new Date();
+        final Instant latestEndDate = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher(
                         Matchers.hasEntry("foo", "bar"),
                         Matchers.hasEntry("dup", "dog")));
-        assertTimestamps(earliestStartDate, latestEndDate, actualEvent.getAnnotations());
-        Assert.assertTrue(actualEvent.getTimerSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
+        assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
+        Assert.assertTrue(actualEvent.getSamples().isEmpty());
     }
 
     @Test
@@ -773,10 +774,10 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "withTimeUnit",
                         QuantityMatcher.match(0.000000011),
@@ -786,8 +787,6 @@ public final class TsdMetricsTest {
                         QuantityMatcher.match(900.0),
                         QuantityMatcher.match(57600.0),
                         QuantityMatcher.match(1468800.0)));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -820,18 +819,16 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
                         QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.001)),
                         "timerObjectB",
                         QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.002)),
                         QuantityMatcher.match(Matchers.greaterThanOrEqualTo(0.001))));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -848,15 +845,13 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
                         QuantityMatcher.match(1.0)));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -873,15 +868,14 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
                         QuantityMatcher.match(1.0),
                         "timerObjectB"));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -897,14 +891,11 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
-                Matchers.allOf(
-                        Matchers.hasKey("_start"),
-                        Matchers.hasKey("_end")));
+                actualEvent.getDimensions(),
+                standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match("timerObjectB"));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -922,15 +913,13 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
                         QuantityMatcher.match(1.0)));
-        Assert.assertTrue(actualEvent.getCounterSamples().isEmpty());
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -948,15 +937,14 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
+                actualEvent.getDimensions(),
                 standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match(
                         "timerObjectA",
                         QuantityMatcher.match(1.0),
                         "timerObjectB"));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -973,14 +961,11 @@ public final class TsdMetricsTest {
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
-                actualEvent.getAnnotations(),
-                Matchers.allOf(
-                        Matchers.hasKey("_start"),
-                        Matchers.hasKey("_end")));
+                actualEvent.getDimensions(),
+                standardAnnotationsMatcher());
         Assert.assertThat(
-                actualEvent.getTimerSamples(),
+                actualEvent.getSamples(),
                 MetricMatcher.match("timerObjectB"));
-        Assert.assertTrue(actualEvent.getGaugeSamples().isEmpty());
     }
 
     @Test
@@ -1044,20 +1029,15 @@ public final class TsdMetricsTest {
     }
 
     private void assertTimestamps(
-            final Date earliestStartDate,
-            final Date latestEndDate,
-            final Map<String, String> annotations)
-            throws ParseException {
+            final Instant earliestStartDate,
+            final Instant latestEndDate,
+            final Event event) {
 
-        Assert.assertTrue(annotations.containsKey("_start"));
-        final Date actualStart = _iso8601Format.parse(annotations.get("_start"));
-        Assert.assertTrue(earliestStartDate.getTime() <= actualStart.getTime());
-        Assert.assertTrue(latestEndDate.getTime() >= actualStart.getTime());
+        final Instant actualStart = event.getStartTime();
+        Assert.assertFalse(earliestStartDate.isAfter(actualStart));
 
-        Assert.assertTrue(annotations.containsKey("_end"));
-        final Date actualEnd = _iso8601Format.parse(annotations.get("_end"));
-        Assert.assertTrue(latestEndDate.getTime() >= actualEnd.getTime());
-        Assert.assertTrue(earliestStartDate.getTime() <= actualEnd.getTime());
+        final Instant actualEnd = event.getEndTime();
+        Assert.assertFalse(latestEndDate.isBefore(actualEnd));
     }
 
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
@@ -1068,12 +1048,7 @@ public final class TsdMetricsTest {
         matchers.add(Matchers.hasEntry("_host", "MyHost"));
         matchers.add(Matchers.hasEntry("_service", "MyService"));
         matchers.add(Matchers.hasEntry("_cluster", "MyCluster"));
-        matchers.add(Matchers.hasKey("_start"));
-        matchers.add(Matchers.hasKey("_end"));
         matchers.addAll(Arrays.asList(additionalMatchers));
         return Matchers.allOf(matchers);
     }
-
-    // NOTE: SimpleDateFormat is not thread safe thus it is non-static
-    private final SimpleDateFormat _iso8601Format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXX");
 }

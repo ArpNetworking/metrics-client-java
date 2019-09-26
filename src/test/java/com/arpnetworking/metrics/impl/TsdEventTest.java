@@ -19,8 +19,10 @@ import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Quantity;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,59 +35,64 @@ import java.util.Map;
  */
 public final class TsdEventTest {
 
+    private Instant _now;
+
+    @Before
+    public void setUp() {
+        _now = Instant.now();
+    }
+
     @Test
     public void test() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> annotations = new HashMap<>();
-        annotations.put("foo", "bar");
-        final Map<String, List<Quantity>> timerSamples = new HashMap<>();
-        timerSamples.put("timer", Collections.singletonList(
+        final Map<String, String> dimensions = new HashMap<>();
+        dimensions.put("foo", "bar");
+        final Map<String, List<Quantity>> samples = new HashMap<>();
+        samples.put("timer", Collections.singletonList(
                 TsdQuantity.newInstance(1)));
-        final Map<String, List<Quantity>> counterSamples = new HashMap<>();
-        counterSamples.put("counter", Collections.singletonList(
+        samples.put("counter", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
-        gaugeSamples.put("gauge", Collections.singletonList(
-                TsdQuantity.newInstance(1.23)));
+        samples.put("gauge", Collections.singletonList(
+                TsdQuantity.newInstance(2.46)));
         final Map<String, AggregatedData> aggregatedData = new HashMap<>();
         aggregatedData.put("aggregatedMetric", NoOpAggregatedData.getInstance());
         // CHECKSTYLE.ON: IllegalInstantiation
+
         final Event event = new TsdEvent(
-                annotations,
-                timerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
                 aggregatedData);
 
-        Assert.assertEquals(annotations, event.getAnnotations());
-        Assert.assertEquals(timerSamples, event.getTimerSamples());
-        Assert.assertEquals(counterSamples, event.getCounterSamples());
-        Assert.assertEquals(gaugeSamples, event.getGaugeSamples());
+        Assert.assertEquals(_now, event.getStartTime());
+        Assert.assertEquals(_now.plusSeconds(60), event.getEndTime());
+        Assert.assertEquals(dimensions, event.getDimensions());
+        Assert.assertEquals(samples, event.getSamples());
         Assert.assertEquals(aggregatedData, event.getAggregatedData());
     }
 
     @Test
     public void testEquals() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> annotations = new HashMap<>();
-        annotations.put("foo", "bar");
-        final Map<String, List<Quantity>> timerSamples = new HashMap<>();
-        timerSamples.put("timer", Collections.singletonList(
+        final Map<String, String> dimensions = new HashMap<>();
+        dimensions.put("foo", "bar");
+        final Map<String, List<Quantity>> samples = new HashMap<>();
+        samples.put("timer", Collections.singletonList(
                 TsdQuantity.newInstance(1)));
-        final Map<String, List<Quantity>> counterSamples = new HashMap<>();
-        counterSamples.put("counter", Collections.singletonList(
+        samples.put("counter", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
-        gaugeSamples.put("gauge", Collections.singletonList(
-                TsdQuantity.newInstance(1.23)));
+        samples.put("gauge", Collections.singletonList(
+                TsdQuantity.newInstance(2.46)));
         final Map<String, AggregatedData> aggregatedData = new HashMap<>();
         aggregatedData.put("aggregatedMetric", NoOpAggregatedData.getInstance());
         // CHECKSTYLE.ON: IllegalInstantiation
+
         final Event event = new TsdEvent(
-                annotations,
-                timerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
                 aggregatedData);
 
         Assert.assertTrue(event.equals(event));
@@ -93,55 +100,62 @@ public final class TsdEventTest {
         Assert.assertFalse(event.equals(null));
         Assert.assertFalse(event.equals("This is a String"));
 
+        final Event event2 = new TsdEvent(
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
+                aggregatedData);
+
+        Assert.assertTrue(event.equals(event2));
+
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> differentAnnotations = new HashMap<>();
-        annotations.put("foo2", "bar");
-        final Map<String, List<Quantity>> differentTimerSamples = new HashMap<>();
-        differentTimerSamples.put("timer2", Collections.singletonList(
+        final Map<String, String> differentDimensions = new HashMap<>();
+        differentDimensions.put("foo2", "bar");
+        final Map<String, List<Quantity>> differentSamples = new HashMap<>();
+        differentSamples.put("timer2", Collections.singletonList(
                 TsdQuantity.newInstance(1)));
-        final Map<String, List<Quantity>> differentCounterSamples = new HashMap<>();
-        differentCounterSamples.put("counter2", Collections.singletonList(
+        differentSamples.put("counter2", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final Map<String, List<Quantity>> differentGaugeSamples = new HashMap<>();
-        differentGaugeSamples.put("gauge2", Collections.singletonList(
-                TsdQuantity.newInstance(1.23)));
+        differentSamples.put("gauge2", Collections.singletonList(
+                TsdQuantity.newInstance(2.46)));
         final Map<String, AggregatedData> differentAggregatedData = new HashMap<>();
-        aggregatedData.put("aggregatedMetric2", NoOpAggregatedData.getInstance());
+        differentAggregatedData.put("aggregatedMetric2", NoOpAggregatedData.getInstance());
         // CHECKSTYLE.ON: IllegalInstantiation
 
         final Event differentEvent1 = new TsdEvent(
-                differentAnnotations,
-                timerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now.minusSeconds(60),
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
                 aggregatedData);
 
         final Event differentEvent2 = new TsdEvent(
-                annotations,
-                differentTimerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(2),
+                dimensions,
+                samples,
                 aggregatedData);
 
         final Event differentEvent3 = new TsdEvent(
-                annotations,
-                timerSamples,
-                differentCounterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                differentDimensions,
+                samples,
                 aggregatedData);
 
         final Event differentEvent4 = new TsdEvent(
-                annotations,
-                timerSamples,
-                counterSamples,
-                differentGaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                differentSamples,
                 aggregatedData);
 
         final Event differentEvent5 = new TsdEvent(
-                annotations,
-                timerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
                 differentAggregatedData);
 
         Assert.assertFalse(event.equals(differentEvent1));
@@ -154,58 +168,55 @@ public final class TsdEventTest {
     @Test
     public void testHashCode() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> annotations = new HashMap<>();
-        annotations.put("foo", "bar");
-        final Map<String, List<Quantity>> timerSamples = new HashMap<>();
-        timerSamples.put("timer", Collections.singletonList(
+        final Map<String, String> dimensions = new HashMap<>();
+        dimensions.put("foo", "bar");
+        final Map<String, List<Quantity>> samples = new HashMap<>();
+        samples.put("timer", Collections.singletonList(
                 TsdQuantity.newInstance(1)));
-        final Map<String, List<Quantity>> counterSamples = new HashMap<>();
-        counterSamples.put("counter", Collections.singletonList(
+        samples.put("counter", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
-        gaugeSamples.put("gauge", Collections.singletonList(
-                TsdQuantity.newInstance(1.23)));
+        samples.put("gauge", Collections.singletonList(
+                TsdQuantity.newInstance(2.46)));
         final Map<String, AggregatedData> aggregatedData = new HashMap<>();
         aggregatedData.put("aggregatedMetric", NoOpAggregatedData.getInstance());
         // CHECKSTYLE.ON: IllegalInstantiation
 
         Assert.assertEquals(
                 new TsdEvent(
-                        annotations,
-                        timerSamples,
-                        counterSamples,
-                        gaugeSamples,
+                        _now,
+                        _now.plusSeconds(60),
+                        dimensions,
+                        samples,
                         aggregatedData).hashCode(),
                 new TsdEvent(
-                        annotations,
-                        timerSamples,
-                        counterSamples,
-                        gaugeSamples,
+                        _now,
+                        _now.plusSeconds(60),
+                        dimensions,
+                        samples,
                         aggregatedData).hashCode());
     }
 
     @Test
     public void testToString() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> annotations = new HashMap<>();
-        annotations.put("foo", "bar");
-        final Map<String, List<Quantity>> timerSamples = new HashMap<>();
-        timerSamples.put("timer", Collections.singletonList(
+        final Map<String, String> dimensions = new HashMap<>();
+        dimensions.put("foo", "bar");
+        final Map<String, List<Quantity>> samples = new HashMap<>();
+        samples.put("timer", Collections.singletonList(
                 TsdQuantity.newInstance(1)));
-        final Map<String, List<Quantity>> counterSamples = new HashMap<>();
-        counterSamples.put("counter", Collections.singletonList(
+        samples.put("counter", Collections.singletonList(
                 TsdQuantity.newInstance(1.23)));
-        final Map<String, List<Quantity>> gaugeSamples = new HashMap<>();
-        gaugeSamples.put("gauge", Collections.singletonList(
-                TsdQuantity.newInstance(1.23)));
+        samples.put("gauge", Collections.singletonList(
+                TsdQuantity.newInstance(2.46)));
         final Map<String, AggregatedData> aggregatedData = new HashMap<>();
         aggregatedData.put("aggregatedMetric", NoOpAggregatedData.getInstance());
         // CHECKSTYLE.ON: IllegalInstantiation
+
         final String asString = new TsdEvent(
-                annotations,
-                timerSamples,
-                counterSamples,
-                gaugeSamples,
+                _now,
+                _now.plusSeconds(60),
+                dimensions,
+                samples,
                 aggregatedData).toString();
 
         Assert.assertNotNull(asString);

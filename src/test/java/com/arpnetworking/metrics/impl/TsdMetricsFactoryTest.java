@@ -274,11 +274,11 @@ public final class TsdMetricsFactoryTest {
         metrics.close();
         Mockito.verify(sink).record(eventArgumentCaptor.capture());
         final Event event = eventArgumentCaptor.getValue();
-        Assert.assertEquals("foo.example.com", event.getAnnotations().get("_host"));
+        Assert.assertEquals("foo.example.com", event.getDimensions().get("_host"));
     }
 
     @Test
-    public void testBuilderHostNameOverride() throws UnknownHostException {
+    public void testBuilderHostNameOverride() {
         Mockito.doReturn("foo.example.com").when(_mockHostResolver).get();
         final Sink sink = Mockito.mock(Sink.class);
 
@@ -305,11 +305,11 @@ public final class TsdMetricsFactoryTest {
         metrics.close();
         Mockito.verify(sink).record(eventArgumentCaptor.capture());
         final Event event = eventArgumentCaptor.getValue();
-        Assert.assertEquals("bar.example.com", event.getAnnotations().get("_host"));
+        Assert.assertEquals("bar.example.com", event.getDimensions().get("_host"));
     }
 
     @Test
-    public void testCustomUuidFactory() throws Exception {
+    public void testCustomUuidFactory() {
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
         Mockito.when(_mockUuidFactory.get()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
 
