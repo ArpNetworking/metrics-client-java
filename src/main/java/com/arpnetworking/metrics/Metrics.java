@@ -144,19 +144,21 @@ public interface Metrics extends AutoCloseable {
     void setGauge(String name, long value);
 
     /**
-     * Add an attribute that describes the captured metrics or context.
+     * Add key-value pair that describes the captured metrics or context.
+     * Statistics will be computed along all key-value pair-set combinations.
      *
-     * @param key The name of the attribute.
-     * @param value The value of the attribute.
+     * @param key The name of the dimension.
+     * @param value The value of the dimension.
      */
-    void addAnnotation(String key, String value);
+    void addDimension(String key, String value);
 
     /**
-     * Add attributes that describe the captured metrics or context.
+     * Add key-value pairs that describe the captured metrics or context.
+     * Statistics will be computed along all key-value pair-set combinations.
      *
-     * @param map The {@link Map} of attribute names to attribute values.
+     * @param map The {@link Map} of dimension names to dimension values.
      */
-    void addAnnotations(Map<String, String> map);
+    void addDimensions(Map<String, String> map);
 
     /**
      * Accessor to determine if this {@link Metrics} instance is open or

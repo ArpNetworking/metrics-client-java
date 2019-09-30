@@ -120,16 +120,16 @@ public final class NoOpMetricsTest {
     }
 
     @Test
-    public void testAddAnnotation() {
+    public void testAddDimension() {
         final Metrics metrics = new NoOpMetrics();
-        metrics.addAnnotation("foo", "bar");
+        metrics.addDimension("foo", "bar");
         // Does not throw.
     }
 
     @Test
-    public void testAddAnnotations() {
+    public void testAddDimensions() {
         final Metrics metrics = new NoOpMetrics();
-        metrics.addAnnotations(Collections.singletonMap("foo", "bar"));
+        metrics.addDimensions(Collections.singletonMap("foo", "bar"));
         // Does not throw.
     }
 

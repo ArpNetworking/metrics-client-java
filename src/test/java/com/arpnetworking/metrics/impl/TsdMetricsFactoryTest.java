@@ -15,7 +15,6 @@
  */
 package com.arpnetworking.metrics.impl;
 
-import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
 import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.commons.uuidfactory.SplittableRandomUuidFactory;
 import com.arpnetworking.commons.uuidfactory.UuidFactory;
@@ -34,13 +33,15 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Tests for {@link TsdMetricsFactory}.
@@ -60,15 +61,12 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testNewInstance() throws UnknownHostException {
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance(
-                "MyService",
-                "MyCluster");
+    public void testNewInstance() {
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance();
 
-        Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
         Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(0, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
@@ -78,63 +76,75 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderDefaults() throws UnknownHostException {
-        final Logger logger = Mockito.mock(Logger.class);
-        Mockito.doReturn("MyHost").when(_mockHostResolver).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver, logger)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
-                .build();
+    public void testNewInstanceWithDimensions() {
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance(
+                DEFAULT_DIMENSIONS,
+                DEFAULT_COMPUTED_DIMENSIONS);
 
-        Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
         Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(2, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals("MyService", metricsFactory.getDefaultDimensions().get("service"));
+        Assert.assertEquals("MyCluster", metricsFactory.getDefaultDimensions().get("cluster"));
+        Assert.assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
+        Assert.assertEquals("MyHost", metricsFactory.getDefaultComputedDimensions().get("host").get());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(_mockHostResolver).get();
     }
 
     @Test
-    public void testBuilderNullSinks() throws UnknownHostException {
+    public void testBuilderDefaults() {
         final Logger logger = Mockito.mock(Logger.class);
-        Mockito.doReturn("MyHost").when(_mockHostResolver).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver, logger)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger).build();
+
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        Assert.assertEquals(0, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
+        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+    }
+
+    @Test
+    public void testBuilderNullSinks() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setSinks(null)
                 .build();
 
-        Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
+        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null sinks; sinks="));
+
         Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(0, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(_mockHostResolver).get();
     }
 
     @Test
-    public void testBuilderNullHostResolver() throws UnknownHostException {
+    public void testBuilderNullDefaultDimensions() {
         final Logger logger = Mockito.mock(Logger.class);
         final Sink sink = Mockito.mock(Sink.class);
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(null, logger)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
+                .setDefaultDimensions(null)
                 .setSinks(Collections.singletonList(sink))
                 .build();
 
-        Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
+        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null default dimensions; defaultDimensions="));
+
         Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
+        Assert.assertEquals(0, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
@@ -146,25 +156,78 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderHostResolverFailure() throws UnknownHostException {
+    public void testBuilderNullDefaultComputedDimensions() {
         final Logger logger = Mockito.mock(Logger.class);
         final Sink sink = Mockito.mock(Sink.class);
-        Mockito.doThrow(new RuntimeException()).when(_mockHostResolver).get();
+        Mockito.doReturn("MyHost").when(_mockHostResolver).get();
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
+                .setDefaultComputedDimensions(null)
+                .setSinks(Collections.singletonList(sink))
+                .build();
 
-        final TsdMetricsFactory.Builder metricsFactoryBuilder = new TsdMetricsFactory.Builder(_mockHostResolver, logger)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
+        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null default computed dimensions; defaultComputedDimensions="));
+
+        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        Assert.assertEquals(0, metricsFactory.getDefaultDimensions().size());
+        Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertSame(sink, metricsFactory.getSinks().get(0));
+
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        metrics.close();
+        Mockito.verify(sink).record(Mockito.any(Event.class));
+    }
+
+    @Test
+    public void testBuilderComputedDimensionNull() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final Sink sink = Mockito.mock(Sink.class);
+        final Supplier<String> nullHostnameProvider = () -> null;
+
+        final TsdMetricsFactory.Builder metricsFactoryBuilder = new TsdMetricsFactory.Builder(logger)
+                .setDefaultComputedDimensions(Collections.singletonMap("host", nullHostnameProvider))
                 .setSinks(Collections.singletonList(sink));
 
         final TsdMetricsFactory metricsFactory = new TsdMetricsFactory(metricsFactoryBuilder, logger);
 
+        Assert.assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
+        Assert.assertEquals(1, metricsFactory.getSinks().size());
+        Assert.assertSame(sink, metricsFactory.getSinks().get(0));
+
+        @SuppressWarnings("resource")
+        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        final Metrics metrics = metricsFactory.create();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof TsdMetrics);
+        metrics.close();
+        Mockito.verify(sink).record(eventCaptor.capture());
+        Assert.assertFalse(eventCaptor.getValue().getDimensions().containsKey("host"));
+    }
+
+    @Test
+    public void testBuilderComputedDimensionFailure() {
+        final Logger logger = Mockito.mock(Logger.class);
+        final Sink sink = Mockito.mock(Sink.class);
+        final Supplier<String> failingHostnameProvider = () -> {
+            throw new RuntimeException("Test Exception");
+        };
+
+        final TsdMetricsFactory.Builder metricsFactoryBuilder = new TsdMetricsFactory.Builder(logger)
+                .setDefaultComputedDimensions(Collections.singletonMap("host", failingHostnameProvider))
+                .setSinks(Collections.singletonList(sink));
+
+        final TsdMetricsFactory metricsFactory = new TsdMetricsFactory(metricsFactoryBuilder, logger);
+
+        Assert.assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Mockito.verify(logger).warn(
-                Mockito.eq("Unable to construct TsdMetrics, metrics disabled; failures=[Unable to determine hostname]"),
+                Mockito.eq("Unable to construct TsdMetrics, metrics disabled"),
                 Mockito.any(RuntimeException.class));
         Assert.assertNotNull(metrics);
         Assert.assertTrue(metrics instanceof TsdMetrics);
@@ -181,8 +244,6 @@ public final class TsdMetricsFactoryTest {
         sinks.add(sink1);
         sinks.add(sink2);
         final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
                 .setSinks(sinks)
                 .build();
         @SuppressWarnings("resource")
@@ -197,126 +258,22 @@ public final class TsdMetricsFactoryTest {
     @Test
     public void testBuilderNoSinks() {
         final Logger logger = Mockito.mock(Logger.class);
-        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
-                .setServiceName("MyService")
-                .setHostName("MyHost")
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
+                .setSinks(Collections.emptyList())
                 .build();
-        Mockito.verify(logger).warn(Mockito.anyString());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        Assert.assertEquals(0, metricsFactory.getSinks().size());
 
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         metrics.close();
-    }
-
-    @Test
-    public void testBuilderFailureClusterName() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
-                .setServiceName("MyService")
-                .setHostName("MyHost")
-                .build();
-        Mockito.verify(logger).warn(Mockito.anyString());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
-        @SuppressWarnings("resource")
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-     }
-
-    @Test
-    public void testBuilderFailureServiceName() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final HostResolver hostResolver = Mockito.mock(HostResolver.class);
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(hostResolver, logger)
-                .setClusterName("MyCluster")
-                .setHostName("MyHost")
-                .build();
-        Mockito.verify(logger).warn(Mockito.anyString());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
-        @SuppressWarnings("resource")
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-    }
-
-    @Test
-    public void testBuilderHostResolver() throws UnknownHostException {
-        Mockito.doReturn("foo.example.com").when(_mockHostResolver).get();
-        final Sink sink = Mockito.mock(Sink.class);
-
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
-                .setSinks(Collections.singletonList(sink))
-                .build();
-
-        Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertSame(sink, metricsFactory.getSinks().get(0));
-
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(_mockHostResolver).get();
-
-        final ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
-        metrics.close();
-        Mockito.verify(sink).record(eventArgumentCaptor.capture());
-        final Event event = eventArgumentCaptor.getValue();
-        Assert.assertEquals("foo.example.com", event.getDimensions().get("_host"));
-    }
-
-    @Test
-    public void testBuilderHostNameOverride() {
-        Mockito.doReturn("foo.example.com").when(_mockHostResolver).get();
-        final Sink sink = Mockito.mock(Sink.class);
-
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
-                .setHostName("bar.example.com")
-                .setSinks(Collections.singletonList(sink))
-                .build();
-
-        Assert.assertNotSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
-        Assert.assertEquals("MyService", metricsFactory.getServiceName());
-        Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertSame(sink, metricsFactory.getSinks().get(0));
-
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        Mockito.verify(_mockHostResolver, Mockito.never()).get();
-
-        final ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
-        metrics.close();
-        Mockito.verify(sink).record(eventArgumentCaptor.capture());
-        final Event event = eventArgumentCaptor.getValue();
-        Assert.assertEquals("bar.example.com", event.getDimensions().get("_host"));
     }
 
     @Test
     public void testCustomUuidFactory() {
-        Mockito.doReturn("MyHost").when(_mockHostResolver).get();
         Mockito.when(_mockUuidFactory.get()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
 
-        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver)
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder()
                 .setUuidFactory(_mockUuidFactory)
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
                 .build();
 
         final Metrics metrics = metricsFactory.create();
@@ -330,9 +287,6 @@ public final class TsdMetricsFactoryTest {
     @Test
     public void testToString() {
         final String asString = new TsdMetricsFactory.Builder()
-                .setClusterName("MyCluster")
-                .setServiceName("MyService")
-                .setHostName("MyHost")
                 .build()
                 .toString();
         Assert.assertNotNull(asString);
@@ -420,6 +374,21 @@ public final class TsdMetricsFactoryTest {
     private HostResolver _mockHostResolver;
     @Mock
     private UuidFactory _mockUuidFactory;
+
+    private static final Map<String, String> DEFAULT_DIMENSIONS;
+    private static final Map<String, Supplier<String>> DEFAULT_COMPUTED_DIMENSIONS;
+
+    static {
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        DEFAULT_DIMENSIONS = new HashMap<>();
+        DEFAULT_COMPUTED_DIMENSIONS = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+
+        DEFAULT_DIMENSIONS.put("service", "MyService");
+        DEFAULT_DIMENSIONS.put("cluster", "MyCluster");
+
+        DEFAULT_COMPUTED_DIMENSIONS.put("host", () -> "MyHost");
+    }
 
     /**
      * Invalid default sink. This sink is an invalid default sink because it

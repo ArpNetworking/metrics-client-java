@@ -63,7 +63,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertTrue(actualEvent.getSamples().isEmpty());
         assertTimestamps(before, after, actualEvent);
     }
@@ -83,7 +83,7 @@ public final class TsdMetricsTest {
         final Event actualEvent1 = eventCapture1.getValue();
         Assert.assertThat(
                 actualEvent1.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertTrue(actualEvent1.getSamples().isEmpty());
         assertTimestamps(before, after, actualEvent1);
 
@@ -92,7 +92,7 @@ public final class TsdMetricsTest {
         final Event actualEvent2 = eventCapture2.getValue();
         Assert.assertThat(
                 actualEvent2.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertTrue(actualEvent2.getSamples().isEmpty());
         assertTimestamps(before, after, actualEvent2);
 
@@ -112,7 +112,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -133,7 +133,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -154,7 +154,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -191,7 +191,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertTrue(actualEvent.getSamples().isEmpty());
         Assert.assertEquals(
                 actualEvent.getAggregatedData(),
@@ -247,7 +247,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertTrue(actualEvent.getSamples().isEmpty());
         Assert.assertEquals(
                 actualEvent.getAggregatedData(),
@@ -277,7 +277,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -305,7 +305,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -431,18 +431,18 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testAddAnnotationNotOpen() {
+    public void testAddDimensionNotOpen() {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
-        metrics.addAnnotation("key", "value");
+        metrics.addDimension("key", "value");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
-    public void testAddAnnotationsNotOpen() {
+    public void testAddDimensionsNotOpen() {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
@@ -453,7 +453,7 @@ public final class TsdMetricsTest {
         // CHECKSTYLE.ON: IllegalInstantiation
         annotations.put("key1", "value1");
         annotations.put("key2", "value2");
-        metrics.addAnnotations(annotations);
+        metrics.addDimensions(annotations);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
@@ -556,7 +556,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -591,7 +591,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
                 actualEvent.getSamples(),
@@ -636,7 +636,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
                 actualEvent.getSamples(),
@@ -680,7 +680,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
         Assert.assertThat(
                 actualEvent.getSamples(),
@@ -698,15 +698,15 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testAddAnnotationMetrics() throws InterruptedException {
+    public void testAddDimensionMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
-        metrics.addAnnotation("foo", "bar");
-        metrics.addAnnotation("dup", "cat");
-        metrics.addAnnotation("dup", "dog");
+        metrics.addDimension("foo", "bar");
+        metrics.addDimension("dup", "cat");
+        metrics.addDimension("dup", "dog");
 
         Thread.sleep(10);
         metrics.close();
@@ -717,7 +717,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher(
+                standardDimensionsMatcher(
                         Matchers.hasEntry("foo", "bar"),
                         Matchers.hasEntry("dup", "dog")));
         assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
@@ -725,18 +725,18 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testAddAnnotationsMetrics() throws InterruptedException {
+    public void testAddDimensionsMetrics() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<String, String> annotations = new HashMap<>();
+        final Map<String, String> dimensions = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
-        annotations.put("foo", "bar");
-        annotations.put("dup", "dog");
-        metrics.addAnnotations(annotations);
+        dimensions.put("foo", "bar");
+        dimensions.put("dup", "dog");
+        metrics.addDimensions(dimensions);
 
         Thread.sleep(10);
         metrics.close();
@@ -747,7 +747,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher(
+                standardDimensionsMatcher(
                         Matchers.hasEntry("foo", "bar"),
                         Matchers.hasEntry("dup", "dog")));
         assertTimestamps(earliestStartDate, latestEndDate, actualEvent);
@@ -775,7 +775,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -820,7 +820,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -846,7 +846,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -869,7 +869,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -892,7 +892,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match("timerObjectB"));
@@ -914,7 +914,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -938,7 +938,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match(
@@ -962,7 +962,7 @@ public final class TsdMetricsTest {
         final Event actualEvent = eventCapture.getValue();
         Assert.assertThat(
                 actualEvent.getDimensions(),
-                standardAnnotationsMatcher());
+                standardDimensionsMatcher());
         Assert.assertThat(
                 actualEvent.getSamples(),
                 MetricMatcher.match("timerObjectB"));
@@ -1014,14 +1014,15 @@ public final class TsdMetricsTest {
     }
 
     private TsdMetrics createTsdMetrics(final Clock clock, final org.slf4j.Logger logger, final Sink... sinks) {
-        return new TsdMetrics(
+        final TsdMetrics metrics = new TsdMetrics(
                 UUID.randomUUID(),
-                "MyService",
-                "MyCluster",
-                "MyHost",
                 Arrays.asList(sinks),
                 clock,
                 logger);
+        metrics.addDimension("host", "MyHost");
+        metrics.addDimension("service", "MyService");
+        metrics.addDimension("cluster", "MyCluster");
+        return metrics;
     }
 
     private org.slf4j.Logger createSlf4jLoggerMock() {
@@ -1041,13 +1042,13 @@ public final class TsdMetricsTest {
     }
 
     @SuppressWarnings(value = {"unchecked", "rawtypes"})
-    private static Matcher<Map<String, String>> standardAnnotationsMatcher(
+    private static Matcher<Map<String, String>> standardDimensionsMatcher(
             final Matcher... additionalMatchers) {
         final List matchers = new ArrayList();
         matchers.add(Matchers.hasKey("_id"));
-        matchers.add(Matchers.hasEntry("_host", "MyHost"));
-        matchers.add(Matchers.hasEntry("_service", "MyService"));
-        matchers.add(Matchers.hasEntry("_cluster", "MyCluster"));
+        matchers.add(Matchers.hasEntry("host", "MyHost"));
+        matchers.add(Matchers.hasEntry("service", "MyService"));
+        matchers.add(Matchers.hasEntry("cluster", "MyCluster"));
         matchers.addAll(Arrays.asList(additionalMatchers));
         return Matchers.allOf(matchers);
     }

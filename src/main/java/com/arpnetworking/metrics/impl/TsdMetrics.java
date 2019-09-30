@@ -197,20 +197,20 @@ public class TsdMetrics implements Metrics {
     }
 
     @Override
-    public void addAnnotation(final String key, final String value) {
+    public void addDimension(final String key, final String value) {
         if (!assertIsOpen()) {
             return;
         }
-        _annotations.put(key, value);
+        _dimensions.put(key, value);
     }
 
     @Override
-    public void addAnnotations(final Map<String, String> map) {
+    public void addDimensions(final Map<String, String> map) {
         if (!assertIsOpen()) {
             return;
         }
         for (final Map.Entry<String, String> entry : map.entrySet()) {
-            addAnnotation(entry.getKey(), entry.getValue());
+            _dimensions.put(entry.getKey(), entry.getValue());
         }
     }
 
@@ -241,7 +241,7 @@ public class TsdMetrics implements Metrics {
         final Event event = new TsdEvent(
                 _initialTimestamp,
                 _finalTimestamp,
-                Collections.unmodifiableMap(_annotations),
+                Collections.unmodifiableMap(_dimensions),
                 clonedSamples.entrySet().stream().collect(
                         Collectors.toMap(
                                 Map.Entry::getKey,
@@ -275,11 +275,12 @@ public class TsdMetrics implements Metrics {
     @Override
     public String toString() {
         return String.format(
-                "TsdMetrics{Sinks=%s, ServiceName=%s, ClusterName=%s, HostName=%s}",
+                "TsdMetrics{Sinks=%s, IsOpen=%b, InitialTimestamp=%s, FinalTimestamp=%s, Dimensions=%s}",
                 _sinks,
-                _annotations.get(SERVICE_KEY),
-                _annotations.get(CLUSTER_KEY),
-                _annotations.get(HOST_KEY));
+                _isOpen.get(),
+                _initialTimestamp,
+                _finalTimestamp,
+                _dimensions);
 
     }
 
@@ -405,19 +406,13 @@ public class TsdMetrics implements Metrics {
     // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
     /* package private */ TsdMetrics(
             final UUID uuid, 
-            final String serviceName,
-            final String clusterName,
-            final String hostName,
             final List<Sink> sinks) {
-        this(uuid, serviceName, clusterName, hostName, sinks, Clock.systemUTC(), LOGGER);
+        this(uuid, sinks, Clock.systemUTC(), LOGGER);
     }
 
     // NOTE: Package private for testing.
     /* package private */ TsdMetrics(
             final UUID uuid,
-            final String serviceName,
-            final String clusterName,
-            final String hostName,
             final List<Sink> sinks,
             final Clock clock,
             final Logger logger) {
@@ -425,10 +420,7 @@ public class TsdMetrics implements Metrics {
         _logger = logger;
         _clock = clock;
         _initialTimestamp = _clock.instant();
-        _annotations.put(ID_KEY, uuid.toString());
-        _annotations.put(HOST_KEY, hostName);
-        _annotations.put(SERVICE_KEY, serviceName);
-        _annotations.put(CLUSTER_KEY, clusterName);
+        _dimensions.put(ID_KEY, uuid.toString());
     }
 
     private final List<Sink> _sinks;
@@ -443,7 +435,7 @@ public class TsdMetrics implements Metrics {
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _timerSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _gaugeSamples = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, AggregatedData> _aggregatedData = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, String> _annotations = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, String> _dimensions = new ConcurrentHashMap<>();
     private final BiFunction<String, TsdCounter, TsdCounter> _createCounterBiFunction = new CreateCounterFunction();
 
     private static final Predicate<Quantity> PREDICATE_STOPPED_TIMERS = new StoppedTimersPredicate();
@@ -451,9 +443,6 @@ public class TsdMetrics implements Metrics {
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetrics.class);
     private static final float DEFAULT_LOAD_FACTOR = 0.75f;
     private static final String ID_KEY = "_id";
-    private static final String HOST_KEY = "_host";
-    private static final String SERVICE_KEY = "_service";
-    private static final String CLUSTER_KEY = "_cluster";
 
     private final class CreateCounterFunction implements BiFunction<String, TsdCounter, TsdCounter> {
 
