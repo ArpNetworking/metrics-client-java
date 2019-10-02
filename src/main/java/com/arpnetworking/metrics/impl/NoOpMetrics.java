@@ -98,12 +98,12 @@ public class NoOpMetrics implements Metrics {
     }
 
     @Override
-    public void addAnnotation(final String key, final String value) {
+    public void addDimension(final String key, final String value) {
         // Do nothing
     }
 
     @Override
-    public void addAnnotations(final Map<String, String> map) {
+    public void addDimensions(final Map<String, String> map) {
         // Do nothing
     }
 

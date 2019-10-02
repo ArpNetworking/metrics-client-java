@@ -15,10 +15,14 @@
  */
 package com.arpnetworking.metrics;
 
+import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
 import com.arpnetworking.metrics.impl.TsdMetricsFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Ensures code samples from README.md at least compile.
@@ -28,21 +32,30 @@ import java.util.List;
 @SuppressWarnings(value = {"resource", "try"})
 public final class Samples {
 
+    // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
     private void metricsFactoryStaticFactory() {
         // Begin sample:
+        final Map<String, String> defaultDimensions = new HashMap<>();
+        defaultDimensions.put("service", "MyServiceName");
+        defaultDimensions.put("cluster", "MyService-US-Prod");
         final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
-                "MyServiceName",            // The name of the service
-                "MyService-US-Prod");       // The name of the cluster or instance
+                defaultDimensions,
+                Collections.singletonMap("host", BackgroundCachingHostResolver.getInstance()));
     }
 
 // TODO(ville): Implement me!
 /*
     private void metricsFactoryBuilder() {
         // Begin sample:
+        final Map<String, String> defaultDimensions = new HashMap<>();
+        defaultDimensions.put("service", "MyServiceName");
+        defaultDimensions.put("cluster", "MyService-US-Prod");
         final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
-                .setServiceName("MyServiceName")
-                .setClusterName("MyService-US-Prod")
-                .setHostName("my-service-app1.us-east")
+                .setDefaultDimensions(defaultDimensions)
+                .setDefaultComputedDimensions(
+                        Collections.singletonMap(
+                                "host",
+                                BackgroundCachingHostResolver.getInstance()))
                 .setSinks(Collections.singletonList(
                         new TsdLogSink.Builder()
                                 .setDirectory(new File("/var/logs"))
@@ -53,7 +66,9 @@ public final class Samples {
                                 .build()))
                 .build();
     }
-*/
+ */
+    // CHECKSTYLE.ON: IllegalInstantiation
+
     private void metrics() {
         final MetricsFactory metricsFactory = createMetricsFactory();
 
@@ -114,9 +129,12 @@ public final class Samples {
     }
 
     private MetricsFactory createMetricsFactory() {
-        return TsdMetricsFactory.newInstance(
-                "Samples",
-                "Samples");
+        // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+        final Map<String, String> defaultDimensions = new HashMap<>();
+        // CHECKSTYLE.ON: IllegalInstantiation
+        defaultDimensions.put("service", "MyServiceName");
+        defaultDimensions.put("cluster", "MyService-US-Prod");
+        return TsdMetricsFactory.newInstance(defaultDimensions, Collections.emptyMap());
     }
 
     private Metrics createMetrics(final MetricsFactory metricsFactory) {
