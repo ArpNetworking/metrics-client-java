@@ -239,6 +239,7 @@ public class TsdMetrics implements Metrics {
         cloneSamples(_gaugeSamples, clonedSamples);
 
         final Event event = new TsdEvent(
+                _id,
                 _initialTimestamp,
                 _finalTimestamp,
                 Collections.unmodifiableMap(_dimensions),
@@ -275,9 +276,10 @@ public class TsdMetrics implements Metrics {
     @Override
     public String toString() {
         return String.format(
-                "TsdMetrics{Sinks=%s, IsOpen=%b, InitialTimestamp=%s, FinalTimestamp=%s, Dimensions=%s}",
+                "TsdMetrics{Sinks=%s, IsOpen=%b, Id=%s, InitialTimestamp=%s, FinalTimestamp=%s, Dimensions=%s}",
                 _sinks,
                 _isOpen.get(),
+                _id,
                 _initialTimestamp,
                 _finalTimestamp,
                 _dimensions);
@@ -412,7 +414,7 @@ public class TsdMetrics implements Metrics {
 
     // NOTE: Package private for testing.
     /* package private */ TsdMetrics(
-            final UUID uuid,
+            final UUID id,
             final List<Sink> sinks,
             final Clock clock,
             final Logger logger) {
@@ -420,13 +422,14 @@ public class TsdMetrics implements Metrics {
         _logger = logger;
         _clock = clock;
         _initialTimestamp = _clock.instant();
-        _dimensions.put(ID_KEY, uuid.toString());
+        _id = id;
     }
 
     private final List<Sink> _sinks;
     private final Logger _logger;
     private final AtomicBoolean _isOpen = new AtomicBoolean(true);
     private final Clock _clock;
+    private final UUID _id;
     private final Instant _initialTimestamp;
     private Instant _finalTimestamp = null;
     private final ConcurrentMap<String, TsdCounter> _counters = new ConcurrentHashMap<>();
