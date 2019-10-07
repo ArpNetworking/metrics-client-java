@@ -22,10 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Implementation of {@link Timer}. This class is thread safe.
+ * Implementation of {@link Timer}. This class is thread safe but does not
+ * provide synchronized access across threads.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
@@ -35,13 +36,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
      * be created through the {@link TsdMetrics} instance.
      *
      * @param name The name of the timer.
-     * @param isOpen Reference to state of containing {@link TsdMetrics}
-     * instance. This is provided as a separate parameter to avoid creating a
-     * cyclical dependency between {@link TsdMetrics} and
      * {@link TsdTimer} which could cause garbage collection delays.
      */
-    /* package private */ static TsdTimer newInstance(final String name, final AtomicBoolean isOpen) {
-        return new TsdTimer(name, isOpen, DEFAULT_LOGGER);
+    /* package private */ static TsdTimer newInstance(final String name) {
+        return new TsdTimer(name, DEFAULT_LOGGER);
     }
 
     @Override
@@ -51,19 +49,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     @Override
     public void close() {
-        final boolean wasRunning = _stopWatch.isRunning();
-        final boolean wasAborted = _isAborted.get();
-        if (!_isOpen.get()) {
-            _logger.warn(String.format("Timer closed/stopped after metrics instance closed; timer=%s", this));
-        }
-        if (wasAborted) {
-            _logger.warn(String.format("Timer closed/stopped after aborted; timer=%s", this));
-        } else if (!wasRunning) {
-            _logger.warn(String.format("Timer closed/stopped multiple times; timer=%s", this));
+        final boolean stopped = _state.compareAndSet(State.RUNNING, State.STOPPED);
+
+        if (stopped) {
+            // The previous state was running for this thread, so we are the
+            // ones that should stop the StopWatch instance.
+            _stopWatch.stop();
         } else {
-            try {
-                _stopWatch.stop();
-            } catch (final IllegalStateException e) {
+            // One of these hints is guaranteed to be logged since the state can
+            // only transition from running to stopped or aborted and if this
+            // thread did not make that transition then another already did and
+            // the updated state should be available for logging.
+            if (State.ABORTED.equals(_state.get())) {
+                _logger.warn(String.format("Timer closed/stopped after aborted; timer=%s", this));
+            } else /* if (State.STOPPED.equals(_state.get())) */ {
                 _logger.warn(String.format("Timer closed/stopped multiple times; timer=%s", this));
             }
         }
@@ -71,72 +70,74 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
     @Override
     public void abort() {
-        final boolean wasAborted = _isAborted.getAndSet(true);
-        final boolean wasRunning = _stopWatch.isRunning();
-        if (!_isOpen.get()) {
-            _logger.warn(String.format("Timer aborted after metrics instance closed; timer=%s", this));
-        }
-        if (wasAborted) {
-            _logger.warn(String.format("Timer aborted multiple times; timer=%s", this));
-        } else if (!wasRunning) {
-            _logger.warn(String.format("Timer aborted after closed/stopped; timer=%s", this));
+        final boolean aborted = _state.compareAndSet(State.RUNNING, State.ABORTED);
+
+        if (!aborted) {
+            // One of these hints is guaranteed to be logged since the state can
+            // only transition from running to stopped or aborted and if this
+            // thread did not make that transition then another already did and
+            // the updated state should be available for logging.
+            if (State.ABORTED.equals(_state.get())) {
+                _logger.warn(String.format("Timer aborted multiple times; timer=%s", this));
+            } else /* if (State.STOPPED.equals(_state.get())) */ {
+                _logger.warn(String.format("Timer aborted after closed/stopped; timer=%s", this));
+            }
         }
     }
 
     @Override
     public Number getValue() {
-        if (_stopWatch.isRunning()) {
+        if (State.RUNNING.equals(_state.get())) {
             _logger.warn(String.format("Timer access before it is closed/stopped; timer=%s", this));
-            return 0;
+            return 0.0;
         }
-        return TsdMetrics.convertTimeUnit(
-                _stopWatch.getElapsedTime().getValue().longValue(),
+        if (State.ABORTED.equals(_state.get())) {
+            _logger.warn(String.format("Invalid aborted timer value access; timer=%s", this));
+            return 0.0;
+        }
+        return Utility.convertTimeUnit(
+                _stopWatch.getElapsedTime(),
                 _stopWatch.getUnit(),
                 TimeUnit.SECONDS);
     }
 
     @Override
     public boolean isRunning() {
-        return _stopWatch.isRunning();
+        return State.RUNNING.equals(_state.get());
     }
 
     @Override
     public boolean isAborted() {
-        return _isAborted.get();
+        return State.ABORTED.equals(_state.get());
     }
 
     @Override
     public String toString() {
         return String.format(
-                "TsdTimer{Name=%s, StopWatch=%s, IsAborted=%s, IsOpen=%s}",
+                "TsdTimer{Name=%s, StopWatch=%s, State=%s}",
                 _name,
                 _stopWatch,
-                _isAborted,
-                _isOpen);
+                _state);
     }
 
     // NOTE: Package private for testing
-    TsdTimer(final String name, final AtomicBoolean isOpen, final Logger logger) {
+    TsdTimer(final String name, final Logger logger) {
         _name = name;
-        _isOpen = isOpen;
         _logger = logger;
         _stopWatch = StopWatch.start();
-        _isAborted = new AtomicBoolean(false);
-    }
-
-    TsdTimer(final String name, final AtomicBoolean isOpen, final StopWatch stopWatch, final Logger logger) {
-        _name = name;
-        _isOpen = isOpen;
-        _logger = logger;
-        _stopWatch = stopWatch;
-        _isAborted = new AtomicBoolean(false);
+        _state = new AtomicReference<>(State.RUNNING);
     }
 
     private final String _name;
-    private final AtomicBoolean _isOpen;
-    private final AtomicBoolean _isAborted;
+    private final AtomicReference<State> _state;
     private final StopWatch _stopWatch;
     private final Logger _logger;
 
     private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(TsdTimer.class);
+
+    private enum State {
+        RUNNING,
+        STOPPED,
+        ABORTED
+    }
 }

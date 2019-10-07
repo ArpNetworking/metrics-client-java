@@ -35,6 +35,13 @@ public final class NoOpMetricsFactoryTest {
     }
 
     @Test
+    public void testCreateLockFree() {
+        final Metrics metrics = new NoOpMetricsFactory().createLockFree();
+        Assert.assertNotNull(metrics);
+        Assert.assertTrue(metrics instanceof NoOpMetrics);
+    }
+
+    @Test
     public void testToString() {
         final String asString = new NoOpMetricsFactory().toString();
         Assert.assertNotNull(asString);

@@ -15,7 +15,7 @@
  */
 package com.arpnetworking.metrics;
 
-import com.arpnetworking.metrics.impl.TsdStopWatch;
+import com.arpnetworking.metrics.impl.TsdNanoStopWatch;
 
 import java.util.concurrent.TimeUnit;
 
@@ -38,7 +38,7 @@ public interface StopWatch {
      * @return new started {@link StopWatch} instance.
      */
     static StopWatch start() {
-        return new TsdStopWatch();
+        return new TsdNanoStopWatch();
     }
 
     /**
@@ -56,9 +56,9 @@ public interface StopWatch {
     /**
      * Retrieve the elapsed time.
      *
-     * @return the elapsed time as a {@link Quantity}.
+     * @return the elapsed time.
      */
-    Quantity getElapsedTime();
+    long getElapsedTime();
 
     /**
      * Retrieve the elapsed time unit.

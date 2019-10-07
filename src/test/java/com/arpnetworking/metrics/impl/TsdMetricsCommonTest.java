@@ -15,8 +15,10 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import com.arpnetworking.metrics.AggregatedData;
 import com.arpnetworking.metrics.Counter;
 import com.arpnetworking.metrics.Event;
+import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.Sink;
 import com.arpnetworking.metrics.Timer;
 import com.arpnetworking.metrics.test.MetricMatcher;
@@ -25,6 +27,8 @@ import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
@@ -33,13 +37,12 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -47,15 +50,29 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class TsdMetricsTest {
-
+@RunWith(Parameterized.class)
+public final class TsdMetricsCommonTest {
+    
+    @Parameterized.Parameters
+    public static Collection<Object[]> getParameters() {
+        return Arrays.asList(
+                new Object[][] {
+                        {new TsdMetricsProxy()},
+                        {new LockFreeMetricsProxy()}
+                });
+    }
+    
+    public TsdMetricsCommonTest(final MetricsProxy metricsCreator) {
+        _metricsProxy = metricsCreator;
+    }
+    
     @Test
     public void testEmptySingleSink() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final UUID id = UUID.randomUUID();
         final Instant before = Instant.now();
-        final TsdMetrics metrics = createTsdMetrics(id, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(id, sink);
         metrics.close();
         final Instant after = Instant.now();
 
@@ -72,12 +89,12 @@ public final class TsdMetricsTest {
 
     @Test
     public void testEmptyMultipleSinks() {
-        final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink1");
-        final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink2");
+        final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsCommonTest.testEmptyMultipleSinks.sink1");
+        final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsCommonTest.testEmptyMultipleSinks.sink2");
         final UUID id = UUID.randomUUID();
         final Instant before = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(id, sink1, sink2);
+        final Metrics metrics = _metricsProxy.createMetrics(id, sink1, sink2);
         metrics.close();
         final Instant after = Instant.now();
 
@@ -108,7 +125,7 @@ public final class TsdMetricsTest {
     public void testCounterOnly() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.incrementCounter("counter");
         metrics.close();
 
@@ -129,7 +146,7 @@ public final class TsdMetricsTest {
     public void testTimerOnly() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.setTimer("timer", 1L, TimeUnit.MILLISECONDS);
         metrics.close();
 
@@ -150,7 +167,7 @@ public final class TsdMetricsTest {
     public void testGaugeOnly() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.setGauge("gauge", 1.23);
         metrics.close();
 
@@ -179,16 +196,17 @@ public final class TsdMetricsTest {
             sum += i * i;
         }
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
-        metrics.recordAggregatedData(
-                "aggregatedMetric",
-                new AugmentedHistogram.Builder()
-                        .setHistogram(histogram)
-                        .setPrecision(7)
-                        .setMinimum(1.0)
-                        .setMaximum(10.0)
-                        .setSum(sum)
-                        .build());
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
+         _metricsProxy.recordAggregatedData(
+                 metrics,
+                 "aggregatedMetric",
+                 new AugmentedHistogram.Builder()
+                         .setHistogram(histogram)
+                         .setPrecision(7)
+                         .setMinimum(1.0)
+                         .setMaximum(10.0)
+                         .setSum(sum)
+                         .build());
         metrics.close();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
@@ -213,7 +231,7 @@ public final class TsdMetricsTest {
 
     @Test
     public void testAggregatedDataDuplicate() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
         final Map<Double, Integer> histogram = new HashMap<>();
@@ -224,25 +242,27 @@ public final class TsdMetricsTest {
             sum += i * i;
         }
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
-        metrics.recordAggregatedData(
-                "aggregatedMetric",
-                new AugmentedHistogram.Builder()
-                        .setHistogram(histogram)
-                        .setPrecision(7)
-                        .setMinimum(1.0)
-                        .setMaximum(10.0)
-                        .setSum(sum)
-                        .build());
-        metrics.recordAggregatedData(
-                "aggregatedMetric",
-                new AugmentedHistogram.Builder()
-                        .setHistogram(histogram)
-                        .setPrecision(7)
-                        .setMinimum(2.0)
-                        .setMaximum(20.0)
-                        .setSum(sum)
-                        .build());
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
+         _metricsProxy.recordAggregatedData(
+                 metrics,
+                 "aggregatedMetric",
+                 new AugmentedHistogram.Builder()
+                         .setHistogram(histogram)
+                         .setPrecision(7)
+                         .setMinimum(1.0)
+                         .setMaximum(10.0)
+                         .setSum(sum)
+                         .build());
+         _metricsProxy.recordAggregatedData(
+                 metrics,
+                 "aggregatedMetric",
+                 new AugmentedHistogram.Builder()
+                         .setHistogram(histogram)
+                         .setPrecision(7)
+                         .setMinimum(2.0)
+                         .setMaximum(20.0)
+                         .setSum(sum)
+                         .build());
         metrics.close();
 
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -271,7 +291,7 @@ public final class TsdMetricsTest {
     public void testTimerCounterGauge() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.incrementCounter("counter");
         metrics.setTimer("timer", 1L, TimeUnit.MILLISECONDS);
         metrics.setGauge("gauge", 1.23);
@@ -296,10 +316,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testTimerCounterGaugeSameName() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.incrementCounter("badName");
         metrics.setTimer("badName", 1L, TimeUnit.MILLISECONDS);
         metrics.setGauge("badName", 1.23);
@@ -325,10 +345,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testIsOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         Assert.assertTrue(metrics.isOpen());
         metrics.close();
         Assert.assertFalse(metrics.isOpen());
@@ -336,10 +356,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testCreateCounterNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         final Counter counter = metrics.createCounter("counter-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -348,10 +368,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testIncrementCounterNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.incrementCounter("counter-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -359,10 +379,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testResetCounterNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.resetCounter("counter-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -370,10 +390,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testSetGaugeDoubleNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.setGauge("gauge-closed", 1.23);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -381,10 +401,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testSetGaugeLongNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.setGauge("gauge-closed", 10L);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -392,10 +412,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testCreateTimerNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         final Timer timer = metrics.createTimer("timer-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -404,10 +424,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testSetTimerNotOpenTimeUnit() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.setTimer("timer-closed", 1L, TimeUnit.MILLISECONDS);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -415,10 +435,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testStartTimerNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.startTimer("timer-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -426,10 +446,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testStopTimerNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.stopTimer("timer-closed");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -437,10 +457,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testAddDimensionNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         metrics.addDimension("key", "value");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -448,10 +468,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testAddDimensionsNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
         final Map<String, String> annotations = new HashMap<>();
@@ -464,10 +484,10 @@ public final class TsdMetricsTest {
 
     @Test
     public void testCloseNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         Mockito.verifyZeroInteractions(logger);
         metrics.close();
@@ -476,7 +496,7 @@ public final class TsdMetricsTest {
 
     @Test
     public void testAggregatedDataNotOpen() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
         final Map<Double, Integer> histogram = new HashMap<>();
@@ -487,28 +507,29 @@ public final class TsdMetricsTest {
             sum += i * i;
         }
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
-        metrics.recordAggregatedData(
-        "aggregatedMetric",
-                new AugmentedHistogram.Builder()
-                        .setHistogram(histogram)
-                        .setPrecision(7)
-                        .setMinimum(1.0)
-                        .setMaximum(10.0)
-                        .setSum(sum)
-                        .build());
+         _metricsProxy.recordAggregatedData(
+                 metrics,
+                 "aggregatedMetric",
+                 new AugmentedHistogram.Builder()
+                         .setHistogram(histogram)
+                         .setPrecision(7)
+                         .setMinimum(1.0)
+                         .setMaximum(10.0)
+                         .setSum(sum)
+                         .build());
 
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testCloseSinkThrows() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         Mockito.doThrow(new NullPointerException("Test exception")).when(sink).record(Mockito.any(Event.class));
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.close();
         Mockito.verify(sink).record(Mockito.any(Event.class));
         Mockito.verifyNoMoreInteractions(sink);
@@ -520,9 +541,9 @@ public final class TsdMetricsTest {
 
     @Test
     public void testStartTimerAlreadyStarted() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.startTimer("timer-already-started");
         metrics.startTimer("timer-already-started");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
@@ -530,18 +551,18 @@ public final class TsdMetricsTest {
 
     @Test
     public void testStopTimerNotStarted() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.stopTimer("timer-not-started");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testStopTimerAlreadyStopped() {
-        final org.slf4j.Logger logger = createSlf4jLoggerMock();
+        final org.slf4j.Logger logger = _metricsProxy.createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
-        final TsdMetrics metrics = createTsdMetrics(logger, sink);
+        final Metrics metrics = _metricsProxy.createMetrics(logger, sink);
         metrics.startTimer("timer-already-stopped");
         metrics.stopTimer("timer-already-stopped");
         Mockito.verifyZeroInteractions(logger);
@@ -552,7 +573,7 @@ public final class TsdMetricsTest {
     @Test
     public void testCloseTryWithResource() {
         final Sink sink = Mockito.mock(Sink.class);
-        try (TsdMetrics metrics = createTsdMetrics(sink)) {
+        try (Metrics metrics = _metricsProxy.createMetrics(sink)) {
             metrics.incrementCounter("testCloseTryWithResource");
         }
 
@@ -574,7 +595,7 @@ public final class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         metrics.setTimer("timerA", 100L, TimeUnit.MILLISECONDS);
         metrics.startTimer("timerB");
@@ -618,7 +639,7 @@ public final class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         metrics.incrementCounter("counterA");
         metrics.incrementCounter("counterB", 2L);
@@ -667,7 +688,7 @@ public final class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         metrics.setGauge("gaugeA", 10L);
         metrics.setGauge("gaugeB", 1.23);
@@ -707,7 +728,7 @@ public final class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         metrics.addDimension("foo", "bar");
         metrics.addDimension("dup", "cat");
@@ -734,7 +755,7 @@ public final class TsdMetricsTest {
         final Sink sink = Mockito.mock(Sink.class);
         final Instant earliestStartDate = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
         final Map<String, String> dimensions = new HashMap<>();
@@ -763,7 +784,7 @@ public final class TsdMetricsTest {
     public void testTimerUnits() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
 
         metrics.setTimer("withTimeUnit", 11L, TimeUnit.NANOSECONDS);
         metrics.setTimer("withTimeUnit", 12L, TimeUnit.MICROSECONDS);
@@ -798,7 +819,7 @@ public final class TsdMetricsTest {
     public void testTimerObjects() throws InterruptedException {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         @SuppressWarnings("resource")
         final Timer timerObjectA = metrics.createTimer("timerObjectA");
         @SuppressWarnings("resource")
@@ -840,7 +861,7 @@ public final class TsdMetricsTest {
     public void testSkipUnclosedTimerSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.createTimer("timerObjectA");
         metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
 
@@ -863,7 +884,7 @@ public final class TsdMetricsTest {
     public void testTimerWithoutClosedSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.createTimer("timerObjectB");
         metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
 
@@ -887,7 +908,7 @@ public final class TsdMetricsTest {
     public void testOnlyTimersWithoutClosedSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         metrics.createTimer("timerObjectB");
 
         metrics.close();
@@ -907,7 +928,7 @@ public final class TsdMetricsTest {
     public void testSkipAbortedTimerSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         final Timer timer = metrics.createTimer("timerObjectA");
         metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
         timer.abort();
@@ -931,7 +952,7 @@ public final class TsdMetricsTest {
     public void testTimerWithoutUnabortedSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         final Timer timer = metrics.createTimer("timerObjectB");
         metrics.setTimer("timerObjectA", 1, TimeUnit.SECONDS);
         timer.abort();
@@ -956,7 +977,7 @@ public final class TsdMetricsTest {
     public void testOnlyTimersWithoutUnabortedSample() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final Metrics metrics = _metricsProxy.createMetrics(sink);
         final Timer timer = metrics.createTimer("timerObjectB");
         timer.abort();
 
@@ -982,7 +1003,7 @@ public final class TsdMetricsTest {
 
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(clock, createSlf4jLoggerMock(), UUID.randomUUID(), sink);
+        final Metrics metrics = _metricsProxy.createMetrics(clock, _metricsProxy.createSlf4jLoggerMock(), UUID.randomUUID(), sink);
         Assert.assertEquals(start, metrics.getOpenTime());
         Assert.assertNull(metrics.getCloseTime());
 
@@ -991,55 +1012,12 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testGetOrCreate() {
-        final Sink sink = Mockito.mock(Sink.class);
-        @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
-
-        final ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
-        Assert.assertEquals("bar", metrics.getOrCreate(map, "foo", "bar"));
-        Assert.assertEquals("bar", metrics.getOrCreate(map, "foo", "who"));
-    }
-
-    @Test
     public void testToString() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final String asString = createTsdMetrics(sink).toString();
+        final String asString = _metricsProxy.createMetrics(sink).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
-    }
-
-    private TsdMetrics createTsdMetrics(final Sink... sinks) {
-        return createTsdMetrics(createSlf4jLoggerMock(), sinks);
-    }
-
-    private TsdMetrics createTsdMetrics(final UUID id, final Sink... sinks) {
-        return createTsdMetrics(Clock.systemUTC(), createSlf4jLoggerMock(), id, sinks);
-    }
-
-    private TsdMetrics createTsdMetrics(final org.slf4j.Logger logger, final Sink... sinks) {
-        return createTsdMetrics(Clock.systemUTC(), logger, UUID.randomUUID(), sinks);
-    }
-
-    private TsdMetrics createTsdMetrics(
-            final Clock clock,
-            final org.slf4j.Logger logger,
-            final UUID id,
-            final Sink... sinks) {
-        final TsdMetrics metrics = new TsdMetrics(
-                id,
-                Arrays.asList(sinks),
-                clock,
-                logger);
-        metrics.addDimension("host", "MyHost");
-        metrics.addDimension("service", "MyService");
-        metrics.addDimension("cluster", "MyCluster");
-        return metrics;
-    }
-
-    private org.slf4j.Logger createSlf4jLoggerMock() {
-        return Mockito.mock(org.slf4j.Logger.class);
     }
 
     private void assertTimestamps(
@@ -1063,5 +1041,85 @@ public final class TsdMetricsTest {
         matchers.add(Matchers.hasEntry("cluster", "MyCluster"));
         matchers.addAll(Arrays.asList(additionalMatchers));
         return Matchers.allOf(matchers);
+    }
+    
+    private MetricsProxy _metricsProxy; 
+    
+    private interface MetricsProxy {
+        default Metrics createMetrics(final Sink... sinks) {
+            return createMetrics(createSlf4jLoggerMock(), sinks);
+        }
+
+        default Metrics createMetrics(final UUID id, final Sink... sinks) {
+            return createMetrics(Clock.systemUTC(), createSlf4jLoggerMock(), id, sinks);
+        }
+
+        default Metrics createMetrics(final org.slf4j.Logger logger, final Sink... sinks) {
+            return createMetrics(Clock.systemUTC(), logger, UUID.randomUUID(), sinks);
+        }
+        
+        default org.slf4j.Logger createSlf4jLoggerMock() {
+            return Mockito.mock(org.slf4j.Logger.class);
+        }
+
+        void recordAggregatedData(Metrics metrics, String metricName, AggregatedData data);
+
+        Metrics createMetrics(
+                Clock clock,
+                org.slf4j.Logger logger,
+                UUID id,
+                Sink... sinks);
+    }
+    
+    private static final class TsdMetricsProxy implements MetricsProxy {
+        
+        @Override
+        public Metrics createMetrics(
+                final Clock clock,
+                final org.slf4j.Logger logger,
+                final UUID id,
+                final Sink... sinks) {
+            final Metrics metrics = new TsdMetrics(
+                    id,
+                    Arrays.asList(sinks),
+                    clock,
+                    logger);
+            metrics.addDimension("host", "MyHost");
+            metrics.addDimension("service", "MyService");
+            metrics.addDimension("cluster", "MyCluster");
+            return metrics;
+        }
+        
+        @Override
+        public void recordAggregatedData(final Metrics metrics, final String metricName, final AggregatedData data) {
+            Assert.assertTrue(metrics instanceof TsdMetrics);
+            ((TsdMetrics) metrics).recordAggregatedData(metricName, data);
+        }
+    }
+
+    private static final class LockFreeMetricsProxy implements MetricsProxy {
+
+        @Override
+        public Metrics createMetrics(
+                final Clock clock,
+                final org.slf4j.Logger logger,
+                final UUID id,
+                final Sink... sinks) {
+            final Metrics metrics = new LockFreeMetrics(
+                    id,
+                    Arrays.asList(sinks),
+                    clock,
+                    logger);
+            metrics.addDimension("host", "MyHost");
+            metrics.addDimension("service", "MyService");
+            metrics.addDimension("cluster", "MyCluster");
+            return metrics;
+        }
+
+        @Override
+        public void recordAggregatedData(final Metrics metrics, final String metricName, final AggregatedData data) {
+            Assert.assertTrue(metrics instanceof LockFreeMetrics);
+            ((LockFreeMetrics) metrics).recordAggregatedData(metricName, data);
+        }
     }
 }

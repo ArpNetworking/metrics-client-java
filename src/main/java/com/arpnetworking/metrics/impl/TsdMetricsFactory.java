@@ -145,6 +145,9 @@ import javax.annotation.Nullable;
  *
  * query-log.YYYY-MM-DD-HH.log
  *
+ * All the examples apply equally to {@link MetricsFactory#create()} and
+ * {@link MetricsFactory#createLockFree()}.
+ *
  * This class is thread safe.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
@@ -193,14 +196,7 @@ public class TsdMetricsFactory implements MetricsFactory {
             metrics = new TsdMetrics(
                     uuid,
                     _sinks);
-
-            metrics.addDimensions(_defaultDimensions);
-            for (final Map.Entry<String, Supplier<String>> entry : _defaultComputedDimensions.entrySet()) {
-                final String value = entry.getValue().get();
-                if (value != null) {
-                    metrics.addDimension(entry.getKey(), value);
-                }
-            }
+            configureMetrics(metrics);
 
             // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
         } catch (final RuntimeException e) {
@@ -217,12 +213,46 @@ public class TsdMetricsFactory implements MetricsFactory {
     }
 
     @Override
+    public Metrics createLockFree() {
+        final UUID uuid = _uuidFactory.get();
+        Metrics metrics;
+        try {
+            metrics = new LockFreeMetrics(
+                    uuid,
+                    _sinks);
+            configureMetrics(metrics);
+
+            // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
+        } catch (final RuntimeException e) {
+            // CHECKSTYLE.ON: IllegalCatch
+            _logger.warn("Unable to construct LockFreeMetrics, metrics disabled", e);
+            metrics = new LockFreeMetrics(
+                    uuid,
+                    Collections.singletonList(
+                            new WarningSink.Builder()
+                                    .setReasons(Collections.singletonList(e.getMessage()))
+                                    .build()));
+        }
+        return metrics;
+    }
+
+    @Override
     public String toString() {
         return String.format(
                 "TsdMetricsFactory{Sinks=%s, DefaultDimensions=%s, DefaultComputedDimensions=%s}",
                 _sinks,
                 _defaultDimensions,
                 _defaultComputedDimensions);
+    }
+
+    /* package private */ void configureMetrics(final Metrics metrics) {
+        metrics.addDimensions(_defaultDimensions);
+        for (final Map.Entry<String, Supplier<String>> entry : _defaultComputedDimensions.entrySet()) {
+            final String value = entry.getValue().get();
+            if (value != null) {
+                metrics.addDimension(entry.getKey(), value);
+            }
+        }
     }
 
     /* package private */ List<Sink> getSinks() {

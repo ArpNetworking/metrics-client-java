@@ -16,21 +16,24 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.StopWatch;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.mockito.hamcrest.MockitoHamcrest;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * Tests for {@link TsdStopWatch}.
+ * Tests for {@link TsdNanoStopWatch}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class TsdStopWatchTest {
+public final class TsdNanoStopWatchTest {
 
     @Test
     public void testIsRunning() {
-        final StopWatch stopWatch = new TsdStopWatch();
+        final StopWatch stopWatch = new TsdNanoStopWatch();
         Assert.assertTrue(stopWatch.isRunning());
         stopWatch.stop();
         Assert.assertFalse(stopWatch.isRunning());
@@ -39,40 +42,35 @@ public final class TsdStopWatchTest {
     @Test
     public void testStopElapsedTime() throws InterruptedException {
         final long startTime = System.nanoTime();
-        final StopWatch stopWatch = new TsdStopWatch();
+        final StopWatch stopWatch = new TsdNanoStopWatch();
         Thread.sleep(1000);
         stopWatch.stop();
         final long elapsedTime = System.nanoTime() - startTime;
         Assert.assertEquals(TimeUnit.NANOSECONDS, stopWatch.getUnit());
-        Assert.assertTrue(stopWatch.getElapsedTime().getValue().doubleValue() <= elapsedTime);
+        Assert.assertTrue(stopWatch.getElapsedTime() <= elapsedTime);
     }
 
     @Test
-    public void testStopTwice() {
-        final StopWatch stopWatch = new TsdStopWatch();
+    public void testStopTwiceNoEffect() throws InterruptedException {
+        final StopWatch stopWatch = new TsdNanoStopWatch();
         stopWatch.stop();
-        try {
-            stopWatch.stop();
-            Assert.fail("Expect exception not thrown");
-        } catch (final IllegalStateException e) {
-            // Expected exception
-        }
+        final long value = stopWatch.getElapsedTime();
+        Thread.sleep(100);
+        stopWatch.stop();
+        Assert.assertEquals(value, stopWatch.getElapsedTime());
     }
 
     @Test
     public void testElapsedBeforeStop() {
-        final StopWatch stopWatch = new TsdStopWatch();
-        try {
-            stopWatch.getElapsedTime();
-            Assert.fail("Expect exception not thrown");
-        } catch (final IllegalStateException e) {
-            // Expected exception
-        }
+        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final StopWatch stopWatch = new TsdNanoStopWatch(logger);
+        stopWatch.getElapsedTime();
+        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testToString() {
-        final String asString = new TsdStopWatch().toString();
+        final String asString = new TsdNanoStopWatch().toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
     }

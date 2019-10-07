@@ -34,7 +34,7 @@ public final class TsdCounterTest {
     @Test
     public void testIncrement() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen);
+        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen::get);
         Assert.assertEquals(0L, counter.getValue().longValue());
         counter.increment();
         Assert.assertEquals(1L, counter.getValue().longValue());
@@ -45,7 +45,7 @@ public final class TsdCounterTest {
     @Test
     public void testDecrement() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen);
+        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen::get);
         Assert.assertEquals(0L, counter.getValue().longValue());
         counter.decrement();
         Assert.assertEquals(-1L, counter.getValue().longValue());
@@ -56,7 +56,7 @@ public final class TsdCounterTest {
     @Test
     public void testIncrementByValue() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen);
+        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen::get);
         Assert.assertEquals(0L, counter.getValue().longValue());
         counter.increment(2);
         Assert.assertEquals(2L, counter.getValue().longValue());
@@ -67,7 +67,7 @@ public final class TsdCounterTest {
     @Test
     public void testDecrementByValue() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen);
+        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen::get);
         Assert.assertEquals(0L, counter.getValue().longValue());
         counter.decrement(2);
         Assert.assertEquals(-2L, counter.getValue().longValue());
@@ -78,7 +78,7 @@ public final class TsdCounterTest {
     @Test
     public void testCombination() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen);
+        final TsdCounter counter = TsdCounter.newInstance("counterName", isOpen::get);
         Assert.assertEquals(0L, counter.getValue().longValue());
         counter.increment();
         Assert.assertEquals(1L, counter.getValue().longValue());
@@ -94,7 +94,7 @@ public final class TsdCounterTest {
     public void testIncrementAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final Logger logger = Mockito.mock(Logger.class);
-        final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
+        final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.increment();
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
@@ -106,7 +106,7 @@ public final class TsdCounterTest {
     public void testIncrementByValueAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final Logger logger = Mockito.mock(Logger.class);
-        final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
+        final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.increment(2L);
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
@@ -118,7 +118,7 @@ public final class TsdCounterTest {
     public void testDecrementAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final Logger logger = Mockito.mock(Logger.class);
-        final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
+        final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.decrement();
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
@@ -130,7 +130,7 @@ public final class TsdCounterTest {
     public void testDecrementByValueAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
         final Logger logger = Mockito.mock(Logger.class);
-        final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
+        final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.decrement(2L);
         isOpen.set(false);
         Mockito.verifyZeroInteractions(logger);
@@ -141,7 +141,7 @@ public final class TsdCounterTest {
     @Test
     public void testToString() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final String asString = TsdCounter.newInstance("counterName", isOpen).toString();
+        final String asString = TsdCounter.newInstance("counterName", isOpen::get).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
         Assert.assertThat(asString, Matchers.containsString("counterName"));
