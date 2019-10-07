@@ -18,6 +18,7 @@ package com.arpnetworking.metrics;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Interface representing one span's metrics data.
@@ -25,6 +26,13 @@ import java.util.Map;
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public interface Event {
+
+    /**
+     * Accessor for event identifier.
+     *
+     * @return the identifier
+     */
+    UUID getId();
 
     /**
      * Accessor for start time.

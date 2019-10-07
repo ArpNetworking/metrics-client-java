@@ -53,14 +53,16 @@ public final class TsdMetricsTest {
     public void testEmptySingleSink() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
+        final UUID id = UUID.randomUUID();
         final Instant before = Instant.now();
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final TsdMetrics metrics = createTsdMetrics(id, sink);
         metrics.close();
         final Instant after = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink).record(eventCapture.capture());
         final Event actualEvent = eventCapture.getValue();
+        Assert.assertEquals(id, actualEvent.getId());
         Assert.assertThat(
                 actualEvent.getDimensions(),
                 standardDimensionsMatcher());
@@ -72,15 +74,17 @@ public final class TsdMetricsTest {
     public void testEmptyMultipleSinks() {
         final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink1");
         final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsTest.testEmptyMultipleSinks.sink2");
+        final UUID id = UUID.randomUUID();
         final Instant before = Instant.now();
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink1, sink2);
+        final TsdMetrics metrics = createTsdMetrics(id, sink1, sink2);
         metrics.close();
         final Instant after = Instant.now();
 
         final ArgumentCaptor<Event> eventCapture1 = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink1).record(eventCapture1.capture());
         final Event actualEvent1 = eventCapture1.getValue();
+        Assert.assertEquals(id, actualEvent1.getId());
         Assert.assertThat(
                 actualEvent1.getDimensions(),
                 standardDimensionsMatcher());
@@ -90,6 +94,7 @@ public final class TsdMetricsTest {
         final ArgumentCaptor<Event> eventCapture2 = ArgumentCaptor.forClass(Event.class);
         Mockito.verify(sink2).record(eventCapture2.capture());
         final Event actualEvent2 = eventCapture2.getValue();
+        Assert.assertEquals(id, actualEvent2.getId());
         Assert.assertThat(
                 actualEvent2.getDimensions(),
                 standardDimensionsMatcher());
@@ -755,7 +760,7 @@ public final class TsdMetricsTest {
     }
 
     @Test
-    public void testUnits() {
+    public void testTimerUnits() {
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
@@ -977,7 +982,7 @@ public final class TsdMetricsTest {
 
         final Sink sink = Mockito.mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(clock, createSlf4jLoggerMock(), sink);
+        final TsdMetrics metrics = createTsdMetrics(clock, createSlf4jLoggerMock(), UUID.randomUUID(), sink);
         Assert.assertEquals(start, metrics.getOpenTime());
         Assert.assertNull(metrics.getCloseTime());
 
@@ -1009,13 +1014,21 @@ public final class TsdMetricsTest {
         return createTsdMetrics(createSlf4jLoggerMock(), sinks);
     }
 
-    private TsdMetrics createTsdMetrics(final org.slf4j.Logger logger, final Sink... sinks) {
-        return createTsdMetrics(Clock.systemUTC(), logger, sinks);
+    private TsdMetrics createTsdMetrics(final UUID id, final Sink... sinks) {
+        return createTsdMetrics(Clock.systemUTC(), createSlf4jLoggerMock(), id, sinks);
     }
 
-    private TsdMetrics createTsdMetrics(final Clock clock, final org.slf4j.Logger logger, final Sink... sinks) {
+    private TsdMetrics createTsdMetrics(final org.slf4j.Logger logger, final Sink... sinks) {
+        return createTsdMetrics(Clock.systemUTC(), logger, UUID.randomUUID(), sinks);
+    }
+
+    private TsdMetrics createTsdMetrics(
+            final Clock clock,
+            final org.slf4j.Logger logger,
+            final UUID id,
+            final Sink... sinks) {
         final TsdMetrics metrics = new TsdMetrics(
-                UUID.randomUUID(),
+                id,
                 Arrays.asList(sinks),
                 clock,
                 logger);
@@ -1045,7 +1058,6 @@ public final class TsdMetricsTest {
     private static Matcher<Map<String, String>> standardDimensionsMatcher(
             final Matcher... additionalMatchers) {
         final List matchers = new ArrayList();
-        matchers.add(Matchers.hasKey("_id"));
         matchers.add(Matchers.hasEntry("host", "MyHost"));
         matchers.add(Matchers.hasEntry("service", "MyService"));
         matchers.add(Matchers.hasEntry("cluster", "MyCluster"));

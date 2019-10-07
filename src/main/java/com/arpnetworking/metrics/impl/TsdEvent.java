@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Default implementation of {@link Event}.
@@ -40,6 +41,7 @@ import java.util.Objects;
      * structures after passing them to this constructor. This is acceptable
      * since this class is for internal implementation only.
      *
+     * @param id the event identifier
      * @param startTime the start time
      * @param endTime the end time
      * @param dimensions the annotations
@@ -47,16 +49,23 @@ import java.util.Objects;
      * @param aggregatedData the aggregated data
      */
     /* package private */ TsdEvent(
+            final UUID id,
             final Instant startTime,
             final Instant endTime,
             final Map<String, String> dimensions,
             final Map<String, List<Quantity>> samples,
             final Map<String, AggregatedData> aggregatedData) {
+        _id = id;
         _startTime = startTime;
         _endTime = endTime;
         _dimensions = dimensions;
         _samples = samples;
         _aggregatedData = aggregatedData;
+    }
+
+    @Override
+    public UUID getId() {
+        return _id;
     }
 
     @Override
@@ -93,7 +102,8 @@ import java.util.Objects;
             return false;
         }
         final TsdEvent otherEvent = (TsdEvent) other;
-        return Objects.equals(_startTime, otherEvent._startTime)
+        return Objects.equals(_id, otherEvent._id)
+                && Objects.equals(_startTime, otherEvent._startTime)
                 && Objects.equals(_endTime, otherEvent._endTime)
                 && Objects.equals(_dimensions, otherEvent._dimensions)
                 && Objects.equals(_samples, otherEvent._samples)
@@ -102,13 +112,14 @@ import java.util.Objects;
 
     @Override
     public int hashCode() {
-        return Objects.hash(_startTime, _endTime, _dimensions, _samples, _aggregatedData);
+        return Objects.hash(_id, _startTime, _endTime, _dimensions, _samples, _aggregatedData);
     }
 
     @Override
     public String toString() {
         return String.format(
-                "TsdEvent{StartTime=%s, EndTime=%s, Dimensions=%s, Samples=%s, AggregatedData=%s}",
+                "TsdEvent{Id=%s, StartTime=%s, EndTime=%s, Dimensions=%s, Samples=%s, AggregatedData=%s}",
+                _id,
                 _startTime,
                 _endTime,
                 _dimensions,
@@ -116,6 +127,7 @@ import java.util.Objects;
                 _aggregatedData);
     }
 
+    private final UUID _id;
     private final Instant _startTime;
     private final Instant _endTime;
     private final Map<String, String> _dimensions;
