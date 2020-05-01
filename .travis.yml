@@ -15,6 +15,3 @@ before_script:
 - if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then export TARGET="deploy -P release --settings settings.xml"; fi;
 script:
 - ./jdk-wrapper.sh ./mvnw clean ${TARGET} -U
-after_failure:
-- cat target/site/jacoco/jacoco.csv
-- cat ./target/site/jacoco/com.arpnetworking.metrics.impl/TsdMetrics.html
