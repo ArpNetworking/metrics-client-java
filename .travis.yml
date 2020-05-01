@@ -17,3 +17,4 @@ script:
 - ./jdk-wrapper.sh ./mvnw clean ${TARGET} -U
 after_failure:
 - cat target/site/jacoco/jacoco.csv
+- cat ./target/site/jacoco/com.arpnetworking.metrics.impl/TsdMetrics.html
