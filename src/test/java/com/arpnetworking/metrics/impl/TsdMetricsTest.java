@@ -174,10 +174,10 @@ public final class TsdMetricsTest {
     public void testAggregatedDataOnly() {
         final Sink sink = Mockito.mock(Sink.class);
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
         double sum = 0.0;
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogram.put(AugmentedHistogramTest.toKey((double) i), i);
             sum += i * i;
         }
@@ -220,10 +220,10 @@ public final class TsdMetricsTest {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
         double sum = 0.0;
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogram.put(AugmentedHistogramTest.toKey((double) i), i);
             sum += i * i;
         }
@@ -461,10 +461,10 @@ public final class TsdMetricsTest {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         final Sink sink = Mockito.mock(Sink.class);
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
         double sum = 0.0;
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogram.put(AugmentedHistogramTest.toKey((double) i), i);
             sum += i * i;
         }
