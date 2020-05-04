@@ -64,7 +64,7 @@ import javax.annotation.Nullable;
  *             "host",
  *             BackgroundCachingHostResolver.getInstance())
  *     .setSinks(Collections.singletonList(
- *         new ApacheHttpSink.Builder().build()));
+ *         new HttpSink.Builder().build()));
  *     .build();
  * }
  *
@@ -81,7 +81,7 @@ import javax.annotation.Nullable;
  *             "host",
  *             BackgroundCachingHostResolver.getInstance())
  *     .setSinks(Collections.singletonList(
- *         new ApacheHttpSink.Builder()
+ *         new HttpSink.Builder()
  *             .setUri(URI.create("http://192.168.0.1:1234/metrics/v3/application"))
  *             .build()));
  *     .build();
@@ -159,7 +159,7 @@ public class TsdMetricsFactory implements MetricsFactory {
 
     static {
         final List<String> sinkClassNames = new ArrayList<>();
-        sinkClassNames.add("com.arpnetworking.metrics.impl.ApacheHttpSink");
+        sinkClassNames.add("com.arpnetworking.metrics.impl.HttpSink");
         sinkClassNames.add("com.arpnetworking.metrics.impl.FileSink");
         DEFAULT_SINK_CLASS_NAMES = Collections.unmodifiableList(sinkClassNames);
     }
