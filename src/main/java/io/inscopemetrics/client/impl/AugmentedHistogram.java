@@ -52,7 +52,7 @@ public class AugmentedHistogram implements AggregatedData {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AugmentedHistogram.class);
 
-    private final Map<Double, Integer> histogram;
+    private final Map<Double, Long> histogram;
     private final int precision;
     private final double min;
     private final double max;
@@ -73,7 +73,7 @@ public class AugmentedHistogram implements AggregatedData {
         sum = builder.sum;
     }
 
-    public Map<Double, Integer> getHistogram() {
+    public Map<Double, Long> getHistogram() {
         return Collections.unmodifiableMap(histogram);
     }
 
@@ -137,7 +137,7 @@ public class AugmentedHistogram implements AggregatedData {
 
         private final Logger logger;
 
-        private Map<Double, Integer> histogram;
+        private Map<Double, Long> histogram;
         private Integer precision;
         private Double min;
         private Double max;
@@ -201,7 +201,7 @@ public class AugmentedHistogram implements AggregatedData {
          * @param value The histogram.
          * @return This {@link Builder} instance.
          */
-        public Builder setHistogram(@Nullable final Map<Double, Integer> value) {
+        public Builder setHistogram(@Nullable final Map<Double, Long> value) {
             histogram = value;
             return this;
         }

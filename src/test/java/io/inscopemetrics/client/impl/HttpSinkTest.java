@@ -31,10 +31,8 @@ import io.inscopemetrics.client.protocol.ClientV3;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.URI;
@@ -55,6 +53,23 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.startsWith;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 /**
  * Tests for {@link HttpSink}.
@@ -77,8 +92,8 @@ public final class HttpSinkTest {
     @Test
     public void testBuilderWithDefaults() {
         final Sink sink = new HttpSink.Builder().build();
-        Assert.assertNotNull(sink);
-        Assert.assertEquals(HttpSink.class, sink.getClass());
+        assertNotNull(sink);
+        assertEquals(HttpSink.class, sink.getClass());
     }
 
     @Test
@@ -94,8 +109,8 @@ public final class HttpSinkTest {
         builder.setUnsupportedDataLoggingInterval(null);
         builder.setEmptyQueueInterval(null);
         final Sink sink = builder.build();
-        Assert.assertNotNull(sink);
-        Assert.assertEquals(HttpSink.class, sink.getClass());
+        assertNotNull(sink);
+        assertEquals(HttpSink.class, sink.getClass());
     }
 
     @Test
@@ -103,8 +118,8 @@ public final class HttpSinkTest {
         final HttpSink.Builder builder = new HttpSink.Builder();
         builder.setUri(URI.create("https://secure.example.com"));
         final Sink sink = builder.build();
-        Assert.assertNotNull(sink);
-        Assert.assertEquals(HttpSink.class, sink.getClass());
+        assertNotNull(sink);
+        assertEquals(HttpSink.class, sink.getClass());
     }
 
     @Test
@@ -112,8 +127,8 @@ public final class HttpSinkTest {
         final HttpSink.Builder builder = new HttpSink.Builder();
         builder.setUri(URI.create("ftp://ftp.example.com"));
         final Sink sink = builder.build();
-        Assert.assertNotNull(sink);
-        Assert.assertNotEquals(HttpSink.class, sink.getClass());
+        assertNotNull(sink);
+        assertNotEquals(HttpSink.class, sink.getClass());
     }
 
     // CHECKSTYLE.OFF: MethodLength
@@ -123,14 +138,14 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(4, r.getDimensionsCount());
+                            assertEquals(4, r.getDimensionsCount());
                             assertDimension(r.getDimensionsList(), "foo", "bar");
                             assertDimension(r.getDimensionsList(), "_host", "some.host.com");
                             assertDimension(r.getDimensionsList(), "_service", "myservice");
                             assertDimension(r.getDimensionsList(), "_cluster", "mycluster");
 
                             // Samples
-                            Assert.assertEquals(6, r.getDataOrBuilderList().size());
+                            assertEquals(6, r.getDataOrBuilderList().size());
                             assertMetricData(
                                     r.getDataList(),
                                     "timerLong",
@@ -196,7 +211,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -204,27 +219,27 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
     // CHECKSTYLE.ON: MethodLength
 
     @Test
     public void testAugmentedHistogram() throws InterruptedException {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
-        histogram.put(1.0, 1);
-        histogram.put(2.0, 2);
-        histogram.put(3.0, 3);
+        histogram.put(1.0, 1L);
+        histogram.put(2.0, 2L);
+        histogram.put(3.0, 3L);
 
         wireMockRule.stubFor(
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
-                            Assert.assertEquals(2, r.getDataOrBuilderList().size());
+                            assertEquals(2, r.getDataOrBuilderList().size());
                             assertMetricData(
                                     r.getDataList(),
                                     "timerLong",
@@ -256,7 +271,7 @@ public final class HttpSinkTest {
 
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
@@ -289,7 +304,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -297,26 +312,26 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
     public void testAugmentedHistogramAndSamplesMerged() throws InterruptedException {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
-        histogram.put(1.0, 1);
-        histogram.put(2.0, 2);
-        histogram.put(3.0, 3);
+        histogram.put(1.0, 1L);
+        histogram.put(2.0, 2L);
+        histogram.put(3.0, 3L);
 
         wireMockRule.stubFor(
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
-                            Assert.assertEquals(1, r.getDataOrBuilderList().size());
+                            assertEquals(1, r.getDataOrBuilderList().size());
                             assertMetricData(
                                     r.getDataList(),
                                     "mergedData",
@@ -345,7 +360,7 @@ public final class HttpSinkTest {
 
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
@@ -378,7 +393,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -386,7 +401,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -395,10 +410,10 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
-                            Assert.assertEquals(2, r.getDataOrBuilderList().size());
+                            assertEquals(2, r.getDataOrBuilderList().size());
                             assertMetricData(
                                     r.getDataList(),
                                     "timerLong",
@@ -410,7 +425,7 @@ public final class HttpSinkTest {
 
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
@@ -437,7 +452,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -445,11 +460,11 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Verify that
-        Mockito.verify(logger).error(
-                Mockito.startsWith(
+        verify(logger).error(
+                startsWith(
                         String.format(
                                 "Unsupported aggregated data type; class=%s",
                                 TestUnsupportedAggregatedData.class.getName())));
@@ -461,7 +476,7 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
                             assertMetricData(
@@ -506,7 +521,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -515,7 +530,7 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
                             assertMetricData(
@@ -568,7 +583,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -576,7 +591,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -585,7 +600,7 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
                             assertMetricData(
@@ -635,7 +650,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(3, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -652,7 +667,7 @@ public final class HttpSinkTest {
                             recordsReceived.incrementAndGet();
 
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
                             assertMetricData(
@@ -703,10 +718,10 @@ public final class HttpSinkTest {
         semaphoreC.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertEquals(5, droppedEvents.get());
+        assertEquals(5, droppedEvents.get());
 
         // Assert number of records received
-        Assert.assertEquals(6, recordsReceived.get());
+        assertEquals(6, recordsReceived.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -714,7 +729,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(4, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -723,17 +738,17 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
-                            Assert.assertEquals(0, r.getDataList().size());
+                            assertEquals(0, r.getDataList().size());
                         }))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(404)));
 
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
@@ -759,7 +774,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -767,12 +782,12 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that an IOException was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
-                Mockito.any(RuntimeException.class));
+        verify(logger).error(
+                startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
+                any(RuntimeException.class));
     }
 
     @Test
@@ -781,17 +796,17 @@ public final class HttpSinkTest {
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
                             // Dimensions
-                            Assert.assertEquals(0, r.getDimensionsCount());
+                            assertEquals(0, r.getDimensionsCount());
 
                             // Samples
-                            Assert.assertEquals(0, r.getDataList().size());
+                            assertEquals(0, r.getDataList().size());
                         }))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(400)));
 
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
@@ -817,7 +832,7 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Ensure expected handler was invoked
-        Assert.assertTrue(assertionResult.get());
+        assertTrue(assertionResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -825,16 +840,16 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(1, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that an IOException was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Received failure response when sending metrics to HTTP endpoint; uri="));
+        verify(logger).error(
+                startsWith("Received failure response when sending metrics to HTTP endpoint; uri="));
     }
 
     @Test
     public void testPostBadHost() throws InterruptedException {
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
@@ -859,23 +874,23 @@ public final class HttpSinkTest {
 
         // Assert that no data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that an IOException was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
-                Mockito.any(IOException.class));
+        verify(logger).error(
+                startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
+                any(IOException.class));
     }
 
     @Test
     public void testHttpClientExecuteException() throws InterruptedException {
-        final CloseableHttpClient httpClient = Mockito.mock(
+        final CloseableHttpClient httpClient = mock(
                 CloseableHttpClient.class,
                 invocationOnMock -> {
                     throw new NullPointerException("Throw by default");
                 });
 
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
@@ -901,22 +916,22 @@ public final class HttpSinkTest {
 
         // Assert that no data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that the runtime exception was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
-                Mockito.any(NullPointerException.class));
+        verify(logger).error(
+                startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
+                any(NullPointerException.class));
     }
 
     @Test
     public void testHttpClientResponseException() throws InterruptedException, IOException {
-        final CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
-        final CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
-        Mockito.doReturn(httpResponse).when(httpClient).execute(Mockito.any(HttpPost.class));
-        Mockito.doThrow(new NullPointerException("Throw by default")).when(httpResponse).getStatusLine();
+        final CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        final CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+        doReturn(httpResponse).when(httpClient).execute(any(HttpPost.class));
+        doThrow(new NullPointerException("Throw by default")).when(httpResponse).getStatusLine();
 
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
@@ -937,11 +952,11 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Verify mocks
-        Mockito.verify(httpClient).execute(Mockito.any(HttpPost.class));
-        Mockito.verifyNoMoreInteractions(httpClient);
-        Mockito.verify(httpResponse).getStatusLine();
-        Mockito.verify(httpResponse).close();
-        Mockito.verifyNoMoreInteractions(httpResponse);
+        verify(httpClient).execute(any(HttpPost.class));
+        verifyNoMoreInteractions(httpClient);
+        verify(httpResponse).getStatusLine();
+        verify(httpResponse).close();
+        verifyNoMoreInteractions(httpResponse);
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -949,23 +964,23 @@ public final class HttpSinkTest {
 
         // Assert that no data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that the runtime exception was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
-                Mockito.any(NullPointerException.class));
+        verify(logger).error(
+                startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
+                any(NullPointerException.class));
     }
 
     @Test
     public void testHttpClientResponseCloseException() throws InterruptedException, IOException {
-        final CloseableHttpClient httpClient = Mockito.mock(CloseableHttpClient.class);
-        final CloseableHttpResponse httpResponse = Mockito.mock(CloseableHttpResponse.class);
-        Mockito.doReturn(httpResponse).when(httpClient).execute(Mockito.any(HttpPost.class));
-        Mockito.doThrow(new NullPointerException("Throw by default")).when(httpResponse).getStatusLine();
-        Mockito.doThrow(new IllegalStateException("Throw by default")).when(httpResponse).close();
+        final CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
+        final CloseableHttpResponse httpResponse = mock(CloseableHttpResponse.class);
+        doReturn(httpResponse).when(httpClient).execute(any(HttpPost.class));
+        doThrow(new NullPointerException("Throw by default")).when(httpResponse).getStatusLine();
+        doThrow(new IllegalStateException("Throw by default")).when(httpResponse).close();
 
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
@@ -986,11 +1001,11 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Verify mocks
-        Mockito.verify(httpClient).execute(Mockito.any(HttpPost.class));
-        Mockito.verifyNoMoreInteractions(httpClient);
-        Mockito.verify(httpResponse).getStatusLine();
-        Mockito.verify(httpResponse).close();
-        Mockito.verifyNoMoreInteractions(httpResponse);
+        verify(httpClient).execute(any(HttpPost.class));
+        verifyNoMoreInteractions(httpClient);
+        verify(httpResponse).getStatusLine();
+        verify(httpResponse).close();
+        verifyNoMoreInteractions(httpResponse);
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -998,20 +1013,20 @@ public final class HttpSinkTest {
 
         // Assert that no data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Assert that the runtime exception was captured
-        Mockito.verify(logger).error(
-                Mockito.startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
-                Mockito.any(NullPointerException.class));
-        Mockito.verifyNoMoreInteractions(logger);
+        verify(logger).error(
+                startsWith("Encountered failure when sending metrics to HTTP endpoint; uri="),
+                any(NullPointerException.class));
+        verifyNoMoreInteractions(logger);
     }
 
     @Test
     public void testHttpClientSupplierException() throws InterruptedException, IOException {
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
-        final HttpSinkEventHandler handler = Mockito.mock(HttpSinkEventHandler.class);
+        final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
         final Sink sink = new HttpSink(
                 new HttpSink.Builder()
                         .setUri(URI.create("http://nohost.example.com" + PATH))
@@ -1034,9 +1049,9 @@ public final class HttpSinkTest {
         semaphore.acquire();
 
         // Assert that the runtime exception was captured
-        Mockito.verify(logger, Mockito.timeout(1000)).error(
-                Mockito.startsWith("MetricsSinkApacheHttpWorker failure"),
-                Mockito.any(IllegalStateException.class));
+        verify(logger, timeout(1000)).error(
+                startsWith("MetricsSinkApacheHttpWorker failure"),
+                any(IllegalStateException.class));
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -1044,15 +1059,15 @@ public final class HttpSinkTest {
 
         // Assert that no data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
 
         // Verify no handler was invoked
-        Mockito.verify(handler, Mockito.never()).attemptComplete(
-                Mockito.anyLong(),
-                Mockito.anyLong(),
-                Mockito.anyBoolean(),
-                Mockito.anyLong(),
-                Mockito.any(TimeUnit.class));
+        verify(handler, never()).attemptComplete(
+                anyLong(),
+                anyLong(),
+                anyBoolean(),
+                anyLong(),
+                any(TimeUnit.class));
     }
 
     @Test
@@ -1090,7 +1105,7 @@ public final class HttpSinkTest {
         sink.stop();
         Thread.sleep(1000);
         sink.record(event);
-        Assert.assertFalse(semaphore.tryAcquire(1, TimeUnit.SECONDS));
+        assertFalse(semaphore.tryAcquire(1, TimeUnit.SECONDS));
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
@@ -1098,7 +1113,7 @@ public final class HttpSinkTest {
 
         // Assert that data was sent
         wireMockRule.verify(0, requestPattern);
-        Assert.assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
@@ -1147,8 +1162,8 @@ public final class HttpSinkTest {
         thread.interrupt();
         thread.join(600);
 
-        Assert.assertFalse(thread.isAlive());
-        Assert.assertTrue(value.get());
+        assertFalse(thread.isAlive());
+        assertTrue(value.get());
     }
 
     private static Map<String, List<Quantity>> createQuantityMap(final Object... arguments) {
@@ -1177,7 +1192,7 @@ public final class HttpSinkTest {
             final String name,
             final List<Double> samples,
             final ClientV3.AugmentedHistogram augmentedHistogram) {
-        Assert.assertTrue(
+        assertTrue(
                 String.format(
                         "Missing metric data: name=%s, samples=%s, augmentedHistogram=%s",
                         name,
@@ -1198,7 +1213,7 @@ public final class HttpSinkTest {
             final List<ClientV3.MetricDataEntry> metricData,
             final String name,
             final ClientV3.AugmentedHistogram augmentedHistogram) {
-        Assert.assertTrue(
+        assertTrue(
                 String.format(
                         "Missing metric data: name=%s, augmentedHistogram=%s",
                         name,
@@ -1217,7 +1232,7 @@ public final class HttpSinkTest {
             final List<ClientV3.MetricDataEntry> metricData,
             final String name,
             final Number sample) {
-        Assert.assertTrue(
+        assertTrue(
                 String.format(
                         "Missing metric data: name=%s, sample=%s",
                         name,
@@ -1236,7 +1251,7 @@ public final class HttpSinkTest {
             final List<ClientV3.DimensionEntry> dimensions,
             final String name,
             final String value) {
-        Assert.assertTrue(dimensions.contains(
+        assertTrue(dimensions.contains(
                 ClientV3.DimensionEntry.newBuilder()
                         .setName(createIdentifier(name))
                         .setValue(createIdentifier(value))
@@ -1377,9 +1392,9 @@ public final class HttpSinkTest {
                 final long elapasedTime,
                 final TimeUnit elapsedTimeUnit) {
             try {
-                Assert.assertEquals(expectedRecords, records);
-                Assert.assertEquals(expectedBytes, bytes);
-                Assert.assertEquals(expectedSuccess, success);
+                assertEquals(expectedRecords, records);
+                assertEquals(expectedBytes, bytes);
+                assertEquals(expectedSuccess, success);
                 assertionResult.set(true);
                 // CHECKSTYLE.OFF: IllegalCatch - JUnit throws assertions which derive from Throwable
             } catch (final Throwable t) {

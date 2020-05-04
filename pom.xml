@@ -86,21 +86,21 @@
     -->
 
     <!--Dependency versions-->
-    <apache.http.client.version>4.5.10</apache.http.client.version>
-    <apache.http.core.version>4.4.12</apache.http.core.version>
-    <arpnetworking.commons.version>1.18.2</arpnetworking.commons.version>
-    <client.protocol.version>0.11.1</client.protocol.version>
+    <apache.http.client.version>4.5.12</apache.http.client.version>
+    <apache.http.core.version>4.4.13</apache.http.core.version>
+    <arpnetworking.commons.version>1.18.3</arpnetworking.commons.version>
+    <client.protocol.version>0.11.3</client.protocol.version>
     <spotbugs.annotations.version>4.0.2</spotbugs.annotations.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.13</junit.version>
-    <mockito.version>2.23.4</mockito.version>
-    <protobuf.version>3.8.0</protobuf.version>
+    <mockito.version>3.3.3</mockito.version>
+    <protobuf.version>3.10.0</protobuf.version>
     <slf4j.version>1.7.25</slf4j.version>
-    <wiremock.version>2.24.1</wiremock.version>
+    <wiremock.version>2.26.3</wiremock.version>
 
     <!-- Plugin versions -->
-    <maven.shade.plugin.version>3.1.0</maven.shade.plugin.version>
+    <maven.shade.plugin.version>3.2.3</maven.shade.plugin.version>
 
     <!-- Checkstyle -->
     <checkstyleExtraSuppressions>${project.basedir}/extra-checkstyle-suppressions.xml</checkstyleExtraSuppressions>

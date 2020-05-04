@@ -43,11 +43,11 @@ public final class AugmentedHistogramTest {
 
     static {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogramA = new HashMap<>();
-        final Map<Double, Integer> histogramB = new HashMap<>();
+        final Map<Double, Long> histogramA = new HashMap<>();
+        final Map<Double, Long> histogramB = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
         double sumA = 0.0;
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogramA.put(toKey((double) i), i);
             sumA += i * i;
 
@@ -113,9 +113,9 @@ public final class AugmentedHistogramTest {
     @Test
     public void testAugmentedHistogram() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogram.put(toKey((double) i), i);
         }
 
@@ -129,10 +129,10 @@ public final class AugmentedHistogramTest {
     @Test
     public void testInvalidAugmentedHistogram() {
         // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
-        final Map<Double, Integer> histogram = new HashMap<>();
+        final Map<Double, Long> histogram = new HashMap<>();
         // CHECKSTYLE.ON: IllegalInstantiation
         double sum = 0.0;
-        for (int i = 1; i < 10; ++i) {
+        for (long i = 1; i < 10; ++i) {
             histogram.put(toKey((double) i), i);
             sum += i * i;
         }

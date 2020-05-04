@@ -17,7 +17,6 @@ package io.inscopemetrics.client.impl;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 import org.slf4j.Logger;
 
@@ -27,6 +26,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Tests for {@link TsdCounter}.
@@ -97,49 +99,49 @@ public final class TsdCounterTest {
     @Test
     public void testIncrementAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.increment();
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         counter.increment();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testIncrementByValueAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.increment(2L);
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         counter.increment(2L);
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testDecrementAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.decrement();
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         counter.decrement();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
     public void testDecrementByValueAfterClose() {
         final AtomicBoolean isOpen = new AtomicBoolean(true);
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdCounter counter = new TsdCounter("counterName", isOpen::get, logger);
         counter.decrement(2L);
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         counter.decrement(2L);
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
