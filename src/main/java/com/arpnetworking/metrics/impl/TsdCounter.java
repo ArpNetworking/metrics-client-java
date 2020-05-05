@@ -20,11 +20,12 @@ import com.arpnetworking.metrics.Quantity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
- * Implementation of {@link Counter}.  This class is thread safe.
+ * Implementation of {@link Counter}. This class is thread safe but does not
+ * provide synchronized access across threads.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
@@ -34,12 +35,9 @@ import java.util.concurrent.atomic.AtomicLong;
      * be created through the {@link TsdMetrics} instance.
      *
      * @param name The name of the counter.
-     * @param isOpen Reference to state of containing {@link TsdMetrics}
-     * instance. This is provided as a separate parameter to avoid creating a
-     * cyclical dependency between {@link TsdMetrics} and
-     * {@link TsdCounter} which could cause garbage collection delays.
+     * @param isOpen {@link Supplier} to the state of the underlying {@link com.arpnetworking.metrics.Metrics} instance.
      */
-    /* package private */ static TsdCounter newInstance(final String name, final AtomicBoolean isOpen) {
+    /* package private */ static TsdCounter newInstance(final String name, final Supplier<Boolean> isOpen) {
         return new TsdCounter(name, isOpen, DEFAULT_LOGGER);
     }
 
@@ -55,7 +53,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
     @Override
     public void increment(final long value) {
-        assertIsOpen();
+        // Note that this check is not guaranteed to catch incorrect use of the
+        // Counter object, but it represents a best effort to help users
+        // identify race conditions in their instrumentation.
+        if (!_isOpen.get()) {
+            _logger.warn(String.format("Attempt to modify counter after underlying Metrics object closed; %s", this));
+            return;
+        }
         _value.addAndGet(value);
     }
 
@@ -67,11 +71,10 @@ import java.util.concurrent.atomic.AtomicLong;
     @Override
     public String toString() {
         return String.format(
-                "TsdCounter{id=%s, Name=%s, Value=%s, IsOpen=%s}",
+                "TsdCounter{id=%s, Name=%s, Value=%s}",
                 Integer.toHexString(System.identityHashCode(this)),
                 _name,
-                _value,
-                _isOpen);
+                _value);
     }
 
     @Override
@@ -79,27 +82,18 @@ import java.util.concurrent.atomic.AtomicLong;
         return _value.get();
     }
 
-    private boolean assertIsOpen() {
-        final boolean isOpen = _isOpen.get();
-        if (!isOpen) {
-            // This is in place of an exception
-            _logger.warn(String.format("Counter manipulated after metrics instance closed; counter=%s", this));
-        }
-        return isOpen;
-    }
-
     // NOTE: Package private for testing.
-    /* package private */TsdCounter(final String name, final AtomicBoolean isOpen, final Logger logger) {
+    /* package private */TsdCounter(final String name, final Supplier<Boolean> isOpen, final Logger logger) {
         _name = name;
+        _value = new AtomicLong(0L);
         _isOpen = isOpen;
         _logger = logger;
-        _value = new AtomicLong(0L);
     }
 
     private final String _name;
-    private final AtomicBoolean _isOpen;
-    private final Logger _logger;
     private final AtomicLong _value;
+    private final Supplier<Boolean> _isOpen;
+    private final Logger _logger;
 
     private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(TsdCounter.class);
 }

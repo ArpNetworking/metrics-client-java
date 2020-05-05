@@ -87,8 +87,8 @@ public final class MetricMatcher extends TypeSafeDiagnosingMatcher<Map<? extends
 
                         if (!sampleMatcher.matches(actualSample)) {
                             mismatchDescription.appendText(String.format(
-                                    "Samples differ: key=%s",
-                                    entry.getKey()));
+                                    "Samples differ: %s",
+                                    actualSample));
                             sampleMatcher.describeMismatch(actualSample, mismatchDescription);
                             matches = false;
                         }

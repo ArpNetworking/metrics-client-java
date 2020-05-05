@@ -95,6 +95,9 @@ public interface Metrics extends AutoCloseable {
      * instances with the same name, even concurrently, each will record a
      * unique sample for the timer of the specified name.
      *
+     * <b>All timers are output in seconds.</b>
+     * <b>All timers are represented in seconds.</b>
+     *
      * @param name The name of the timer.
      * @return {@link Timer} instance for recording a timing sample.
      */
@@ -104,6 +107,9 @@ public interface Metrics extends AutoCloseable {
      * Start measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
      * to make multiple concurrent measurements.
      *
+     * <b>All timers are output in seconds.</b>
+     * <b>All timers are represented in seconds.</b>
+     *
      * @param name The name of the timer.
      */
     void startTimer(String name);
@@ -112,6 +118,9 @@ public interface Metrics extends AutoCloseable {
      * Stop measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
      * to make multiple concurrent measurements.
      *
+     * <b>All timers are output in seconds.</b>
+     * <b>All timers are internally represented in seconds.</b>
+     *
      * @param name The name of the timer.
      */
     void stopTimer(String name);
@@ -119,13 +128,15 @@ public interface Metrics extends AutoCloseable {
     /**
      * Set the timer to the specified value. This is most commonly used to
      * record timers from external sources that are not directly integrated with
-     * metrics. All timers are internally represented in seconds.
+     * metrics.
+     *
+     * <b>All timers are output in seconds.</b>
      *
      * @param name The name of the timer.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
      */
-    void setTimer(String name, long duration, @Nullable TimeUnit unit);
+    void setTimer(String name, long duration, TimeUnit unit);
 
     /**
      * Set the specified gauge reading.

@@ -29,9 +29,19 @@ package com.arpnetworking.metrics;
 public interface MetricsFactory {
 
     /**
-     * Return an instance of {@link Metrics}.
+     * Return a thread safe instance of {@link Metrics}.
      * 
      * @return An instance of {@link Metrics}.
      */
     Metrics create();
+
+    /**
+     * Return a lock-free instance of {@link Metrics}. This is not appropriate
+     * in most use cases and is only intended for use in frameworks which
+     * guarantee a single thread of execution in a particular context such as
+     * Akka and Vert.x.
+     *
+     * @return A lock-free instance of {@link Metrics}.
+     */
+    Metrics createLockFree();
 }

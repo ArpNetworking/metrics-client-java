@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Groupon.com
+ * Copyright 2019 Dropbox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,15 +32,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -56,8 +52,8 @@ import javax.annotation.Nullable;
  * warning is logged using the SLF4J {@link LoggerFactory} for this class.
  *
  * Another example would be if the disk is full or fails to record the metrics
- * when {@link TsdMetrics#close} is invoked the library will not throw an exception.
- * However, it will attempt to write a warning using the SLF4J
+ * when {@link LockFreeMetrics#close} is invoked the library will not throw an
+ * exception. However, it will attempt to write a warning using the SLF4J
  * {@link LoggerFactory} for this class; although this is likely to fail
  * if the underlying hardware is experiencing problems.
  *
@@ -69,229 +65,161 @@ import javax.annotation.Nullable;
  * refer to the {@link Metrics} interface documentation. To create an
  * instance of this class use {@link TsdMetricsFactory}.
  *
- * This class is thread safe; however, it makes no effort to order
- * operations on the same data. For example, it is safe for two threads to
- * start and stop separate timers but if the threads start and stop the same
- * timer than it is up to the caller to ensure that start is called before
- * stop.
+ * This class is <b>NOT</b> thread safe; in fact, it is intended for use only
+ * in contexts where the framework guarantees single threaded execution. For
+ * example, Akka or Vert.x. In support of such an execution model this class
+ * is implemented under the assumption of single threaded execution and as
+ * a result does not use any locks.
  *
- * The library does attempt to detect incorrect usage, for example modifying
- * metrics after closing and starting but never stopping a timer; however, in
- * a multithreaded environment it is not guaranteed that these warnings are
- * emitted. It is up to clients to ensure that multithreaded use of the same
- * {@link TsdMetrics} instance is correct.
+ * Most use cases will be better served with {@link TsdMetrics}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class TsdMetrics implements Metrics {
+public class LockFreeMetrics implements Metrics {
 
     @Override
     public Counter createCounter(final String name) {
-        // NOTE: Open lock performed by createCounterInternal
         return createCounterInternal(name);
     }
 
     @Override
     public void incrementCounter(final String name) {
-        // NOTE: Open lock performed by incrementCounter
         incrementCounter(name, 1L);
     }
 
     @Override
     public void decrementCounter(final String name) {
-        // NOTE: Open lock performed by incrementCounter
         incrementCounter(name, -1L);
     }
 
     @Override
     public void decrementCounter(final String name, final long value) {
-        // NOTE: Open lock performed by incrementCounter
         incrementCounter(name, -1L * value);
     }
 
     @Override
     public void incrementCounter(final String name, final long value) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-
-            final Counter counter = _counters.compute(name, _createCounterBiFunction);
-            counter.increment(value);
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+
+        final Counter counter = _counters.compute(name, _createCounterBiFunction);
+        counter.increment(value);
     }
 
     @Override
     public void resetCounter(final String name) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            _counters.put(name, createCounterInternal(name));
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        _counters.put(name, createCounterInternal(name));
     }
 
     @Override
     public Timer createTimer(final String name) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                // To prevent the calling code from throwing a NPE we just return a
-                // timer object; note that the call to assertIsOpen has already
-                // logged a warning about incorrect use of the class.
-                return TsdTimer.newInstance(name);
-            }
-            final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
-            final TsdTimer timer = TsdTimer.newInstance(name);
-            samples.add(timer);
-            return timer;
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            // To prevent the calling code from throwing a NPE we just return a
+            // timer object; note that the call to assertIsOpen has already
+            // logged a warning about incorrect use of the class.
+            return new NoOpTimer();
         }
+        final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
+        final TsdTimer timer = TsdTimer.newInstance(name);
+        samples.add(timer);
+        return timer;
     }
 
     @Override
     public void startTimer(final String name) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            // In this case the normal behavior is to insert; only if the library is
-            // being incorrectly used will there be a running timer with the same
-            // name.
-            final TsdTimer timer = TsdTimer.newInstance(name);
-            if (_timers.putIfAbsent(name, timer) != null) {
-                // This is in place of an exception; see class Javadoc
-                // NOTE: If you are seeing this message and want multiple instances
-                // of the same named timer then you should use {@code createTimer}
-                _logger.warn(String.format("Cannot start timer because timer already started; timerName=%s", name));
-                return;
-            }
-            final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
-            samples.add(timer);
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        // In this case the normal behavior is to insert; only if the library is
+        // being incorrectly used will there be a running timer with the same
+        // name.
+        final TsdTimer timer = TsdTimer.newInstance(name);
+        if (_timers.putIfAbsent(name, timer) != null) {
+            // This is in place of an exception; see class Javadoc
+            // NOTE: If you are seeing this message and want multiple instances
+            // of the same named timer then you should use {@code createTimer}
+            _logger.warn(String.format("Cannot start timer because timer already started; timerName=%s", name));
+            return;
+        }
+        final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
+        samples.add(timer);
     }
 
     @Override
     public void stopTimer(final String name) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            final Timer timer = _timers.remove(name);
-            if (timer == null) {
-                // This is in place of an exception; see class Javadoc
-                _logger.warn(String.format("Cannot stop timer because timer was not started; timerName=%s", name));
-                return;
-            }
-            timer.stop();
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        final Timer timer = _timers.remove(name);
+        if (timer == null) {
+            // This is in place of an exception; see class Javadoc
+            _logger.warn(String.format("Cannot stop timer because timer was not started, or was already stopped; timerName=%s", name));
+            return;
+        }
+        timer.stop();
     }
 
     @Override
     public void setTimer(final String name, final long duration, final TimeUnit unit) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
-            samples.add(TsdQuantity.newInstance(Utility.convertTimeUnit(duration, unit, TimeUnit.SECONDS)));
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        final Deque<Quantity> samples = getOrCreateDeque(_timerSamples, name);
+        samples.add(TsdQuantity.newInstance(Utility.convertTimeUnit(duration, unit, TimeUnit.SECONDS)));
     }
 
 
     @Override
     public void setGauge(final String name, final double value) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-            list.add(TsdQuantity.newInstance(value));
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
+        list.add(TsdQuantity.newInstance(value));
     }
 
     @Override
     public void setGauge(final String name, final long value) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
-            list.add(TsdQuantity.newInstance(value));
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        final Deque<Quantity> list = getOrCreateDeque(_gaugeSamples, name);
+        list.add(TsdQuantity.newInstance(value));
     }
 
     @Override
     public void addDimension(final String key, final String value) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            _dimensions.put(key, value);
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
         }
+        _dimensions.put(key, value);
     }
 
     @Override
     public void addDimensions(final Map<String, String> map) {
-        _openLock.readLock().lock();
-        try {
-            if (!assertIsOpen()) {
-                return;
-            }
-            for (final Map.Entry<String, String> entry : map.entrySet()) {
-                _dimensions.put(entry.getKey(), entry.getValue());
-            }
-        } finally {
-            _openLock.readLock().unlock();
+        if (!assertIsOpen()) {
+            return;
+        }
+        for (final Map.Entry<String, String> entry : map.entrySet()) {
+            _dimensions.put(entry.getKey(), entry.getValue());
         }
     }
 
     @Override
     public boolean isOpen() {
-        _openLock.readLock().lock();
-        try {
-            return _isOpen;
-        } finally {
-            _openLock.readLock().unlock();
-        }
+        return _isOpen;
     }
 
     @Override
     public void close() {
-        _openLock.writeLock().lock();
-        try {
-            if (!assertIsOpen(_isOpen)) {
-                return;
-            }
-            _isOpen = false;
-        } finally {
-            _openLock.writeLock().unlock();
+        if (!assertIsOpen(_isOpen)) {
+            return;
         }
+        _isOpen = false;
 
         _finalTimestamp = _clock.instant();
 
@@ -347,7 +275,7 @@ public class TsdMetrics implements Metrics {
     @Override
     public String toString() {
         return String.format(
-                "TsdMetrics{Sinks=%s, IsOpen=%b, Id=%s, InitialTimestamp=%s, FinalTimestamp=%s, Dimensions=%s}",
+                "LockFreeMetrics{Sinks=%s, IsOpen=%b, Id=%s, InitialTimestamp=%s, FinalTimestamp=%s, Dimensions=%s}",
                 _sinks,
                 _isOpen,
                 _id,
@@ -383,39 +311,25 @@ public class TsdMetrics implements Metrics {
         }
     }
 
-    // NOTE: Package private for testing
-    /* package private */ <T> T getOrCreate(final ConcurrentMap<String, T> map, final String key, final T newValue) {
-        final T currentValue = map.putIfAbsent(key, newValue);
-        if (currentValue != null) {
-            return currentValue;
-        }
-        return newValue;
-    }
-
     private Counter createCounterInternal(final String name) {
         if (!assertIsOpen()) {
             // To prevent the calling code from throwing a NPE we just return a
             // counter object; note that the call to assertIsOpen has already
             // logged a warning about incorrect use of the class.
-            return TsdCounter.newInstance(name, this::isOpen);
+            return new NoOpCounter();
         }
 
         // Create and register a new counter sample
         final Deque<Quantity> counters = getOrCreateDeque(_counterSamples, name);
-        final Counter newCounter = TsdCounter.newInstance(name, this::isOpen);
+        final TsdCounter newCounter = TsdCounter.newInstance(name, this::isOpen);
         counters.add(newCounter);
         return newCounter;
     }
 
-    private <T> ConcurrentLinkedDeque<T> getOrCreateDeque(
-            final ConcurrentMap<String, ConcurrentLinkedDeque<T>> map,
+    private <T> Deque<T> getOrCreateDeque(
+            final Map<String, Deque<T>> map,
             final String key) {
-        ConcurrentLinkedDeque<T> deque = map.get(key);
-        if (deque == null) {
-            final ConcurrentLinkedDeque<T> newDeque = new ConcurrentLinkedDeque<>();
-            deque = getOrCreate(map, key, newDeque);
-        }
-        return deque;
+        return map.computeIfAbsent(key, k -> new LinkedList<>());
     }
 
     private boolean assertIsOpen() {
@@ -425,7 +339,7 @@ public class TsdMetrics implements Metrics {
     private boolean assertIsOpen(final boolean isOpen) {
         if (!isOpen) {
             // This is in place of an exception; see class Javadoc
-            _logger.warn("TsdMetrics object was closed before an operation");
+            _logger.warn("LockFreeMetrics object was closed before an operation");
         }
         return isOpen;
     }
@@ -466,15 +380,15 @@ public class TsdMetrics implements Metrics {
         }
     }
 
-    // NOTE: Use an instance of TsdMetricsFactory to construct TsdMetrics instances.
-    /* package private */ TsdMetrics(
-            final UUID uuid, 
+    // NOTE: Use an instance of TsdMetricsFactory to construct LockFreeMetrics instances.
+    /* package private */ LockFreeMetrics(
+            final UUID uuid,
             final List<Sink> sinks) {
         this(uuid, sinks, Clock.systemUTC(), LOGGER);
     }
 
     // NOTE: Package private for testing.
-    /* package private */ TsdMetrics(
+    /* package private */ LockFreeMetrics(
             final UUID id,
             final List<Sink> sinks,
             final Clock clock,
@@ -483,7 +397,6 @@ public class TsdMetrics implements Metrics {
         _sinks = sinks;
         _logger = logger;
         _clock = clock;
-        _openLock = new ReentrantReadWriteLock(true);
         _initialTimestamp = _clock.instant();
         _id = id;
     }
@@ -493,20 +406,22 @@ public class TsdMetrics implements Metrics {
 
     private final List<Sink> _sinks;
     private final Logger _logger;
-    private final ReadWriteLock _openLock;
     private final Clock _clock;
     private final UUID _id;
     private final Instant _initialTimestamp;
-    private final ConcurrentMap<String, Counter> _counters = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, Timer> _timers = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _counterSamples = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _timerSamples = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, ConcurrentLinkedDeque<Quantity>> _gaugeSamples = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, AggregatedData> _aggregatedData = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, String> _dimensions = new ConcurrentHashMap<>();
+
+    // CHECKSTYLE.OFF: IllegalInstantiation - No Guava
+    private final Map<String, Counter> _counters = new HashMap<>();
+    private final Map<String, Timer> _timers = new HashMap<>();
+    private final Map<String, Deque<Quantity>> _counterSamples = new HashMap<>();
+    private final Map<String, Deque<Quantity>> _timerSamples = new HashMap<>();
+    private final Map<String, Deque<Quantity>> _gaugeSamples = new HashMap<>();
+    private final Map<String, AggregatedData> _aggregatedData = new HashMap<>();
+    private final Map<String, String> _dimensions = new HashMap<>();
+    // CHECKSTYLE.ON: IllegalInstantiation
     private final BiFunction<String, Counter, Counter> _createCounterBiFunction = new CreateCounterFunction();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetrics.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LockFreeMetrics.class);
     private static final Utility.Predicate<Quantity> PREDICATE_STOPPED_TIMERS = new Utility.StoppedTimersPredicate();
     private static final Utility.Predicate<Quantity> PREDICATE_NON_ABORTED_TIMERS = new Utility.NonAbortedTimersPredicate();
     private static final List<Utility.Predicate<Quantity>> TIMER_PREDICATE_LIST;
@@ -526,7 +441,7 @@ public class TsdMetrics implements Metrics {
         @Override
         public Counter apply(final String name, @Nullable final Counter existingValue) {
             if (existingValue == null) {
-                final Counter newCounter = TsdCounter.newInstance(name, TsdMetrics.this::isOpen);
+                final Counter newCounter = TsdCounter.newInstance(name, LockFreeMetrics.this::isOpen);
                 final Deque<Quantity> counters = getOrCreateDeque(_counterSamples, name);
                 counters.add(newCounter);
                 return newCounter;

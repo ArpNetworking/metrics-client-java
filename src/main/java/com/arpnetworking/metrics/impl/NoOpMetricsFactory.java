@@ -28,11 +28,18 @@ public class NoOpMetricsFactory implements MetricsFactory {
 
     @Override
     public Metrics create() {
-        return new NoOpMetrics();
+        return NO_OP_METRICS;
+    }
+
+    @Override
+    public Metrics createLockFree() {
+        return NO_OP_METRICS;
     }
 
     @Override
     public String toString() {
         return "NoOpMetricsFactory";
     }
+
+    private static final Metrics NO_OP_METRICS = new NoOpMetrics();
 }

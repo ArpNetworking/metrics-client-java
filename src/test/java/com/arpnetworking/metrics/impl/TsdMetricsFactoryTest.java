@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
@@ -70,9 +71,12 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                });
     }
 
     @Test
@@ -90,9 +94,12 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                });
     }
 
     @Test
@@ -105,9 +112,12 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                });
     }
 
     @Test
@@ -125,9 +135,12 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                });
     }
 
     @Test
@@ -148,11 +161,15 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-        Mockito.verify(sink).record(Mockito.any(Event.class));
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Mockito.reset(sink);
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                    metrics.close();
+                    Mockito.verify(sink).record(Mockito.any(Event.class));
+                });
     }
 
     @Test
@@ -173,11 +190,15 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-        Mockito.verify(sink).record(Mockito.any(Event.class));
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Mockito.reset(sink);
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                    metrics.close();
+                    Mockito.verify(sink).record(Mockito.any(Event.class));
+                });
     }
 
     @Test
@@ -195,15 +216,19 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
-
-        @SuppressWarnings("resource")
-        final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-        Mockito.verify(sink).record(eventCaptor.capture());
-        Assert.assertFalse(eventCaptor.getValue().getDimensions().containsKey("host"));
+        
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    @SuppressWarnings("resource")
+                    final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+                    Mockito.reset(sink);
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                    metrics.close();
+                    Mockito.verify(sink).record(eventCaptor.capture());
+                    Assert.assertFalse(eventCaptor.getValue().getDimensions().containsKey("host"));
+                });
     }
 
     @Test
@@ -224,16 +249,20 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
-        @SuppressWarnings("resource")
-        final Metrics metrics = metricsFactory.create();
-        Mockito.verify(logger).warn(
-                Mockito.eq("Unable to construct TsdMetrics, metrics disabled"),
-                Mockito.any(RuntimeException.class));
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Mockito.verify(logger).warn(
+                            Mockito.eq(String.format("Unable to construct %s, metrics disabled", type.getSimpleName())),
+                            Mockito.any(RuntimeException.class));
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                    metrics.close();
 
-        Mockito.verify(sink, Mockito.never()).record(Mockito.any(Event.class));
+                    Mockito.verify(sink, Mockito.never()).record(Mockito.any(Event.class));
+                    Mockito.reset(sink);
+                    Mockito.reset(logger);
+                });
     }
 
     @Test
@@ -246,13 +275,17 @@ public final class TsdMetricsFactoryTest {
         final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
                 .setSinks(sinks)
                 .build();
-        @SuppressWarnings("resource")
-        final Metrics metrics = metricsFactory.create();
-        Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
-        metrics.close();
-        Mockito.verify(sink1).record(Mockito.any(Event.class));
-        Mockito.verify(sink2).record(Mockito.any(Event.class));
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> {
+                    Mockito.reset(sink1);
+                    Mockito.reset(sink2);
+                    Assert.assertNotNull(metrics);
+                    Assert.assertEquals(type, metrics.getClass());
+                    metrics.close();
+                    Mockito.verify(sink1).record(Mockito.any(Event.class));
+                    Mockito.verify(sink2).record(Mockito.any(Event.class));
+                });
     }
 
     @Test
@@ -263,9 +296,9 @@ public final class TsdMetricsFactoryTest {
                 .build();
         Assert.assertEquals(0, metricsFactory.getSinks().size());
 
-        @SuppressWarnings("resource")
-        final Metrics metrics = metricsFactory.create();
-        metrics.close();
+        testOnCreateMethods(
+                metricsFactory,
+                (metrics, type) -> metrics.close());
     }
 
     @Test
@@ -282,6 +315,13 @@ public final class TsdMetricsFactoryTest {
         final Metrics metrics2 = metricsFactory.create();
         Assert.assertNotNull(metrics2);
         Mockito.verify(_mockUuidFactory, Mockito.times(2)).get();
+
+        final Metrics metricsLF = metricsFactory.createLockFree();
+        Assert.assertNotNull(metricsLF);
+        Mockito.verify(_mockUuidFactory, Mockito.times(3)).get();
+        final Metrics metricsLF2 = metricsFactory.createLockFree();
+        Assert.assertNotNull(metricsLF2);
+        Mockito.verify(_mockUuidFactory, Mockito.times(4)).get();
     }
 
     @Test
@@ -368,6 +408,11 @@ public final class TsdMetricsFactoryTest {
         final Optional<Class<? extends Sink>> sinkClass = TsdMetricsFactory.getSinkClass(
                 "com.arpnetworking.metrics.impl.NonExistentSink");
         Assert.assertFalse(sinkClass.isPresent());
+    }
+
+    private void testOnCreateMethods(final MetricsFactory factory, final BiConsumer<Metrics, Class<? extends Metrics>> test) {
+        test.accept(factory.create(), TsdMetrics.class);
+        test.accept(factory.createLockFree(), LockFreeMetrics.class);
     }
 
     @Mock

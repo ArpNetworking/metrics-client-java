@@ -15,18 +15,20 @@
  */
 package com.arpnetworking.metrics.impl;
 
-import com.arpnetworking.metrics.Quantity;
 import com.arpnetworking.metrics.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Simple thread-safe implementation of nanosecond {@link StopWatch}.
+ * Implementation of nanosecond {@link StopWatch}. This class is thread safe but
+ * does not provide synchronized access across threads.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class TsdStopWatch implements StopWatch {
+public final class TsdNanoStopWatch implements StopWatch {
 
     @Override
     public boolean isRunning() {
@@ -36,15 +38,17 @@ public final class TsdStopWatch implements StopWatch {
     @Override
     public void stop() {
         if (!_isRunning.getAndSet(false)) {
-            throw new IllegalStateException("StopWatch is not running.");
+            _logger.warn("Ignore call to stop; stopwatch already stopped");
+            return;
         }
-        _elapsedNanoSeconds = TsdQuantity.newInstance(System.nanoTime() - _startedAtNanoSeconds);
+        _elapsedNanoSeconds = System.nanoTime() - _startedAtNanoSeconds;
     }
 
     @Override
-    public Quantity getElapsedTime() {
+    public long getElapsedTime() {
         if (_isRunning.get()) {
-            throw new IllegalStateException("StopWatch is still running.");
+            _logger.warn("Invalid call to getElapsedTime; stopwatch not stopped");
+            return 0;
         }
         return _elapsedNanoSeconds;
     }
@@ -57,7 +61,7 @@ public final class TsdStopWatch implements StopWatch {
     @Override
     public String toString() {
         return String.format(
-                "TsdStopWatch{IsRunning=%s, StartNanos=%d, Elapsed=%s}",
+                "TsdNanoStopWatch{IsRunning=%s, StartNanos=%d, Elapsed=%s}",
                 _isRunning,
                 _startedAtNanoSeconds,
                 _elapsedNanoSeconds);
@@ -66,11 +70,20 @@ public final class TsdStopWatch implements StopWatch {
     /**
      * Create a new stop watch that is immediately started.
      */
-    public TsdStopWatch() {
+    public TsdNanoStopWatch() {
         _startedAtNanoSeconds = System.nanoTime();
+        _logger = DEFAULT_LOGGER;
+    }
+
+    TsdNanoStopWatch(final Logger logger) {
+        _startedAtNanoSeconds = System.nanoTime();
+        _logger = logger;
     }
 
     private final AtomicBoolean _isRunning = new AtomicBoolean(true);
-    private long _startedAtNanoSeconds;
-    private Quantity _elapsedNanoSeconds;
+    private final long _startedAtNanoSeconds;
+    private long _elapsedNanoSeconds;
+    private final Logger _logger;
+
+    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(TsdNanoStopWatch.class);
 }
