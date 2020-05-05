@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
  */
 public final class AugmentedHistogram implements AggregatedData {
 
-    public Map<Double, Integer> getHistogram() {
+    public Map<Double, Long> getHistogram() {
         return Collections.unmodifiableMap(_histogram);
     }
 
@@ -113,7 +113,7 @@ public final class AugmentedHistogram implements AggregatedData {
         _sum = builder._sum;
     }
 
-    private final Map<Double, Integer> _histogram;
+    private final Map<Double, Long> _histogram;
     private final int _precision;
     private final double _min;
     private final double _max;
@@ -203,7 +203,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * @param value The histogram.
          * @return This <code>Builder</code> instance.
          */
-        public Builder setHistogram(@Nullable final Map<Double, Integer> value) {
+        public Builder setHistogram(@Nullable final Map<Double, Long> value) {
             _histogram = value;
             return this;
         }
@@ -254,7 +254,7 @@ public final class AugmentedHistogram implements AggregatedData {
 
         private final Logger _logger;
 
-        private Map<Double, Integer> _histogram;
+        private Map<Double, Long> _histogram;
         private Integer _precision;
         private Double _min;
         private Double _max;
