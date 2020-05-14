@@ -15,6 +15,7 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -144,6 +145,6 @@ public final class TsdCounterTest {
         final String asString = TsdCounter.newInstance("counterName", isOpen).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
-        Assert.assertThat(asString, Matchers.containsString("counterName"));
+        MatcherAssert.assertThat(asString, Matchers.containsString("counterName"));
     }
 }

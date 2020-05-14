@@ -16,6 +16,7 @@
 package com.arpnetworking.metrics.impl;
 
 import com.arpnetworking.metrics.StopWatch;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,13 +46,13 @@ public final class TsdTimerTest {
             resourceTimer.stop();
         }
         final double elapsedTimeInNanoseconds = System.nanoTime() - startTime;
-        Assert.assertThat(
+        MatcherAssert.assertThat(
                 (Double) timer.getValue(),
                 Matchers.greaterThanOrEqualTo(TsdMetrics.convertTimeUnit(
                         minimumTimeInMilliseconds,
                         TimeUnit.MILLISECONDS,
                         TimeUnit.SECONDS)));
-        Assert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
+        MatcherAssert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
     }
 
     @Test
@@ -64,13 +65,13 @@ public final class TsdTimerTest {
             timer.stop();
 
             final double elapsedTimeInNanoseconds = System.nanoTime() - startTime;
-            Assert.assertThat(
+            MatcherAssert.assertThat(
                     (Double) timer.getValue(),
                     Matchers.greaterThanOrEqualTo(TsdMetrics.convertTimeUnit(
                             minimumTimeInMilliseconds,
                             TimeUnit.MILLISECONDS,
                             TimeUnit.SECONDS)));
-            Assert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
+            MatcherAssert.assertThat((Double) timer.getValue(), Matchers.lessThanOrEqualTo(elapsedTimeInNanoseconds));
         }
     }
 
@@ -194,7 +195,7 @@ public final class TsdTimerTest {
         final String asString = TsdTimer.newInstance("timerName", isOpen).toString();
         Assert.assertNotNull(asString);
         Assert.assertFalse(asString.isEmpty());
-        Assert.assertThat(asString, Matchers.containsString("timerName"));
+        MatcherAssert.assertThat(asString, Matchers.containsString("timerName"));
     }
 
     @Test
