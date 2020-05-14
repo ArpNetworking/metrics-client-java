@@ -201,7 +201,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * for details on truncation process.
          *
          * @param value The histogram.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setHistogram(@Nullable final Map<Double, Long> value) {
             _histogram = value;
@@ -212,7 +212,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * Set the precision. Cannot be null.
          *
          * @param value The precision.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setPrecision(@Nullable final Integer value) {
             _precision = value;
@@ -223,7 +223,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * Set the minimum. Cannot be null.
          *
          * @param value The minimum.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setMinimum(@Nullable final Double value) {
             _min = value;
@@ -234,7 +234,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * Set the maximum. Cannot be null.
          *
          * @param value The maximum.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setMaximum(@Nullable final Double value) {
             _max = value;
@@ -245,7 +245,7 @@ public final class AugmentedHistogram implements AggregatedData {
          * Set the sum. Cannot be null.
          *
          * @param value The sum.
-         * @return This <code>Builder</code> instance.
+         * @return This {@link Builder} instance.
          */
         public Builder setSum(@Nullable final Double value) {
             _sum = value;
