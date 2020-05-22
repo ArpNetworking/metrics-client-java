@@ -1,20 +1,20 @@
 MetricsJava Client
 ==================
 
-<a href="https://raw.githubusercontent.com/ArpNetworking/metrics-client-java/master/LICENSE">
+<a href="https://raw.githubusercontent.com/InscopeMetrics/metrics-client-java/master/LICENSE">
     <img src="https://img.shields.io/hexpm/l/plug.svg"
          alt="License: Apache 2">
 </a>
-<a href="https://travis-ci.org/ArpNetworking/metrics-client-java/">
-    <img src="https://travis-ci.org/ArpNetworking/metrics-client-java.png?branch=master"
+<a href="https://travis-ci.org/InscopeMetrics/metrics-client-java/">
+    <img src="https://travis-ci.org/InscopeMetrics/metrics-client-java.png?branch=master"
          alt="Travis Build">
 </a>
-<a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22">
-    <img src="https://img.shields.io/maven-central/v/com.arpnetworking.metrics/metrics-client.svg"
+<a href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%io.inscopemetrics.client%22%20a%3A%22metrics-client%22">
+    <img src="https://img.shields.io/maven-central/v/io.inscopemetrics.client/metrics-client.svg"
          alt="Maven Artifact">
 </a>
-<a href="http://www.javadoc.io/doc/com.arpnetworking.metrics/metrics-client">
-    <img src="http://www.javadoc.io/badge/com.arpnetworking.metrics/metrics-client.svg" 
+<a href="http://www.javadoc.io/doc/io.inscopemetrics.client/metrics-client">
+    <img src="http://www.javadoc.io/badge/io.inscopemetrics.client/metrics-client.svg"
          alt="Javadocs">
 </a>
 
@@ -26,7 +26,7 @@ Instrumenting Your Application
 
 ### Add Dependency
 
-Determine the latest version of the Java client in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.arpnetworking.metrics%22%20a%3A%22metrics-client%22).
+Determine the latest version of the Java client in [Maven Central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.inscopemetrics.client%22%20a%3A%22metrics-client%22).
 
 #### Maven
 
@@ -34,7 +34,7 @@ Add a dependency to your pom:
 
 ```xml
 <dependency>
-    <groupId>com.arpnetworking.metrics</groupId>
+    <groupId>io.inscopemetrics.client</groupId>
     <artifactId>metrics-client</artifactId>
     <version>VERSION</version>
 </dependency>
@@ -46,7 +46,7 @@ The Maven Central repository is included by default.
 
 Add a dependency to your build.gradle:
 
-    compile group: 'com.arpnetworking.metrics', name: 'metrics-client', version: 'VERSION'
+    compile group: 'io.inscopemetrics.client', name: 'metrics-client', version: 'VERSION'
 
 Add the Maven Central Repository into your *build.gradle*:
 
@@ -62,29 +62,21 @@ Add a dependency to your project/Build.scala:
 
 ```scala
 val appDependencies = Seq(
-    "com.arpnetworking.metrics" % "metrics-client" % "VERSION"
+    "io.inscopemetrics.client" % "metrics-client" % "VERSION"
 )
 ```
 
 The Maven Central repository is included by default.
 
-#### Sink
-
-Add a dependency on one or more of the sink implementations such as [metrics-apache-http-sink-extra](https://github.com/ArpNetworking/metrics-apache-http-sink-extra)
-or [metrics-file-sink-extra](https://github.com/ArpNetworking/metrics-file-sink-extra). If found the *ApacheHttpSink* is
-used by default (with default settings) or if not found then the *FileSink* is used by default (with default settings). You
-may also specify the sinks to use to the *MetricsFactory.Builder*. If you get warnings in your log "No default sink found." 
-it means that you don't have one of the default sinks available and need to specify one or more to the builder.
-
 #### Vertx
 
-Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package.  The vertx-extra provides
-the necessary wrappers around the standard Java metrics client to work with the shared data model in Vertx.  Special thanks
-to Gil Markham for contributing this work.  For more information please see [metrics-vertx-extra/README.md](https://github.com/ArpNetworking/metrics-vertx-extra).
+Users of Vertx need to depend on the vertx-extra package instead of the metrics-client package. The vertx-extra provides
+the necessary wrappers around the standard Java metrics client to work with the shared data model in Vertx. Special thanks
+to Gil Markham for contributing this work. For more information please see [metrics-vertx-extra/README.md](https://github.com/ArpNetworking/metrics-vertx-extra).
 
 ### MetricsFactory
 
-Your application should instantiate a single instance of MetricsFactory.  For example:
+Your application should instantiate a single instance of MetricsFactory. For example:
 
 ```java
 final Map<String, String> defaultDimensions = new HashMap<>();
@@ -98,7 +90,7 @@ final MetricsFactory metricsFactory = TsdMetricsFactory.newInstance(
 Please note that `BackgroundCachingHostResolver` is from [ArpNetworking Commons](https://github.com/ArpNetworking/commons)
 although you can use any [Supplier](https://docs.oracle.com/javase/8/docs/api/java/util/function/Supplier.html) as the value.
 
-Alternatively, you can customize construction using the Builder.  For example:
+Alternatively, you can customize construction using the Builder. For example:
 
 ```java
 final Map<String, String> defaultDimensions = new HashMap<>();
@@ -121,14 +113,14 @@ final MetricsFactory metricsFactory = new TsdMetricsFactory.Builder()
         .build();
 ```
 
-Other options on the TsdLogSink include _immediateFlush_ and _prudent_.  The former is used to flush all writes to disk
+Other options on the TsdLogSink include _immediateFlush_ and _prudent_. The former is used to flush all writes to disk
 immediately while the latter performs file access in a more conservative manner enabling multiple processes to write to
-the same file (assuming they all have _prudent_ set to true).  Setting either _immediateFlush_ or _prudent_ to _true_
+the same file (assuming they all have _prudent_ set to true). Setting either _immediateFlush_ or _prudent_ to _true_
 will have non-trivial performance impact.
 
 ### Metrics
 
-The MetricsFactory is used to create a Metrics instance for each unit of work.  For example:
+The MetricsFactory is used to create a Metrics instance for each unit of work. For example:
 
  ```java
 final Metrics metrics = metricsFactory.create();
@@ -149,21 +141,23 @@ metrics.close();
 
 ### Injection
 
-Passing the MetricsFactory instance around your code is far from ideal.  We strongly recommend a combination of two
-techniques to keep metrics from polluting your interfaces.  First, use a dependency injection framework like Spring or
+Passing the MetricsFactory instance around your code is far from ideal. We strongly recommend a combination of two
+techniques to keep metrics from polluting your interfaces. First, use a dependency injection framework like Spring or
 Guice to create your TsdMetricsFactory instance and inject it into the parts of your code that initiate units of work.
 
 Next, the unit of work entry points can leverage thread local storage to distribute the Metrics instance for each unit
-of work transparently throughout your codebase.  Log4J calls this a Mapped Diagnostics Context (MDC) and it is also
+of work transparently throughout your codebase. Log4J calls this a Mapped Diagnostics Context (MDC) and it is also
 available in LogBack although you will have to create a static thread-safe store (read ConcurrentMap) of Metrics
 instances since the LogBack implementation is limited to Strings.
 
 One important note, if your unit of work leverages additional worker threads you need to pass the Metrics instance from
-the parent thread's MDC into the child thread's MDC.
+the parent thread's MDC into the child thread's MDC. Further, if you use a framework like Akka or Vert.x that manages
+your threadpool for you, then you will either need to confine a Metrics instance to a particular execution context or
+else integrate it with the framework. This package provides a lock free implementation for such frameworks.
 
 ### Counters
 
-Surprisingly, counters are probably more difficult to use and interpret than timers and gauges.  In the simplest case
+Surprisingly, counters are probably more difficult to use and interpret than timers and gauges. In the simplest case
 you can just starting counting, for example, iterations of a loop:
 
 ```java
@@ -200,8 +194,8 @@ for (List<String> listOfString : Arrays.asList(
 ```
 
 The above code will produce a number of samples equal to the size of listOfListOfStrings (including no samples if
-listOfListOfStrings is empty).  If you move the resetCounter call outside the outer loop the code always produces a
-single sample (even if listOfListOfStrings is empty).  There is a significant difference between counting the total
+listOfListOfStrings is empty). If you move the resetCounter call outside the outer loop the code always produces a
+single sample (even if listOfListOfStrings is empty). There is a significant difference between counting the total
 number of strings and the number of strings per list; especially, when computing and analyzing statistics such as
 percentiles.
 
@@ -221,23 +215,23 @@ The Counter object example extends in a similar way for nested loops.
 ### Timers
 
 Timers are very easy to use. The only note worth making is that when using timers - either procedural or via objects -
-do not forget to stop/close the timer!  If you fail to do this the client will log a warning and suppress any
+do not forget to stop/close the timer! If you fail to do this the client will log a warning and suppress any
 unstopped/unclosed samples.
 
-The timer object allows a timer sample to be detached from the Metrics instance.  One common usage is in
+The timer object allows a timer sample to be detached from the Metrics instance. One common usage is in
 request/response filters (e.g. for Jersey and RestEasy) where the timer is started on the inbound filter and
 stopped/closed on the outbound filter.
 
 The timer instance is also very useful in a concurrent system when executing and thus measuring the same event multiple
-times concurrently for the same unit of work.  The one caveat is to ensure the timer objects are stopped/closed before
-the Metrics instance is closed.  Failing to do so will log a warning and suppress any samples stopped/closed after the
+times concurrently for the same unit of work. The one caveat is to ensure the timer objects are stopped/closed before
+the Metrics instance is closed. Failing to do so will log a warning and suppress any samples stopped/closed after the
 Metrics instance is closed.
 
 ### Gauges
 
-Gauges are the simplest metric to record.  Samples for a gauge represent spot measurements. For example, the length of a
-queue or the number of active threads in a thread pool.  Gauges are often used in separate units of work to measure the
-state of system resources, for example the row count in a database table.  However, gauges are also useful in existing
+Gauges are the simplest metric to record. Samples for a gauge represent spot measurements. For example, the length of a
+queue or the number of active threads in a thread pool. Gauges are often used in separate units of work to measure the
+state of system resources, for example the row count in a database table. However, gauges are also useful in existing
 units of work, for example recording the memory in use at the beginning and end of each service request.
 
 ### Annotations
@@ -248,7 +242,7 @@ outside the scope of the Metrics project. Currently, the Metrics project makes n
 ### Closeable
 
 The Metrics interface as well as the Timer and Counter interfaces extend [Closeable](http://docs.oracle.com/javase/7/docs/api/java/io/Closeable.html)
-which allows you to use Java 7's try-with-resources pattern.  For example:
+which allows you to use Java 7's try-with-resources pattern. For example:
 
 ```java
 try (Metrics metrics = metricsFactory.create()) {
@@ -266,17 +260,17 @@ Building
 --------
 
 Prerequisites:
-* [JDK8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) (Or Invoke with JDKW)
+* _None_
 
 Building:
 
-    metrics-client-java> ./mvnw verify
+    metrics-client-java> ./jdk-wrapper.sh ./mvnw verify
 
 To use the local version you must first install it locally:
 
-    metrics-client-java> ./mvnw install
+    metrics-client-java> ./jdk-wrapper.sh ./mvnw install
 
-You can determine the version of the local build from the pom file.  Using the local version is intended only for testing or development.
+You can determine the version of the local build from the pom file. Using the local version is intended only for testing or development.
 
 You may also need to add the local repository to your build in order to pick-up the local version:
 
@@ -289,4 +283,4 @@ License
 
 Published under Apache Software License 2.0, see LICENSE
 
-&copy; Groupon Inc., 2014
+&copy; Inscope Metrics Inc., 2020

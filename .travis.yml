@@ -11,7 +11,7 @@ env:
   - secure: lzNUHmeWnJ6KM1aB0k/U4j2PPaIq2f/TnxIwrkmd/Cmj3VL1GJh7KJn7A84ifeMzmU6eH2E8KK4U2G4jR5C0MYiEJz+vUfNb4HWLisPEPcTKr1L2XHuSd+XnijscH9wQkrLrlPgs/XaYTiiIMXqEw4UIxjMbo4eKDLE9zEXpe7iDil+Mbut7u2+5L1D3HFClxG3l5cTKRR8S4Je68l1XUraMvJYxcR1uPqTZVmmqQ1oWrRFMW+RdbIRyok3h+tot4LulZZ0OFB7UIBI/KfD0/4WWCz3E79AXwm9uTRLuTAKl1yJTh46CAzskuGPjNkMjM5IJCxTK6OEF1A1JouQ4gCdSDMpJSIr0prWa4MZ6iv9OSihiDDSwX1u/gUI0bH47ikstWamlLV4EzVDEatQta81vVTwQqNcK6N6K2Af5a6sFuFksGgYKqpoIrY7UgeIu/rwupBE5AdrUoYPbzR6YzAqAfyEx9tBZ0XV6kxdThMp5hQ0QFixN36TInYfo6dHZHa3JwAc3uckchnl3UxYdubIaaiWeUfs3IsUygO54HMi/FnlBWwlnWVeaCcBB4w6Oc4rs07i6DZLIkPPbWdWEw9DO2+39bUFS6p9DgaqntZ6vgkyg53jjjjP3LP7YR6WLVg24HlHYw62u1E/ZUgrcQjQjAeeDWdw0P1x0pC80lW8=
 install: true
 before_script:
-- gpg --import arpnetworking.key
+- gpg --import ism.key
 - if [ \( -n "${TRAVIS_TAG}" \) -a  "${TRAVIS_PULL_REQUEST}" = "false" ]; then export TARGET="deploy -P release --settings settings.xml"; fi;
 script:
 - ./jdk-wrapper.sh ./mvnw clean ${TARGET} -U

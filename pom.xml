@@ -16,20 +16,20 @@
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <groupId>com.arpnetworking.build</groupId>
-    <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>2.0.1</version>
+    <groupId>io.inscopemetrics.build</groupId>
+    <artifactId>parent-pom</artifactId>
+    <version>2.2.0</version>
     <relativePath />
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.arpnetworking.metrics</groupId>
+  <groupId>io.inscopemetrics.client</groupId>
   <artifactId>metrics-client</artifactId>
   <packaging>jar</packaging>
   <name>Metrics Client (Java)</name>
   <description>Client library in Java for metrics collection and publication.</description>
-  <url>https://github.com/ArpNetworking/metrics-client-java</url>
-  <version>0.11.1-SNAPSHOT</version>
+  <url>https://github.com/InscopeMetrics/metrics-client-java</url>
+  <version>1.0.0-RC1-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -60,25 +60,28 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</connection>
-    <developerConnection>scm:git:git@github.com:arpnetworking/metrics-client-java.git</developerConnection>
-    <url>https://github.com/arpnetworking/metrics-client-java</url>
+    <connection>scm:git:git@github.com:inscopemetrics/metrics-client-java.git</connection>
+    <developerConnection>scm:git:git@github.com:inscopemetrics/metrics-client-java.git</developerConnection>
+    <url>https://github.com/inscopemetrics/metrics-client-java</url>
     <tag>HEAD</tag>
   </scm>
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.18.1</arpnetworking.commons.version>
-    <findbugs.annotations.version>3.0.1</findbugs.annotations.version>
-    <hamcrest.version>2.1</hamcrest.version>
+    <arpnetworking.commons.version>1.18.2</arpnetworking.commons.version>
+    <spotbugs.annotations.version>4.0.2</spotbugs.annotations.version>
+    <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13</junit.version>
     <mockito.version>2.23.4</mockito.version>
     <slf4j.version>1.7.25</slf4j.version>
 
+    <!-- Checkstyle -->
+    <checkstyleExtraSuppressions>${project.basedir}/extra-checkstyle-suppressions.xml</checkstyleExtraSuppressions>
+
     <!-- Spotbugs -->
     <!-- NOTE: Custom version excludes sample code as well -->
-    <spotbugs.exclude>${project.basedir}/findbugs.exclude.xml</spotbugs.exclude>
+    <spotbugs.exclude>${project.basedir}/spotbugs.exclude.xml</spotbugs.exclude>
 
     <!-- Code Coverage -->
     <jacoco.check.line.coverage>1.0</jacoco.check.line.coverage>
@@ -133,9 +136,9 @@
       <version>${jsr305.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>findbugs-annotations</artifactId>
-      <version>${findbugs.annotations.version}</version>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>${spotbugs.annotations.version}</version>
     </dependency>
 
     <!-- Test dependencies -->

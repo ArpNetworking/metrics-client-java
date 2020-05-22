@@ -6,7 +6,7 @@
       <password>${env.OSSRH_PASS}</password>
     </server>
     <server>
-      <id>arpnet</id>
+      <id>ism</id>
       <passphrase>${env.GPG_PASS}</passphrase>
     </server>
   </servers>
