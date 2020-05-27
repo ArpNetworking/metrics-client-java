@@ -145,7 +145,7 @@ public final class HttpSink implements Sink {
         events.push(event);
         final int eventCount = eventsCount.incrementAndGet();
         if (eventCount > bufferSize) {
-            eventsDroppedLogger.getLogger().warn(
+            eventsDroppedLogger.warn(
                     "Event queue is full; dropping event(s)");
             final Event droppedEvent = this.events.pollFirst();
             eventHandler.ifPresent(eh -> eh.droppedEvent(droppedEvent));
@@ -226,7 +226,7 @@ public final class HttpSink implements Sink {
                     // CHECKSTYLE.OFF: IllegalCatch - Ensure exception neutrality
                 } catch (final RuntimeException e) {
                     // CHECKSTYLE.ON: IllegalCatch
-                    dispatchErrorLogger.getLogger().error("MetricsSinkApacheHttpWorker failure", e);
+                    dispatchErrorLogger.error("MetricsSinkApacheHttpWorker failure", e);
                 }
             }
         }
@@ -259,7 +259,7 @@ public final class HttpSink implements Sink {
                 // CHECKSTYLE.OFF: MagicNumber - Http codes are three digits
                 if ((statusCode / 100) != 2) {
                     // CHECKSTYLE.ON: MagicNumber
-                    dispatchErrorLogger.getLogger().error(
+                    dispatchErrorLogger.error(
                             String.format(
                                     "Received failure response when sending metrics to HTTP endpoint; uri=%s, status=%s",
                                     uri,
@@ -270,7 +270,7 @@ public final class HttpSink implements Sink {
                 // CHECKSTYLE.OFF: IllegalCatch - Prevent leaking exceptions; it makes testing more complex
             } catch (final RuntimeException | IOException e) {
                 // CHECKSTYLE.ON: IllegalCatch
-                dispatchErrorLogger.getLogger().error(
+                dispatchErrorLogger.error(
                         String.format(
                                 "Encountered failure when sending metrics to HTTP endpoint; uri=%s",
                                 uri),
@@ -376,7 +376,7 @@ public final class HttpSink implements Sink {
                                 .build()
                 );
             } else if (aggregatedData != null) {
-                unsupportedDataLogger.getLogger().error(
+                unsupportedDataLogger.error(
                         String.format(
                                 "Unsupported aggregated data type; class=%s",
                                 aggregatedData.getClass().getName()));
