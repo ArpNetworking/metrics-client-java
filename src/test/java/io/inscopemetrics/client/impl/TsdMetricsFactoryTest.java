@@ -99,7 +99,7 @@ public final class TsdMetricsFactoryTest {
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
         assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
         assertEquals(1, metricsFactory.getSinks().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -122,7 +122,7 @@ public final class TsdMetricsFactoryTest {
         assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
         assertEquals("MyHost", metricsFactory.getDefaultComputedDimensions().get("host").get());
         assertEquals(1, metricsFactory.getSinks().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -140,7 +140,7 @@ public final class TsdMetricsFactoryTest {
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
         assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -162,8 +162,7 @@ public final class TsdMetricsFactoryTest {
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
         assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
-        assertEquals(1, metricsFactory.getSinks().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().isEmpty());
 
         testOnCreateMethods(
                 metricsFactory,
@@ -177,7 +176,6 @@ public final class TsdMetricsFactoryTest {
     public void testBuilderNullDefaultDimensions() {
         final Logger logger = mock(Logger.class);
         final Sink sink = mock(Sink.class);
-        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultDimensions(null)
                 .setSinks(Collections.singletonList(sink))
@@ -206,7 +204,6 @@ public final class TsdMetricsFactoryTest {
     public void testBuilderNullDefaultComputedDimensions() {
         final Logger logger = mock(Logger.class);
         final Sink sink = mock(Sink.class);
-        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultComputedDimensions(null)
                 .setSinks(Collections.singletonList(sink))

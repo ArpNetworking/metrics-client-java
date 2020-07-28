@@ -364,9 +364,13 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<MetricsFactory> {
 
+        private static final List<Sink> EMPTY_SINKS = Collections.emptyList();
+        private static final Map<String, String> EMPTY_DEFAULT_DIMENSIONS = Collections.emptyMap();
+        private static final Map<String, Supplier<String>> EMPTY_DEFAULT_COMPUTED_DIMENSIONS = Collections.emptyMap();
+
         private static final List<Sink> DEFAULT_SINKS = Collections.singletonList(new HttpSink.Builder().build());
-        private static final Map<String, String> DEFAULT_DEFAULT_DIMENSIONS = Collections.emptyMap();
-        private static final Map<String, Supplier<String>> DEFAULT_DEFAULT_COMPUTED_DIMENSIONS = Collections.emptyMap();
+        private static final Map<String, String> DEFAULT_DEFAULT_DIMENSIONS = EMPTY_DEFAULT_DIMENSIONS;
+        private static final Map<String, Supplier<String>> DEFAULT_DEFAULT_COMPUTED_DIMENSIONS = EMPTY_DEFAULT_COMPUTED_DIMENSIONS;
         private static final Supplier<UUID> DEFAULT_UUID_FACTORY = new SplittableRandomUuidFactory();
 
         private final Logger logger;
@@ -397,22 +401,28 @@ public class TsdMetricsFactory implements MetricsFactory {
         public MetricsFactory build() {
             // Defaults
             if (sinks == null) {
-                sinks = DEFAULT_SINKS;
+                sinks = EMPTY_SINKS;
                 logger.info(String.format(
                         "Defaulted null sinks; sinks=%s",
                         sinks));
             }
             if (defaultDimensions == null) {
-                defaultDimensions = DEFAULT_DEFAULT_DIMENSIONS;
+                defaultDimensions = EMPTY_DEFAULT_DIMENSIONS;
                 logger.info(String.format(
                         "Defaulted null default dimensions; defaultDimensions=%s",
                         defaultDimensions));
             }
             if (defaultComputedDimensions == null) {
-                defaultComputedDimensions = DEFAULT_DEFAULT_COMPUTED_DIMENSIONS;
+                defaultComputedDimensions = EMPTY_DEFAULT_COMPUTED_DIMENSIONS;
                 logger.info(String.format(
                         "Defaulted null default computed dimensions; defaultComputedDimensions=%s",
                         defaultComputedDimensions));
+            }
+            if (uuidFactory == null) {
+                uuidFactory = DEFAULT_UUID_FACTORY;
+                logger.info(String.format(
+                        "Defaulted null uuid factory; uuidFactory=%s",
+                        uuidFactory));
             }
 
             return new TsdMetricsFactory(this);
