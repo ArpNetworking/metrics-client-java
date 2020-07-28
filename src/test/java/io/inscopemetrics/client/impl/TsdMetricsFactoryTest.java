@@ -23,11 +23,11 @@ import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.MetricsFactory;
 import io.inscopemetrics.client.Sink;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -63,6 +63,7 @@ import static org.mockito.Mockito.when;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
+@RunWith(MockitoJUnitRunner.StrictStubs.class)
 public final class TsdMetricsFactoryTest {
 
     private static final Map<String, String> DEFAULT_DIMENSIONS;
@@ -84,11 +85,6 @@ public final class TsdMetricsFactoryTest {
     private HostResolver mockHostResolver;
     @Mock
     private UuidFactory mockUuidFactory;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @AfterClass
     public static void afterClass() {

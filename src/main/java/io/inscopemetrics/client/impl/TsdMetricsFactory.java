@@ -154,15 +154,7 @@ import javax.annotation.Nullable;
  */
 public class TsdMetricsFactory implements MetricsFactory {
 
-    private static final List<String> DEFAULT_SINK_CLASS_NAMES;
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetricsFactory.class);
-
-    static {
-        final List<String> sinkClassNames = new ArrayList<>();
-        sinkClassNames.add("com.arpnetworking.metrics.impl.HttpSink");
-        sinkClassNames.add("com.arpnetworking.metrics.impl.FileSink");
-        DEFAULT_SINK_CLASS_NAMES = Collections.unmodifiableList(sinkClassNames);
-    }
 
     private final List<Sink> sinks;
     private final Supplier<UUID> uuidFactory;
@@ -372,7 +364,7 @@ public class TsdMetricsFactory implements MetricsFactory {
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<MetricsFactory> {
 
-        private static final List<Sink> DEFAULT_SINKS = createDefaultSinks(DEFAULT_SINK_CLASS_NAMES);
+        private static final List<Sink> DEFAULT_SINKS = Collections.singletonList(new HttpSink.Builder().build());
         private static final Map<String, String> DEFAULT_DEFAULT_DIMENSIONS = Collections.emptyMap();
         private static final Map<String, Supplier<String>> DEFAULT_DEFAULT_COMPUTED_DIMENSIONS = Collections.emptyMap();
         private static final Supplier<UUID> DEFAULT_UUID_FACTORY = new SplittableRandomUuidFactory();
