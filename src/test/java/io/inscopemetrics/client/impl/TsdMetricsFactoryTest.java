@@ -27,7 +27,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
@@ -48,6 +47,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.startsWith;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for {@link TsdMetricsFactory}.
@@ -129,7 +138,7 @@ public final class TsdMetricsFactoryTest {
 
     @Test
     public void testBuilderDefaults() {
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger).build();
 
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
@@ -147,12 +156,12 @@ public final class TsdMetricsFactoryTest {
 
     @Test
     public void testBuilderNullSinks() {
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setSinks(null)
                 .build();
 
-        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null sinks; sinks="));
+        verify(logger).info(startsWith("Defaulted null sinks; sinks="));
 
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
@@ -170,15 +179,15 @@ public final class TsdMetricsFactoryTest {
 
     @Test
     public void testBuilderNullDefaultDimensions() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Sink sink = Mockito.mock(Sink.class);
-        Mockito.doReturn("MyHost").when(mockHostResolver).get();
+        final Logger logger = mock(Logger.class);
+        final Sink sink = mock(Sink.class);
+        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultDimensions(null)
                 .setSinks(Collections.singletonList(sink))
                 .build();
 
-        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null default dimensions; defaultDimensions="));
+        verify(logger).info(startsWith("Defaulted null default dimensions; defaultDimensions="));
 
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
@@ -189,25 +198,25 @@ public final class TsdMetricsFactoryTest {
         testOnCreateMethods(
                 metricsFactory,
                 (metrics, type) -> {
-                    Mockito.reset(sink);
+                    reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
                     metrics.close();
-                    Mockito.verify(sink).record(Mockito.any(Event.class));
+                    verify(sink).record(any(Event.class));
                 });
     }
 
     @Test
     public void testBuilderNullDefaultComputedDimensions() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Sink sink = Mockito.mock(Sink.class);
-        Mockito.doReturn("MyHost").when(mockHostResolver).get();
+        final Logger logger = mock(Logger.class);
+        final Sink sink = mock(Sink.class);
+        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultComputedDimensions(null)
                 .setSinks(Collections.singletonList(sink))
                 .build();
 
-        Mockito.verify(logger).info(Mockito.startsWith("Defaulted null default computed dimensions; defaultComputedDimensions="));
+        verify(logger).info(startsWith("Defaulted null default computed dimensions; defaultComputedDimensions="));
 
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
@@ -218,18 +227,18 @@ public final class TsdMetricsFactoryTest {
         testOnCreateMethods(
                 metricsFactory,
                 (metrics, type) -> {
-                    Mockito.reset(sink);
+                    reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
                     metrics.close();
-                    Mockito.verify(sink).record(Mockito.any(Event.class));
+                    verify(sink).record(any(Event.class));
                 });
     }
 
     @Test
     public void testBuilderComputedDimensionNull() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Sink sink = Mockito.mock(Sink.class);
+        final Logger logger = mock(Logger.class);
+        final Sink sink = mock(Sink.class);
         final Supplier<String> nullHostnameProvider = () -> null;
 
         final TsdMetricsFactory.Builder metricsFactoryBuilder = new TsdMetricsFactory.Builder(logger)
@@ -247,19 +256,19 @@ public final class TsdMetricsFactoryTest {
                 (metrics, type) -> {
                     @SuppressWarnings("resource")
                     final ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
-                    Mockito.reset(sink);
+                    reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
                     metrics.close();
-                    Mockito.verify(sink).record(eventCaptor.capture());
+                    verify(sink).record(eventCaptor.capture());
                     assertFalse(eventCaptor.getValue().getDimensions().containsKey("host"));
                 });
     }
 
     @Test
     public void testBuilderComputedDimensionFailure() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Sink sink = Mockito.mock(Sink.class);
+        final Logger logger = mock(Logger.class);
+        final Sink sink = mock(Sink.class);
         final Supplier<String> failingHostnameProvider = () -> {
             throw new RuntimeException("Test Exception");
         };
@@ -277,23 +286,23 @@ public final class TsdMetricsFactoryTest {
         testOnCreateMethods(
                 metricsFactory,
                 (metrics, type) -> {
-                    Mockito.verify(logger).warn(
-                            Mockito.eq(String.format("Unable to construct %s, metrics disabled", type.getSimpleName())),
-                            Mockito.any(RuntimeException.class));
+                    verify(logger).warn(
+                            eq(String.format("Unable to construct %s, metrics disabled", type.getSimpleName())),
+                            any(RuntimeException.class));
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
                     metrics.close();
 
-                    Mockito.verify(sink, Mockito.never()).record(Mockito.any(Event.class));
-                    Mockito.reset(sink);
-                    Mockito.reset(logger);
+                    verify(sink, never()).record(any(Event.class));
+                    reset(sink);
+                    reset(logger);
                 });
     }
 
     @Test
     public void testBuilderSinks() {
-        final Sink sink1 = Mockito.mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink1");
-        final Sink sink2 = Mockito.mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink2");
+        final Sink sink1 = mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink1");
+        final Sink sink2 = mock(Sink.class, "TsdMetricsFactoryTest.testCreate.sink2");
         final List<Sink> sinks = new ArrayList<>();
         sinks.add(sink1);
         sinks.add(sink2);
@@ -303,19 +312,19 @@ public final class TsdMetricsFactoryTest {
         testOnCreateMethods(
                 metricsFactory,
                 (metrics, type) -> {
-                    Mockito.reset(sink1);
-                    Mockito.reset(sink2);
+                    reset(sink1);
+                    reset(sink2);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
                     metrics.close();
-                    Mockito.verify(sink1).record(Mockito.any(Event.class));
-                    Mockito.verify(sink2).record(Mockito.any(Event.class));
+                    verify(sink1).record(any(Event.class));
+                    verify(sink2).record(any(Event.class));
                 });
     }
 
     @Test
     public void testBuilderNoSinks() {
-        final Logger logger = Mockito.mock(Logger.class);
+        final Logger logger = mock(Logger.class);
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setSinks(Collections.emptyList())
                 .build();
@@ -328,7 +337,7 @@ public final class TsdMetricsFactoryTest {
 
     @Test
     public void testCustomUuidFactory() {
-        Mockito.when(mockUuidFactory.get()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
+        when(mockUuidFactory.get()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
 
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder()
                 .setUuidFactory(mockUuidFactory)
@@ -336,17 +345,17 @@ public final class TsdMetricsFactoryTest {
 
         final Metrics metrics = metricsFactory.create();
         assertNotNull(metrics);
-        Mockito.verify(mockUuidFactory, Mockito.times(1)).get();
+        verify(mockUuidFactory, times(1)).get();
         final Metrics metrics2 = metricsFactory.create();
         assertNotNull(metrics2);
-        Mockito.verify(mockUuidFactory, Mockito.times(2)).get();
+        verify(mockUuidFactory, times(2)).get();
 
         final Metrics metricsLF = metricsFactory.createLockFree();
         assertNotNull(metricsLF);
-        Mockito.verify(mockUuidFactory, Mockito.times(3)).get();
+        verify(mockUuidFactory, times(3)).get();
         final Metrics metricsLF2 = metricsFactory.createLockFree();
         assertNotNull(metricsLF2);
-        Mockito.verify(mockUuidFactory, Mockito.times(4)).get();
+        verify(mockUuidFactory, times(4)).get();
     }
 
     @Test

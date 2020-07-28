@@ -17,7 +17,6 @@ package io.inscopemetrics.client.impl;
 
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 import org.slf4j.Logger;
 
@@ -28,6 +27,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Tests for {@link TsdTimer}.
@@ -82,9 +85,9 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
         timer.close();
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         timer.close();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -93,9 +96,9 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
         timer.abort();
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         timer.abort();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -104,9 +107,9 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
         timer.abort();
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         timer.close();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -115,9 +118,9 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
         timer.close();
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         timer.abort();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -125,9 +128,9 @@ public final class TsdTimerTest {
         final org.slf4j.Logger logger = createSlf4jLoggerMock();
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
-        Mockito.verify(logger, Mockito.never()).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger, never()).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
         timer.getValue();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -136,9 +139,9 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", logger);
         timer.abort();
-        Mockito.verifyZeroInteractions(logger);
+        verifyNoInteractions(logger);
         timer.getValue();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test
@@ -172,6 +175,6 @@ public final class TsdTimerTest {
     }
 
     private Logger createSlf4jLoggerMock() {
-        return Mockito.mock(org.slf4j.Logger.class);
+        return mock(org.slf4j.Logger.class);
     }
 }

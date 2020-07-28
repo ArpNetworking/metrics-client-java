@@ -18,7 +18,6 @@ package io.inscopemetrics.client.impl;
 import io.inscopemetrics.client.StopWatch;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 
 import java.util.concurrent.TimeUnit;
@@ -27,6 +26,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 /**
  * Tests for {@link TsdNanoStopWatch}.
@@ -66,10 +67,10 @@ public final class TsdNanoStopWatchTest {
 
     @Test
     public void testElapsedBeforeStop() {
-        final org.slf4j.Logger logger = Mockito.mock(org.slf4j.Logger.class);
+        final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final StopWatch stopWatch = new TsdNanoStopWatch(logger);
         stopWatch.getElapsedTime();
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
+        verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
 
     @Test

@@ -20,7 +20,6 @@ import io.inscopemetrics.client.Event;
 import io.inscopemetrics.client.Sink;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.hamcrest.MockitoHamcrest;
 import org.slf4j.Logger;
 
@@ -31,6 +30,9 @@ import java.util.List;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * Tests for {@link WarningSink}.
@@ -45,8 +47,8 @@ public final class WarningSinkTest {
         reasons.add("reason1");
         reasons.add("reason2");
 
-        final Logger logger = Mockito.mock(Logger.class);
-        final Event event = Mockito.mock(Event.class);
+        final Logger logger = mock(Logger.class);
+        final Event event = mock(Event.class);
         final Sink sink = new WarningSink.Builder()
                 .setReasons(reasons)
                 .setLogger(logger)
@@ -60,16 +62,16 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+        verifyNoInteractions(event);
+        verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString(reasons.toString())));
     }
 
     @Test
     @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     public void testWarningSinkBuilderNullReasons() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Event event = Mockito.mock(Event.class);
+        final Logger logger = mock(Logger.class);
+        final Event event = mock(Event.class);
         final Sink sink = new WarningSink.Builder()
                 .setReasons(null)
                 .setLogger(logger)
@@ -77,15 +79,15 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+        verifyNoInteractions(event);
+        verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString("Reasons must be a non-null list")));
     }
 
     @Test
     public void testWarningSinkBuilderEmptyReasons() {
-        final Logger logger = Mockito.mock(Logger.class);
-        final Event event = Mockito.mock(Event.class);
+        final Logger logger = mock(Logger.class);
+        final Event event = mock(Event.class);
         final Sink sink = new WarningSink.Builder()
                 .setReasons(Collections.emptyList())
                 .setLogger(logger)
@@ -93,8 +95,8 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
-        Mockito.verify(logger).warn(MockitoHamcrest.argThat(
+        verifyNoInteractions(event);
+        verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString("Reasons must be a non-empty list")));
     }
 }

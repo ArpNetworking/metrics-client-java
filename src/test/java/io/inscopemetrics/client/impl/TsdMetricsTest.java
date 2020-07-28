@@ -17,7 +17,6 @@ package io.inscopemetrics.client.impl;
 
 import io.inscopemetrics.client.Sink;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.time.Clock;
 import java.util.Collections;
@@ -26,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 /**
  * Tests specific to {@link TsdMetrics}. Tests shared with {@link LockFreeMetrics}
@@ -37,7 +37,7 @@ public final class TsdMetricsTest {
 
     @Test
     public void testGetOrCreate() {
-        final Sink sink = Mockito.mock(Sink.class);
+        final Sink sink = mock(Sink.class);
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(sink);
 
@@ -51,7 +51,7 @@ public final class TsdMetricsTest {
                 UUID.randomUUID(),
                 Collections.singletonList(sink),
                 Clock.systemDefaultZone(),
-                Mockito.mock(org.slf4j.Logger.class));
+                mock(org.slf4j.Logger.class));
         metrics.addDimension("host", "MyHost");
         metrics.addDimension("service", "MyService");
         metrics.addDimension("cluster", "MyCluster");
