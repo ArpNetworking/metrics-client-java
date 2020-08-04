@@ -16,7 +16,7 @@
 package io.inscopemetrics.client.impl;
 
 import io.inscopemetrics.client.Counter;
-import io.inscopemetrics.client.Metrics;
+import io.inscopemetrics.client.ScopedMetrics;
 import io.inscopemetrics.client.Timer;
 
 import java.time.Clock;
@@ -27,15 +27,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of {@link Metrics} that provides safe interactions
+ * Implementation of {@link ScopedMetrics} that provides safe interactions
  * but does not actually publish any metrics. This is useful for merging
- * codepaths where in one clients provide a {@link Metrics} instance
+ * codepaths where in one clients provide a {@link ScopedMetrics} instance
  * and in another where they do not without having to resort to the use
  * of {@code null} or {@code Optional}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class NoOpMetrics implements Metrics {
+public class NoOpScopedMetrics implements ScopedMetrics {
 
     private final AtomicBoolean isOpen = new AtomicBoolean(true);
     private final Clock clock;
@@ -45,11 +45,11 @@ public class NoOpMetrics implements Metrics {
     /**
      * Public constructor.
      */
-    public NoOpMetrics() {
+    public NoOpScopedMetrics() {
         this(Clock.systemUTC());
     }
 
-    NoOpMetrics(final Clock clock) {
+    NoOpScopedMetrics(final Clock clock) {
         this.clock = clock;
         initialTimestamp = this.clock.instant();
     }
@@ -100,17 +100,22 @@ public class NoOpMetrics implements Metrics {
     }
 
     @Override
-    public void setTimer(final String name, final long duration, @Nullable final TimeUnit unit) {
+    public void recordCounter(final String name, final long value) {
         // Do nothing
     }
 
     @Override
-    public void setGauge(final String name, final double value) {
+    public void recordTimer(final String name, final long duration, @Nullable final TimeUnit unit) {
         // Do nothing
     }
 
     @Override
-    public void setGauge(final String name, final long value) {
+    public void recordGauge(final String name, final double value) {
+        // Do nothing
+    }
+
+    @Override
+    public void recordGauge(final String name, final long value) {
         // Do nothing
     }
 
@@ -150,6 +155,6 @@ public class NoOpMetrics implements Metrics {
 
     @Override
     public String toString() {
-        return "NoOpMetrics";
+        return "NoOpScopedMetrics";
     }
 }

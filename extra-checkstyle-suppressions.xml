@@ -20,4 +20,5 @@
 
 <suppressions>
   <suppress checks="MagicNumber" files="Samples\.java"/>
+  <suppress checks="FinalClass" files="src/main/java/io/inscopemetrics/client/impl/.*"/>
 </suppressions>

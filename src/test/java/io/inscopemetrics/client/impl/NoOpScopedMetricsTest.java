@@ -15,7 +15,7 @@
  */
 package io.inscopemetrics.client.impl;
 
-import io.inscopemetrics.client.Metrics;
+import io.inscopemetrics.client.ScopedMetrics;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -32,15 +32,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests for {@link NoOpMetrics}.
+ * Tests for {@link NoOpScopedMetrics}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class NoOpMetricsTest {
+public final class NoOpScopedMetricsTest {
+
+    private final Instant now = Clock.systemUTC().instant();
+    private final ScopedMetrics metrics = new NoOpScopedMetrics();
 
     @Test
     public void testCreateCounter() {
-        final Metrics metrics = new NoOpMetrics();
         assertNotNull(metrics.createCounter("aCounter"));
         assertTrue(metrics.createCounter("aCounter") instanceof NoOpCounter);
         assertNotSame(metrics.createCounter("aCounter"), metrics.createCounter("aCounter"));
@@ -48,42 +50,36 @@ public final class NoOpMetricsTest {
 
     @Test
     public void testIncrementCounter() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.incrementCounter("aCounter");
         // Does not throw.
     }
 
     @Test
     public void testIncrementCounterByValue() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.incrementCounter("aCounter", 2);
         // Does not throw.
     }
 
     @Test
     public void testDecrementCounter() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.decrementCounter("aCounter");
         // Does not throw.
     }
 
     @Test
     public void testDecrementCounterByValue() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.decrementCounter("aCounter", 2);
         // Does not throw.
     }
 
     @Test
     public void testResetCounter() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.resetCounter("aCounter");
         // Does not throw.
     }
 
     @Test
     public void testCreateTimer() {
-        final Metrics metrics = new NoOpMetrics();
         assertNotNull(metrics.createTimer("aTimer"));
         assertTrue(metrics.createTimer("aTimer") instanceof NoOpTimer);
         assertNotSame(metrics.createTimer("aTimer"), metrics.createTimer("aTimer"));
@@ -91,57 +87,54 @@ public final class NoOpMetricsTest {
 
     @Test
     public void testStartTimer() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.startTimer("aTimer");
         // Does not throw.
     }
 
     @Test
     public void testStopTimer() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.stopTimer("aTimer");
         // Does not throw.
     }
 
     @Test
-    @SuppressWarnings("deprecation")
-    public void testSetTimerTimeUnit() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setTimer("aTimer", 1, TimeUnit.SECONDS);
+    public void testRecordCounter() {
+        metrics.recordCounter("aCounter", 1);
         // Does not throw.
     }
 
     @Test
-    public void testSetGaugeDouble() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setGauge("aGauge", 1.23d);
+    public void testRecordTimerTimeUnit() {
+        metrics.recordTimer("aTimer", 1, TimeUnit.SECONDS);
         // Does not throw.
     }
 
     @Test
-    public void testSetGaugeLong() {
-        final Metrics metrics = new NoOpMetrics();
-        metrics.setGauge("aGauge", 123L);
+    public void testRecordGaugeDouble() {
+        metrics.recordGauge("aGauge", 1.23d);
+        // Does not throw.
+    }
+
+    @Test
+    public void testRecordGaugeLong() {
+        metrics.recordGauge("aGauge", 123L);
         // Does not throw.
     }
 
     @Test
     public void testAddDimension() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.addDimension("foo", "bar");
         // Does not throw.
     }
 
     @Test
     public void testAddDimensions() {
-        final Metrics metrics = new NoOpMetrics();
         metrics.addDimensions(Collections.singletonMap("foo", "bar"));
         // Does not throw.
     }
 
     @Test
     public void testClose() {
-        final Metrics metrics = new NoOpMetrics();
         assertTrue(metrics.isOpen());
         metrics.close();
         assertFalse(metrics.isOpen());
@@ -149,8 +142,6 @@ public final class NoOpMetricsTest {
 
     @Test
     public void testDoubleClose() throws InterruptedException {
-        final Instant now = Clock.systemUTC().instant();
-        final Metrics metrics = new NoOpMetrics();
         assertTrue(metrics.isOpen());
         metrics.close();
         assertFalse(metrics.isOpen());
@@ -164,8 +155,6 @@ public final class NoOpMetricsTest {
 
     @Test
     public void testTimestamps() {
-        final Instant now = Clock.systemUTC().instant();
-        final Metrics metrics = new NoOpMetrics();
         assertNotNull(metrics.getOpenTime());
         assertNull(metrics.getCloseTime());
         assertTrue(metrics.getOpenTime().compareTo(now) >= 0);
@@ -177,9 +166,9 @@ public final class NoOpMetricsTest {
 
     @Test
     public void testToString() {
-        final String asString = new NoOpMetrics().toString();
+        final String asString = metrics.toString();
         assertNotNull(asString);
         assertFalse(asString.isEmpty());
-        assertThat(asString, Matchers.containsString("NoOpMetrics"));
+        assertThat(asString, Matchers.containsString("NoOpScopedMetrics"));
     }
 }

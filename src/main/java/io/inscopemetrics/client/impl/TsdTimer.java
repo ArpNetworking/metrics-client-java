@@ -54,7 +54,7 @@ public final class TsdTimer implements Timer, Quantity {
 
     /**
      * Package private static factory. All {@link TsdTimer} instances should
-     * be created through the {@link TsdMetrics} instance.
+     * be created through the {@link ThreadSafeScopedMetrics} instance.
      *
      * @param name The name of the timer.
      * @return New instance of {@link TsdTimer}.

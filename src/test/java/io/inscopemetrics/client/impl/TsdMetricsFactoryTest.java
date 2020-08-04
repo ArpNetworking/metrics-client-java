@@ -15,24 +15,27 @@
  */
 package io.inscopemetrics.client.impl;
 
-import com.arpnetworking.commons.hostresolver.HostResolver;
 import com.arpnetworking.commons.uuidfactory.SplittableRandomUuidFactory;
 import com.arpnetworking.commons.uuidfactory.UuidFactory;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.inscopemetrics.client.Event;
-import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.MetricsFactory;
+import io.inscopemetrics.client.PeriodicMetrics;
+import io.inscopemetrics.client.ScopedMetrics;
 import io.inscopemetrics.client.Sink;
 import org.junit.AfterClass;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,14 +51,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.startsWith;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -80,15 +84,12 @@ public final class TsdMetricsFactoryTest {
         DEFAULT_COMPUTED_DIMENSIONS.put("host", () -> "MyHost");
     }
 
-    @Mock
-    private HostResolver mockHostResolver;
+    @Rule
+    @SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+    public final MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
+
     @Mock
     private UuidFactory mockUuidFactory;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @AfterClass
     public static void afterClass() {
@@ -103,7 +104,7 @@ public final class TsdMetricsFactoryTest {
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
         assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
         assertEquals(1, metricsFactory.getSinks().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -126,7 +127,7 @@ public final class TsdMetricsFactoryTest {
         assertEquals(1, metricsFactory.getDefaultComputedDimensions().size());
         assertEquals("MyHost", metricsFactory.getDefaultComputedDimensions().get("host").get());
         assertEquals(1, metricsFactory.getSinks().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -144,7 +145,7 @@ public final class TsdMetricsFactoryTest {
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
         assertEquals(0, metricsFactory.getDefaultComputedDimensions().size());
-        assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        assertTrue(metricsFactory.getSinks().get(0) instanceof HttpSink);
 
         testOnCreateMethods(
                 metricsFactory,
@@ -161,7 +162,7 @@ public final class TsdMetricsFactoryTest {
                 .setSinks(null)
                 .build();
 
-        verify(logger).info(startsWith("Defaulted null sinks; sinks="));
+        verify(logger).warn(startsWith("Unable to construct TsdMetricsFactory, metrics disabled; failures="));
 
         assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
         assertEquals(0, metricsFactory.getDefaultDimensions().size());
@@ -181,7 +182,6 @@ public final class TsdMetricsFactoryTest {
     public void testBuilderNullDefaultDimensions() {
         final Logger logger = mock(Logger.class);
         final Sink sink = mock(Sink.class);
-        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultDimensions(null)
                 .setSinks(Collections.singletonList(sink))
@@ -201,6 +201,7 @@ public final class TsdMetricsFactoryTest {
                     reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
+                    metrics.recordGauge("foo", 1);
                     metrics.close();
                     verify(sink).record(any(Event.class));
                 });
@@ -210,7 +211,6 @@ public final class TsdMetricsFactoryTest {
     public void testBuilderNullDefaultComputedDimensions() {
         final Logger logger = mock(Logger.class);
         final Sink sink = mock(Sink.class);
-        doReturn("MyHost").when(mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(logger)
                 .setDefaultComputedDimensions(null)
                 .setSinks(Collections.singletonList(sink))
@@ -230,6 +230,7 @@ public final class TsdMetricsFactoryTest {
                     reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
+                    metrics.recordGauge("foo", 1);
                     metrics.close();
                     verify(sink).record(any(Event.class));
                 });
@@ -259,6 +260,7 @@ public final class TsdMetricsFactoryTest {
                     reset(sink);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
+                    metrics.recordGauge("foo", 1);
                     metrics.close();
                     verify(sink).record(eventCaptor.capture());
                     assertFalse(eventCaptor.getValue().getDimensions().containsKey("host"));
@@ -316,6 +318,7 @@ public final class TsdMetricsFactoryTest {
                     reset(sink2);
                     assertNotNull(metrics);
                     assertEquals(type, metrics.getClass());
+                    metrics.recordGauge("foo", 1);
                     metrics.close();
                     verify(sink1).record(any(Event.class));
                     verify(sink2).record(any(Event.class));
@@ -343,19 +346,104 @@ public final class TsdMetricsFactoryTest {
                 .setUuidFactory(mockUuidFactory)
                 .build();
 
-        final Metrics metrics = metricsFactory.create();
+        final ScopedMetrics metrics = metricsFactory.createScopedMetrics();
         assertNotNull(metrics);
         verify(mockUuidFactory, times(1)).get();
-        final Metrics metrics2 = metricsFactory.create();
+        final ScopedMetrics metrics2 = metricsFactory.createScopedMetrics();
         assertNotNull(metrics2);
         verify(mockUuidFactory, times(2)).get();
 
-        final Metrics metricsLF = metricsFactory.createLockFree();
+        final ScopedMetrics metricsLF = metricsFactory.createLockFreeScopedMetrics();
         assertNotNull(metricsLF);
         verify(mockUuidFactory, times(3)).get();
-        final Metrics metricsLF2 = metricsFactory.createLockFree();
+        final ScopedMetrics metricsLF2 = metricsFactory.createLockFreeScopedMetrics();
         assertNotNull(metricsLF2);
         verify(mockUuidFactory, times(4)).get();
+    }
+
+    @Test
+    public void testSchedulePeriodicMetrics() {
+        final Sink sink = mock(Sink.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder()
+                .setSinks(Collections.singletonList(sink))
+                .setDefaultDimensions(Collections.singletonMap("abc", "123"))
+                .setDefaultComputedDimensions(Collections.singletonMap("def", () -> "xyz"))
+                .build();
+
+        final PeriodicMetrics periodicMetrics = metricsFactory.schedulePeriodicMetrics(Duration.ofSeconds(1));
+        periodicMetrics.recordGauge("foo", 123);
+
+        final ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(sink, timeout(1500)).record(captor.capture());
+        final Event event = captor.getValue();
+        assertEquals(1, event.getSamples().size());
+        assertEquals(1, event.getSamples().get("foo").size());
+        assertEquals(123L, event.getSamples().get("foo").iterator().next().getValue());
+        assertEquals(2, event.getDimensions().size());
+        assertEquals("123", event.getDimensions().get("abc"));
+        assertEquals("xyz", event.getDimensions().get("def"));
+    }
+
+    @Test
+    public void testClose() throws InterruptedException {
+        final Sink sink = mock(Sink.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder()
+                .setSinks(Collections.singletonList(sink))
+                .build();
+
+        final PeriodicMetrics periodicMetrics = metricsFactory.schedulePeriodicMetrics(Duration.ofSeconds(10));
+        periodicMetrics.recordGauge("foo", 123);
+
+        metricsFactory.close();
+
+        final ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(sink).record(captor.capture());
+        final Event event = captor.getValue();
+        assertEquals(1, event.getSamples().size());
+        assertEquals(1, event.getSamples().get("foo").size());
+        assertEquals(123L, event.getSamples().get("foo").iterator().next().getValue());
+    }
+
+    @Test
+    public void testCreateScopedMetricsAfterClose() throws InterruptedException {
+        final Sink sink = mock(Sink.class);
+        final Logger logger = mock(Logger.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(
+                logger,
+                () -> new WarningSink.Builder().setLogger(logger))
+                .setSinks(Collections.singletonList(sink))
+                .build();
+
+        metricsFactory.close();
+        verify(sink).close();
+
+        final ScopedMetrics scopedMetrics = metricsFactory.createScopedMetrics();
+        scopedMetrics.recordGauge("foo", 123);
+        scopedMetrics.close();
+
+        verifyNoMoreInteractions(sink);
+        verify(logger).warn(startsWith("Unable to record event, metrics disabled; reasons="));
+    }
+
+    @Test
+    public void testCreateLockFreeScopedMetricsAfterClose() throws InterruptedException {
+        final Sink sink = mock(Sink.class);
+        final Logger logger = mock(Logger.class);
+        final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(
+                logger,
+                () -> new WarningSink.Builder().setLogger(logger))
+                .setSinks(Collections.singletonList(sink))
+                .build();
+
+        metricsFactory.close();
+        verify(sink).close();
+
+        final ScopedMetrics scopedMetrics = metricsFactory.createLockFreeScopedMetrics();
+        scopedMetrics.recordGauge("foo", 123);
+        scopedMetrics.close();
+
+        verifyNoMoreInteractions(sink);
+        verify(logger).warn(startsWith("Unable to record event, metrics disabled; reasons="));
     }
 
     @Test
@@ -365,68 +453,6 @@ public final class TsdMetricsFactoryTest {
                 .toString();
         assertNotNull(asString);
         assertFalse(asString.isEmpty());
-    }
-
-    @Test
-    public void testCreateDefaultSinksNone() {
-        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(Collections.emptyList());
-        assertNotNull(sinks);
-        assertEquals(1, sinks.size());
-        assertTrue(sinks.iterator().next() instanceof WarningSink);
-    }
-
-    @Test
-    public void testCreateDefaultSinksInvalid() {
-        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
-                Collections.singletonList("com.arpnetworking.metrics.impl.NonExistentSink"));
-        assertNotNull(sinks);
-        assertEquals(1, sinks.size());
-        assertTrue(sinks.iterator().next() instanceof WarningSink);
-    }
-
-    @Test
-    public void testCreateDefaultSinksValid() {
-        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
-                Collections.singletonList("io.inscopemetrics.client.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
-        assertNotNull(sinks);
-        assertEquals(1, sinks.size());
-        assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
-    }
-
-    @Test
-    public void testCreateDefaultSinksMultipleUseFirst() {
-        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
-                Arrays.asList(
-                        "io.inscopemetrics.client.impl.TsdMetricsFactoryTest$ValidDefaultSink",
-                        "com.arpnetworking.metrics.impl.NonExistentSink"));
-        assertNotNull(sinks);
-        assertEquals(1, sinks.size());
-        assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
-    }
-
-    @Test
-    public void testCreateDefaultSinksMultipleSkipInvalid() {
-        final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(
-                Arrays.asList(
-                        "com.arpnetworking.metrics.impl.NonExistentSink",
-                        "io.inscopemetrics.client.impl.TsdMetricsFactoryTest$InvalidDefaultSink",
-                        "io.inscopemetrics.client.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
-        assertNotNull(sinks);
-        assertEquals(1, sinks.size());
-        assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
-    }
-
-    @Test
-    public void testCreateSinkSuccess() {
-        final Optional<Sink> sink = TsdMetricsFactory.createSink(WarningSink.class);
-        assertTrue(sink.isPresent());
-        assertTrue(sink.get() instanceof WarningSink);
-    }
-
-    @Test
-    public void testCreateSinkFailure() {
-        final Optional<Sink> sink = TsdMetricsFactory.createSink(InvalidDefaultSink.class);
-        assertFalse(sink.isPresent());
     }
 
     @Test
@@ -444,9 +470,9 @@ public final class TsdMetricsFactoryTest {
         assertFalse(sinkClass.isPresent());
     }
 
-    private void testOnCreateMethods(final MetricsFactory factory, final BiConsumer<Metrics, Class<? extends Metrics>> test) {
-        test.accept(factory.create(), TsdMetrics.class);
-        test.accept(factory.createLockFree(), LockFreeMetrics.class);
+    private void testOnCreateMethods(final MetricsFactory factory, final BiConsumer<ScopedMetrics, Class<? extends ScopedMetrics>> test) {
+        test.accept(factory.createScopedMetrics(), ThreadSafeScopedMetrics.class);
+        test.accept(factory.createLockFreeScopedMetrics(), LockFreeScopedMetrics.class);
     }
 
     /**
@@ -460,6 +486,11 @@ public final class TsdMetricsFactoryTest {
         public void record(final Event event) {
             // Do nothing
         }
+
+        @Override
+        public void close() {
+            // Do nothing
+        }
     }
 
     /**
@@ -469,6 +500,11 @@ public final class TsdMetricsFactoryTest {
 
         @Override
         public void record(final Event event) {
+            // Do nothing
+        }
+
+        @Override
+        public void close() {
             // Do nothing
         }
 

@@ -32,7 +32,7 @@ public class NoOpTimer implements Timer, Quantity {
 
     /**
      * Public. All {@link NoOpTimer} instances should
-     * be created through the {@link NoOpMetrics} instance.
+     * be created through the {@link NoOpScopedMetrics} instance.
      */
     public NoOpTimer() {
         // Do nothing

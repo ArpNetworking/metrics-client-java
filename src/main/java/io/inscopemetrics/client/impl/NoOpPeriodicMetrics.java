@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Inscope Metrics, Inc.
+ * Copyright 2020 Dropbox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,36 +15,43 @@
  */
 package io.inscopemetrics.client.impl;
 
-import io.inscopemetrics.client.MetricsFactory;
+import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.PeriodicMetrics;
-import io.inscopemetrics.client.ScopedMetrics;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
- * No operation implementation of {@link MetricsFactory}. This class is
- * thread safe.
+ * Implementation of {@link PeriodicMetrics} that provides safe interactions
+ * but does not actually publish any metrics.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public class NoOpMetricsFactory implements MetricsFactory {
-
-    private static final ScopedMetrics NO_OP_SCOPED_METRICS = new NoOpScopedMetrics();
-    private static final PeriodicMetrics NO_OP_PERIODIC_METRICS = new NoOpPeriodicMetrics();
+public class NoOpPeriodicMetrics implements PeriodicMetrics {
 
     @Override
-    public ScopedMetrics createScopedMetrics() {
-        return NO_OP_SCOPED_METRICS;
+    public void registerPolledMetric(final Consumer<Metrics> callback) {
+        // Do nothing
     }
 
     @Override
-    public ScopedMetrics createLockFreeScopedMetrics() {
-        return NO_OP_SCOPED_METRICS;
+    public void recordCounter(final String name, final long value) {
+        // Do nothing
     }
 
     @Override
-    public PeriodicMetrics schedulePeriodicMetrics(final Duration duration) {
-        return NO_OP_PERIODIC_METRICS;
+    public void recordTimer(final String name, final long duration, final TimeUnit unit) {
+        // Do nothing
+    }
+
+    @Override
+    public void recordGauge(final String name, final double value) {
+        // Do nothing
+    }
+
+    @Override
+    public void recordGauge(final String name, final long value) {
+        // Do nothing
     }
 
     @Override
@@ -54,6 +61,6 @@ public class NoOpMetricsFactory implements MetricsFactory {
 
     @Override
     public String toString() {
-        return "NoOpMetricsFactory";
+        return "NoOpPeriodicMetrics";
     }
 }

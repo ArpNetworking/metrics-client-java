@@ -55,6 +55,11 @@ public class WarningSink implements Sink {
     }
 
     @Override
+    public void close() {
+        // Nothing to do
+    }
+
+    @Override
     public String toString() {
         return String.format(
                 "WarningSink{Reasons=%s}",

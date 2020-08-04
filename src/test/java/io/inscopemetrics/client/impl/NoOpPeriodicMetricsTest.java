@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Inscope Metrics, Inc.
+ * Copyright 2020 Dropbox
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,55 +16,65 @@
 package io.inscopemetrics.client.impl;
 
 import io.inscopemetrics.client.PeriodicMetrics;
-import io.inscopemetrics.client.ScopedMetrics;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
- * Tests for {@link NoOpMetricsFactory}.
+ * Tests for {@link NoOpPeriodicMetrics}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class NoOpMetricsFactoryTest {
+public final class NoOpPeriodicMetricsTest {
+
+    private final PeriodicMetrics metrics = new NoOpPeriodicMetrics();
 
     @Test
-    public void testCreateScopedMetrics() {
-        final ScopedMetrics metrics = new NoOpMetricsFactory().createScopedMetrics();
-        assertNotNull(metrics);
-        assertTrue(metrics instanceof NoOpScopedMetrics);
+    public void testRegisterPolledMetric() {
+        metrics.registerPolledMetric(m -> { });
+        // Does not throw.
     }
 
     @Test
-    public void testCreateLockFreeScopedMetrics() {
-        final ScopedMetrics metrics = new NoOpMetricsFactory().createLockFreeScopedMetrics();
-        assertNotNull(metrics);
-        assertTrue(metrics instanceof NoOpScopedMetrics);
+    public void testRecordCounter() {
+        metrics.recordCounter("aCounter", 1);
+        // Does not throw.
     }
 
     @Test
-    public void testSchedulePeriodicMetrics() {
-        final PeriodicMetrics metrics = new NoOpMetricsFactory().schedulePeriodicMetrics(Duration.ofSeconds(1));
-        assertNotNull(metrics);
-        assertTrue(metrics instanceof NoOpPeriodicMetrics);
+    public void testRecordTimerTimeUnit() {
+        metrics.recordTimer("aTimer", 1, TimeUnit.SECONDS);
+        // Does not throw.
+    }
+
+    @Test
+    public void testRecordGaugeDouble() {
+        metrics.recordGauge("aGauge", 1.23d);
+        // Does not throw.
+    }
+
+    @Test
+    public void testRecordGaugeLong() {
+        metrics.recordGauge("aGauge", 123L);
+        // Does not throw.
     }
 
     @Test
     public void testClose() {
-        new NoOpMetricsFactory().close();
+        metrics.close();
+        // Does not throw.
     }
 
     @Test
     public void testToString() {
-        final String asString = new NoOpMetricsFactory().toString();
+        final String asString = metrics.toString();
         assertNotNull(asString);
         assertFalse(asString.isEmpty());
-        assertThat(asString, Matchers.containsString("NoOpMetricsFactory"));
+        assertThat(asString, Matchers.containsString("NoOpPeriodicMetrics"));
     }
 }

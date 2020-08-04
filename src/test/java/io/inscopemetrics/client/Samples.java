@@ -16,13 +16,18 @@
 package io.inscopemetrics.client;
 
 import com.arpnetworking.commons.hostresolver.BackgroundCachingHostResolver;
+import io.inscopemetrics.client.impl.ThreadSafePeriodicMetrics;
 import io.inscopemetrics.client.impl.TsdMetricsFactory;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Ensures code samples from README.md at least compile.
@@ -69,22 +74,42 @@ public final class Samples {
  */
     // CHECKSTYLE.ON: IllegalInstantiation
 
-    private void metrics() {
+    private void scopedMetrics() {
         final MetricsFactory metricsFactory = createMetricsFactory();
 
         // Begin sample:
-        final Metrics metrics = metricsFactory.create();
+        final ScopedMetrics scopedMetrics = metricsFactory.createScopedMetrics();
 
-        metrics.incrementCounter("foo");
-        metrics.startTimer("bar");
+        scopedMetrics.incrementCounter("foo");
+        scopedMetrics.startTimer("bar");
         // Do something that is being timed
-        metrics.stopTimer("bar");
-        metrics.setGauge("temperature", 21.7);
-        metrics.close();
+        scopedMetrics.stopTimer("bar");
+        scopedMetrics.recordGauge("temperature", 21.7);
+        scopedMetrics.close();
+    }
+
+    private void periodicMetrics() {
+        final MetricsFactory metricsFactory = createMetricsFactory();
+
+        // Begin sample:
+        final PeriodicMetrics periodicMetrics = metricsFactory.schedulePeriodicMetrics(Duration.ofMinutes(5));
+        periodicMetrics.recordGauge("foo", 1);
+        periodicMetrics.registerPolledMetric(metrics -> metrics.recordCounter("bar", 1));
+    }
+
+    private void periodicMetricsBuilders() {
+        final MetricsFactory metricsFactory = createMetricsFactory();
+
+        // Begin sample:
+        final ThreadSafePeriodicMetrics periodicMetrics = new ThreadSafePeriodicMetrics.Builder()
+                .setMetricsFactory(metricsFactory)
+                .build();
+        final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleAtFixedRate(periodicMetrics, 0, 1, TimeUnit.MINUTES);
     }
 
     private void counters() {
-        final Metrics metrics = createMetrics();
+        final ScopedMetrics metrics = createMetrics();
 
         // Begin sample:
         for (String s : Arrays.asList("a", "b", "c", "d", "e")) {
@@ -120,7 +145,7 @@ public final class Samples {
         final MetricsFactory metricsFactory = createMetricsFactory();
 
         // Begin sample:
-        try (Metrics metrics = metricsFactory.create()) {
+        try (ScopedMetrics metrics = metricsFactory.createScopedMetrics()) {
             try (Timer timer = metrics.createTimer("timer")) {
                 // Time unsafe operation (e.g. this may throw)
                 Thread.sleep(1000);
@@ -137,11 +162,11 @@ public final class Samples {
         return TsdMetricsFactory.newInstance(defaultDimensions, Collections.emptyMap());
     }
 
-    private Metrics createMetrics(final MetricsFactory metricsFactory) {
-        return metricsFactory.create();
+    private ScopedMetrics createMetrics(final MetricsFactory metricsFactory) {
+        return metricsFactory.createScopedMetrics();
     }
 
-    private Metrics createMetrics() {
+    private ScopedMetrics createMetrics() {
         return createMetrics(createMetricsFactory());
     }
 }
