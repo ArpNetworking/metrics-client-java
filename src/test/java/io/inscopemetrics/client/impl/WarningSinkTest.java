@@ -99,4 +99,13 @@ public final class WarningSinkTest {
         verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString("Reasons must be a non-empty list")));
     }
+
+    @Test
+    public void testClose() throws InterruptedException {
+        final Sink sink = new WarningSink.Builder()
+                .setReasons(Collections.emptyList())
+                .build();
+        sink.close();
+        // Does not throw.
+    }
 }

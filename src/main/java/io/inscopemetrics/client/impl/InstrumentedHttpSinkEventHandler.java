@@ -16,8 +16,8 @@
 package io.inscopemetrics.client.impl;
 
 import io.inscopemetrics.client.Event;
-import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.MetricsFactory;
+import io.inscopemetrics.client.ScopedMetrics;
 
 import java.util.Optional;
 import java.util.concurrent.Executors;
@@ -33,6 +33,7 @@ import java.util.function.Supplier;
  *
  * TODO(ville): Convert to using PeriodicMetrics from the incubator project.
  * TODO(ville): Add queue length metric by periodically polling the sink.
+ * TODO(ville): Support retries (attempt probably needs to be renamed).
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
@@ -53,7 +54,7 @@ public class InstrumentedHttpSinkEventHandler implements HttpSinkEventHandler {
             });
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private volatile Metrics metrics;
+    private volatile ScopedMetrics metrics;
 
     /**
      * Public constructor.
@@ -64,7 +65,7 @@ public class InstrumentedHttpSinkEventHandler implements HttpSinkEventHandler {
      */
     public InstrumentedHttpSinkEventHandler(final Supplier<Optional<MetricsFactory>> metricsFactorySupplier) {
         this.metricsFactorySupplier = metricsFactorySupplier;
-        metrics = this.metricsFactorySupplier.get().map(MetricsFactory::create).orElse(null);
+        metrics = this.metricsFactorySupplier.get().map(MetricsFactory::createScopedMetrics).orElse(null);
         executorService.scheduleAtFixedRate(
                 new PeriodicUnitOfWork(),
                 DELAY_IN_MILLISECONDS,
@@ -88,7 +89,7 @@ public class InstrumentedHttpSinkEventHandler implements HttpSinkEventHandler {
                 if (success) {
                     metrics.incrementCounter("metrics_client/http_sink/success_rate");
                 }
-                metrics.setTimer(
+                metrics.recordTimer(
                         "metrics_client/http_sink/latency",
                         elapasedTime,
                         elapsedTimeUnit);
@@ -118,7 +119,7 @@ public class InstrumentedHttpSinkEventHandler implements HttpSinkEventHandler {
                     readWriteLock.writeLock().lock();
                     metrics.close();
                     metrics = null;
-                    metrics = metricsFactorySupplier.get().map(MetricsFactory::create).orElse(null);
+                    metrics = metricsFactorySupplier.get().map(MetricsFactory::createScopedMetrics).orElse(null);
                     if (metrics != null) {
                         metrics.resetCounter("metrics_client/http_sink/records");
                         metrics.resetCounter("metrics_client/http_sink/bytes");
@@ -128,7 +129,7 @@ public class InstrumentedHttpSinkEventHandler implements HttpSinkEventHandler {
                     readWriteLock.writeLock().unlock();
                 }
             } else {
-                metrics = metricsFactorySupplier.get().map(MetricsFactory::create).orElse(null);
+                metrics = metricsFactorySupplier.get().map(MetricsFactory::createScopedMetrics).orElse(null);
             }
         }
     }

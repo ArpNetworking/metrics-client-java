@@ -39,7 +39,7 @@ public class TsdQuantity implements Quantity {
 
     /**
      * Public static factory. All {@link TsdQuantity} instances should be
-     * created through the {@link TsdMetrics} instance and its supporting
+     * created through the {@link ThreadSafeScopedMetrics} instance and its supporting
      * {@link TsdCounter} and {@link TsdTimer} classes.
      *
      * @param value The value.

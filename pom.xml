@@ -90,13 +90,13 @@
     <apache.http.core.version>4.4.13</apache.http.core.version>
     <arpnetworking.commons.version>1.18.3</arpnetworking.commons.version>
     <client.protocol.version>0.11.3</client.protocol.version>
-    <spotbugs.annotations.version>4.0.2</spotbugs.annotations.version>
+    <spotbugs.annotations.version>4.0.3</spotbugs.annotations.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.13</junit.version>
-    <mockito.version>3.3.3</mockito.version>
+    <mockito.version>3.4.4</mockito.version>
     <protobuf.version>3.10.0</protobuf.version>
-    <slf4j.version>1.7.25</slf4j.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <wiremock.version>2.26.3</wiremock.version>
 
     <!-- Plugin versions -->

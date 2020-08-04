@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Groupon.com
+ * Copyright 2020 Inscope Metrics
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,198 +15,57 @@
  */
 package io.inscopemetrics.client;
 
-import java.time.Instant;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 
 /**
- * Interface for logging metrics: timers, counters and gauges. Clients should
- * create one instance of an implementing class for each unit of work. At the
- * end of the unit of work the client should invoke {@link Metrics#close()} on that
- * instance. After the {@link Metrics#close()} method is invoked the instance
- * cannot be used to record further metrics and should be discarded.
+ * Interface for logging metrics: timers, counters and gauges.
+ *
+ * The constructs of a counter, timer and gauge are provided only as constructs
+ * to aide with instrumentation. The domain of metric names should be
+ * considered shared across these constructs. Specifically, samples recorded
+ * against a timer named "metric_name" and a counter named "metric_name"
+ * records those measurements against the <u>same</u> metric.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public interface Metrics extends AutoCloseable {
+public interface Metrics {
 
     /**
-     * Create and initialize a counter sample. It is valid to create multiple
-     * {@link Counter} instances with the same name, even concurrently,
-     * each will record a unique sample for the counter of the specified name.
+     * Record a sample for the specified counter. This is most commonly used to
+     * record counters from external sources that are not directly integrated
+     * with metrics.
      *
-     * @param name The name of the counter.
-     * @return {@link Counter} instance for recording a counter sample.
+     * @param name The name of the metric.
+     * @param value The value of the counter sample.
      */
-    Counter createCounter(String name);
+    void recordCounter(String name, long value);
 
     /**
-     * Increment the specified counter by 1. All counters are initialized to
-     * zero. Creates a sample if one does not exist. To create a new sample
-     * invoke {@link Metrics#resetCounter(String)}.
-     *
-     * @param name The name of the counter.
-     */
-    void incrementCounter(String name);
-
-    /**
-     * Increment the specified counter by the specified amount. All counters are
-     * initialized to zero. Creates a sample if one does not exist. To create a new
-     * sample invoke {@link Metrics#resetCounter(String)}.
-     *
-     * @param name The name of the counter.
-     * @param value The amount to increment by.
-     */
-    void incrementCounter(String name, long value);
-
-    /**
-     * Decrement the specified counter by 1. All counters are initialized to
-     * zero. Creates a sample if one does not exist. To create a new sample
-     * invoke {@link Metrics#resetCounter(String)}.
-     *
-     * @param name The name of the counter.
-     */
-    void decrementCounter(String name);
-
-    /**
-     * Decrement the specified counter by the specified amount. All counters are
-     * initialized to zero. Creates a sample if one does not exist. To create a new
-     * sample invoke {@link Metrics#resetCounter(String)}.
-     *
-     * @param name The name of the counter.
-     * @param value The amount to decrement by.
-     */
-    void decrementCounter(String name, long value);
-
-    /**
-     * Create a new sample for the counter with value zero. This most commonly used
-     * to either record a zero-count for a particular counter or to record multiple
-     * samples of the same counter in one unit of work. If clients wish to record set
-     * count metrics then all counters should be reset before conditionally invoking
-     * increment and/or decrement.
-     *
-     * @param name The name of the counter.
-     */
-    void resetCounter(String name);
-
-    /**
-     * Create and start a timer. It is valid to create multiple {@link Timer}
-     * instances with the same name, even concurrently, each will record a
-     * unique sample for the timer of the specified name.
-     *
-     * <b>All timers are output in seconds.</b>
-     * <b>All timers are represented in seconds.</b>
-     *
-     * @param name The name of the timer.
-     * @return {@link Timer} instance for recording a timing sample.
-     */
-    Timer createTimer(String name);
-
-    /**
-     * Start measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
-     * to make multiple concurrent measurements.
-     *
-     * <b>All timers are output in seconds.</b>
-     * <b>All timers are represented in seconds.</b>
-     *
-     * @param name The name of the timer.
-     */
-    void startTimer(String name);
-
-    /**
-     * Stop measurement of a sample for the specified timer. Use {@link Metrics#createTimer(String)}
-     * to make multiple concurrent measurements.
-     *
-     * <b>All timers are output in seconds.</b>
-     * <b>All timers are internally represented in seconds.</b>
-     *
-     * @param name The name of the timer.
-     */
-    void stopTimer(String name);
-
-    /**
-     * Set the timer to the specified value. This is most commonly used to
+     * Record a sample for the specified timer. This is most commonly used to
      * record timers from external sources that are not directly integrated with
      * metrics.
      *
      * <b>All timers are output in seconds.</b>
      *
-     * @param name The name of the timer.
+     * @param name The name of the metric.
      * @param duration The duration of the timer.
      * @param unit The time unit of the timer.
      */
-    void setTimer(String name, long duration, TimeUnit unit);
+    void recordTimer(String name, long duration, TimeUnit unit);
 
     /**
-     * Set the specified gauge reading.
+     * Record a sample for the specified metric.
      *
-     * @param name The name of the gauge.
-     * @param value The reading on the gauge
+     * @param name The name of the metric.
+     * @param value The reading on the gauge.
      */
-    void setGauge(String name, double value);
+    void recordGauge(String name, double value);
 
     /**
-     * Set the specified gauge reading.
+     * Record a sample for the specified metric.
      *
-     * @param name The name of the gauge.
-     * @param value The reading on the gauge
+     * @param name The name of the metric.
+     * @param value The reading on the gauge.
      */
-    void setGauge(String name, long value);
-
-    /**
-     * Add key-value pair that describes the captured metrics or context.
-     * Statistics will be computed along all key-value pair-set combinations.
-     *
-     * @param key The name of the dimension.
-     * @param value The value of the dimension.
-     */
-    void addDimension(String key, String value);
-
-    /**
-     * Add key-value pairs that describe the captured metrics or context.
-     * Statistics will be computed along all key-value pair-set combinations.
-     *
-     * @param map The {@link Map} of dimension names to dimension values.
-     */
-    void addDimensions(Map<String, String> map);
-
-    /**
-     * Accessor to determine if this {@link Metrics} instance is open or
-     * closed. Once closed an instance will not record new data.
-     *
-     * @return True if and only if this {@link Metrics} instance is open.
-     */
-    boolean isOpen();
-
-    /**
-     * Close the metrics object. This should complete publication of metrics to
-     * the underlying data store. Once the metrics object is closed, no further
-     * metrics can be recorded.
-     */
-    @Override
-    void close();
-
-    /**
-     * Returns {@link Instant} this {@link Metrics} instance was
-     * opened. Commonly {@link Metrics} instances are opened on creation;
-     * however, that is not required. If this instance has not been opened the
-     * returned {@link Instant} will be null.
-     *
-     * @return The {@link Instant} this {@link Metrics} instance was
-     * opened.
-     */
-    @Nullable
-    Instant getOpenTime();
-
-    /**
-     * Returns {@link Instant} this {@link Metrics} instance was
-     * closed. If this instance has not been closed the returned
-     * {@link Instant} will be null.
-     *
-     * @return The {@link Instant} this {@link Metrics} instance was
-     * closed.
-     */
-    @Nullable
-    Instant getCloseTime();
+    void recordGauge(String name, long value);
 }

@@ -16,8 +16,8 @@
 package io.inscopemetrics.client.impl;
 
 import io.inscopemetrics.client.Event;
-import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.MetricsFactory;
+import io.inscopemetrics.client.ScopedMetrics;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -46,8 +46,8 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Semaphore semaphore = new Semaphore(-2);
 
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metricsA = mock(Metrics.class, "A");
-        final Metrics metricsB = mock(Metrics.class, "B");
+        final ScopedMetrics metricsA = mock(ScopedMetrics.class, "A");
+        final ScopedMetrics metricsB = mock(ScopedMetrics.class, "B");
 
         doAnswer(ignored -> {
             try {
@@ -59,7 +59,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
             } finally {
                 semaphore.release();
             }
-        }).when(metricsFactory).create();
+        }).when(metricsFactory).createScopedMetrics();
 
         final HttpSinkEventHandler eventHandler = new InstrumentedHttpSinkEventHandler(
                 () -> Optional.of(metricsFactory));
@@ -67,15 +67,15 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         eventHandler.attemptComplete(3, 4, false, 246, TimeUnit.NANOSECONDS);
         semaphore.acquire();
 
-        verify(metricsFactory, times(3)).create();
+        verify(metricsFactory, times(3)).createScopedMetrics();
         verify(metricsA).incrementCounter("metrics_client/http_sink/records", 1);
         verify(metricsA).incrementCounter("metrics_client/http_sink/records", 3);
         verify(metricsA).incrementCounter("metrics_client/http_sink/bytes", 2);
         verify(metricsA).incrementCounter("metrics_client/http_sink/bytes", 4);
         verify(metricsA, times(2)).resetCounter("metrics_client/http_sink/success_rate");
         verify(metricsA).incrementCounter("metrics_client/http_sink/success_rate");
-        verify(metricsA).setTimer("metrics_client/http_sink/latency", 123, TimeUnit.NANOSECONDS);
-        verify(metricsA).setTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
+        verify(metricsA).recordTimer("metrics_client/http_sink/latency", 123, TimeUnit.NANOSECONDS);
+        verify(metricsA).recordTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
         verify(metricsA).close();
         verifyNoMoreInteractions(metricsA);
     }
@@ -88,7 +88,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Semaphore semaphore = new Semaphore(0);
 
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metrics = mock(Metrics.class);
+        final ScopedMetrics metrics = mock(ScopedMetrics.class);
         doAnswer(ignored -> {
                     semaphore.release();
                     return metrics;
@@ -98,7 +98,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
                     return null;
                 })
                 .when(metricsFactory)
-                .create();
+                .createScopedMetrics();
         doThrow(new IllegalStateException("Test Exception"))
                 .when(metrics)
                 .incrementCounter(anyString(), anyLong());
@@ -119,7 +119,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         // is not recorded.
         eventHandler.attemptComplete(-1, -1, true, 123, TimeUnit.NANOSECONDS);
 
-        verify(metricsFactory, times(2)).create();
+        verify(metricsFactory, times(2)).createScopedMetrics();
         verify(metrics).incrementCounter("metrics_client/http_sink/records", 3);
         verify(metrics).close();
         verifyNoMoreInteractions(metrics);
@@ -132,8 +132,8 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Event eventA = mock(Event.class, "A");
         final Event eventB = mock(Event.class, "B");
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metricsA = mock(Metrics.class, "A");
-        final Metrics metricsB = mock(Metrics.class, "B");
+        final ScopedMetrics metricsA = mock(ScopedMetrics.class, "A");
+        final ScopedMetrics metricsB = mock(ScopedMetrics.class, "B");
 
         doAnswer(ignored -> {
             try {
@@ -145,7 +145,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
             } finally {
                 semaphore.release();
             }
-        }).when(metricsFactory).create();
+        }).when(metricsFactory).createScopedMetrics();
 
         final HttpSinkEventHandler eventHandler = new InstrumentedHttpSinkEventHandler(
                 () -> Optional.of(metricsFactory));
@@ -153,7 +153,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         eventHandler.droppedEvent(eventB);
         semaphore.acquire();
 
-        verify(metricsFactory, times(3)).create();
+        verify(metricsFactory, times(3)).createScopedMetrics();
         verify(metricsA, times(2)).incrementCounter("metrics_client/http_sink/dropped");
         verify(metricsA).close();
         verifyNoMoreInteractions(metricsA);
@@ -169,7 +169,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Event eventA = mock(Event.class, "A");
         final Event eventB = mock(Event.class, "B");
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metrics = mock(Metrics.class);
+        final ScopedMetrics metrics = mock(ScopedMetrics.class);
         doAnswer(ignored -> {
             semaphore.release();
             return metrics;
@@ -179,7 +179,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
                     return null;
                 })
                 .when(metricsFactory)
-                .create();
+                .createScopedMetrics();
         doThrow(new IllegalStateException("Test Exception"))
                 .when(metrics)
                 .incrementCounter(Mockito.anyString());
@@ -200,7 +200,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         // is not recorded.
         eventHandler.droppedEvent(eventB);
 
-        verify(metricsFactory, times(2)).create();
+        verify(metricsFactory, times(2)).createScopedMetrics();
         verify(metrics).incrementCounter("metrics_client/http_sink/dropped");
         verify(metrics).close();
         verifyNoMoreInteractions(metrics);
@@ -214,7 +214,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Semaphore semaphore = new Semaphore(0);
 
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metrics = mock(Metrics.class);
+        final ScopedMetrics metrics = mock(ScopedMetrics.class);
         doAnswer(ignored -> {
             semaphore.release();
             return metrics;
@@ -224,7 +224,7 @@ public final class InstrumentedHttpSinkEventHandlerTest {
                     throw new IllegalStateException("Test Exception");
                 })
                 .when(metricsFactory)
-                .create();
+                .createScopedMetrics();
 
         final HttpSinkEventHandler eventHandler = new InstrumentedHttpSinkEventHandler(
                 () -> Optional.of(metricsFactory));
@@ -238,11 +238,11 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         // is not recorded.
         eventHandler.attemptComplete(-1, -1, true, 123, TimeUnit.NANOSECONDS);
 
-        verify(metricsFactory, times(2)).create();
+        verify(metricsFactory, times(2)).createScopedMetrics();
         verify(metrics).incrementCounter("metrics_client/http_sink/records", 3);
         verify(metrics).incrementCounter("metrics_client/http_sink/bytes", 4);
         verify(metrics, times(1)).resetCounter("metrics_client/http_sink/success_rate");
-        verify(metrics).setTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
+        verify(metrics).recordTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
         verify(metrics).close();
         verifyNoMoreInteractions(metrics);
     }
@@ -252,12 +252,12 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         final Semaphore semaphore = new Semaphore(-1);
 
         final MetricsFactory metricsFactory = mock(MetricsFactory.class);
-        final Metrics metricsA = mock(Metrics.class, "A");
+        final ScopedMetrics metricsA = mock(ScopedMetrics.class, "A");
 
         doAnswer(ignored -> {
             semaphore.release();
             return metricsA;
-        }).when(metricsFactory).create();
+        }).when(metricsFactory).createScopedMetrics();
 
         final HttpSinkEventHandler eventHandler = new InstrumentedHttpSinkEventHandler(() -> {
             if (semaphore.availablePermits() == -1) {
@@ -271,14 +271,14 @@ public final class InstrumentedHttpSinkEventHandlerTest {
         eventHandler.attemptComplete(3, 4, false, 246, TimeUnit.NANOSECONDS);
         semaphore.acquire();
 
-        verify(metricsFactory, times(2)).create();
+        verify(metricsFactory, times(2)).createScopedMetrics();
         verify(metricsA).resetCounter("metrics_client/http_sink/records");
         verify(metricsA).resetCounter("metrics_client/http_sink/bytes");
         verify(metricsA).resetCounter("metrics_client/http_sink/dropped");
         verify(metricsA).incrementCounter("metrics_client/http_sink/records", 3);
         verify(metricsA).incrementCounter("metrics_client/http_sink/bytes", 4);
         verify(metricsA, times(1)).resetCounter("metrics_client/http_sink/success_rate");
-        verify(metricsA).setTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
+        verify(metricsA).recordTimer("metrics_client/http_sink/latency", 246, TimeUnit.NANOSECONDS);
         verify(metricsA).close();
         verifyNoMoreInteractions(metricsA);
     }
