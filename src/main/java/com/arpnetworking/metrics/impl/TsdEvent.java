@@ -45,6 +45,7 @@ public final class TsdEvent implements Event {
      * @param timerSamples The timer samples.
      * @param counterSamples The counter samples.
      * @param gaugeSamples The gauge samples.
+     * @param aggregatedData The pre-aggregated data.
      */
     public TsdEvent(
             final Map<String, String> annotations,
