@@ -29,7 +29,7 @@ import java.util.Objects;
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-/* package private */ final class TsdEvent implements Event {
+public final class TsdEvent implements Event {
 
     /**
      * Public constructor.
@@ -37,14 +37,16 @@ import java.util.Objects;
      * NOTE: This method does <b>not</b> perform a deep copy of the provided
      * data structures. Callers are expected to <b>not</b> modify these data
      * structures after passing them to this constructor. This is acceptable
-     * since this class is for internal implementation only.
+     * since this class is for sink implementations only which are expected
+     * to honor this contract (e.g. by creating a copy of any end-user
+     * provided data).
      *
      * @param annotations The annotations.
      * @param timerSamples The timer samples.
      * @param counterSamples The counter samples.
      * @param gaugeSamples The gauge samples.
      */
-    /* package private */ TsdEvent(
+    public TsdEvent(
             final Map<String, String> annotations,
             final Map<String, List<Quantity>> timerSamples,
             final Map<String, List<Quantity>> counterSamples,
