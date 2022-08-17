@@ -452,7 +452,7 @@ public final class TsdMetricsTest {
         @SuppressWarnings("resource")
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.close();
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         metrics.close();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -527,7 +527,7 @@ public final class TsdMetricsTest {
         final TsdMetrics metrics = createTsdMetrics(logger, sink);
         metrics.startTimer("timer-already-stopped");
         metrics.stopTimer("timer-already-stopped");
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         metrics.stopTimer("timer-already-stopped");
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }

@@ -37,7 +37,7 @@ public final class NoOpMetricsTest {
     public void testCreateCounter() {
         final Metrics metrics = new NoOpMetrics();
         Assert.assertNotNull(metrics.createCounter("aCounter"));
-        Assert.assertTrue(metrics.createCounter("aCounter") instanceof NoOpCounter);
+        MatcherAssert.assertThat(metrics.createCounter("aCounter"), Matchers.instanceOf(NoOpCounter.class));
         Assert.assertNotSame(metrics.createCounter("aCounter"), metrics.createCounter("aCounter"));
     }
 
@@ -80,7 +80,7 @@ public final class NoOpMetricsTest {
     public void testCreateTimer() {
         final Metrics metrics = new NoOpMetrics();
         Assert.assertNotNull(metrics.createTimer("aTimer"));
-        Assert.assertTrue(metrics.createTimer("aTimer") instanceof NoOpTimer);
+        MatcherAssert.assertThat(metrics.createTimer("aTimer"), Matchers.instanceOf(NoOpTimer.class));
         Assert.assertNotSame(metrics.createTimer("aTimer"), metrics.createTimer("aTimer"));
     }
 

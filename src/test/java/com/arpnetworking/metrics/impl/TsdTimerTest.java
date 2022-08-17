@@ -82,7 +82,7 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
         timer.close();
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         timer.close();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -107,7 +107,7 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
         timer.abort();
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         timer.abort();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -119,7 +119,7 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
         timer.abort();
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         timer.close();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -131,7 +131,7 @@ public final class TsdTimerTest {
         @SuppressWarnings("resource")
         final TsdTimer timer = new TsdTimer("timerName", isOpen, logger);
         timer.close();
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         timer.abort();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }

@@ -57,7 +57,7 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
+        Mockito.verifyNoInteractions(event);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString(reasons.toString())));
     }
@@ -74,7 +74,7 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
+        Mockito.verifyNoInteractions(event);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString("Reasons must be a non-null list")));
     }
@@ -90,7 +90,7 @@ public final class WarningSinkTest {
 
         sink.record(event);
 
-        Mockito.verifyZeroInteractions(event);
+        Mockito.verifyNoInteractions(event);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(
                 Matchers.containsString("Reasons must be a non-empty list")));
     }

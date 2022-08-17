@@ -236,7 +236,7 @@ public class TsdMetricsFactory implements MetricsFactory {
     /* package private */ static Optional<Sink> createSink(final Class<? extends Sink> sinkClass) {
         try {
             final Class<?> sinkBuilderClass = Class.forName(sinkClass.getName() + "$Builder");
-            final Object sinkBuilder = sinkBuilderClass.newInstance();
+            final Object sinkBuilder = sinkBuilderClass.getDeclaredConstructor().newInstance();
             final Method buildMethod = sinkBuilderClass.getMethod("build");
             return Optional.of((Sink) buildMethod.invoke(sinkBuilder));
             // CHECKSTYLE.OFF: IllegalCatch - Much cleaner than catching the half-dozen checked exceptions

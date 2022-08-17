@@ -98,7 +98,7 @@ public final class TsdCounterTest {
         final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
         counter.increment();
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         counter.increment();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -110,7 +110,7 @@ public final class TsdCounterTest {
         final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
         counter.increment(2L);
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         counter.increment(2L);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -122,7 +122,7 @@ public final class TsdCounterTest {
         final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
         counter.decrement();
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         counter.decrement();
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }
@@ -134,7 +134,7 @@ public final class TsdCounterTest {
         final TsdCounter counter = new TsdCounter("counterName", isOpen, logger);
         counter.decrement(2L);
         isOpen.set(false);
-        Mockito.verifyZeroInteractions(logger);
+        Mockito.verifyNoInteractions(logger);
         counter.decrement(2L);
         Mockito.verify(logger).warn(MockitoHamcrest.argThat(Matchers.any(String.class)));
     }

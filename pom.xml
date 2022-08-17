@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>2.0.5</version>
+    <version>3.0.9</version>
     <relativePath />
   </parent>
 
@@ -68,13 +68,13 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>1.18.3</arpnetworking.commons.version>
-    <spotbugs.annotations.version>4.0.3</spotbugs.annotations.version>
+    <arpnetworking.commons.version>2.0.4</arpnetworking.commons.version>
+    <spotbugs.annotations.version>4.7.1</spotbugs.annotations.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
-    <junit.version>4.13</junit.version>
-    <mockito.version>2.23.4</mockito.version>
-    <slf4j.version>1.7.30</slf4j.version>
+    <junit.version>4.13.2</junit.version>
+    <mockito.version>4.7.0</mockito.version>
+    <slf4j.version>1.7.36</slf4j.version>
 
     <!-- Spotbugs -->
     <!-- NOTE: Custom version excludes sample code as well -->

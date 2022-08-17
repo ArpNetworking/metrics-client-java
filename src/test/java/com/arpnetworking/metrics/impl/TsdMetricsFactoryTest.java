@@ -23,6 +23,9 @@ import com.arpnetworking.metrics.Event;
 import com.arpnetworking.metrics.Metrics;
 import com.arpnetworking.metrics.MetricsFactory;
 import com.arpnetworking.metrics.Sink;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,9 +54,13 @@ public final class TsdMetricsFactoryTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        _mocks = MockitoAnnotations.openMocks(this);
     }
 
+    @After
+    public void after() throws Exception {
+        _mocks.close();
+    }
     @AfterClass
     public static void afterClass() {
         new File("./query.log").deleteOnExit();
@@ -65,16 +72,16 @@ public final class TsdMetricsFactoryTest {
                 "MyService",
                 "MyCluster");
 
-        Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getHostResolver(), Matchers.instanceOf(BackgroundCachingHostResolver.class));
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
     }
 
     @Test
@@ -87,14 +94,14 @@ public final class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         Mockito.verify(_mockHostResolver).get();
     }
 
@@ -109,14 +116,14 @@ public final class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         Mockito.verify(_mockHostResolver).get();
     }
 
@@ -131,8 +138,8 @@ public final class TsdMetricsFactoryTest {
                 .setSinks(Collections.singletonList(sink))
                 .build();
 
-        Assert.assertTrue(metricsFactory.getHostResolver() instanceof BackgroundCachingHostResolver);
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getHostResolver(), Matchers.instanceOf(BackgroundCachingHostResolver.class));
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -140,7 +147,7 @@ public final class TsdMetricsFactoryTest {
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         metrics.close();
         Mockito.verify(sink).record(Mockito.any(Event.class));
     }
@@ -167,7 +174,7 @@ public final class TsdMetricsFactoryTest {
                 Mockito.eq("Unable to construct TsdMetrics, metrics disabled; failures=[Unable to determine hostname]"),
                 Mockito.any(RuntimeException.class));
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         metrics.close();
 
         Mockito.verify(sink, Mockito.never()).record(Mockito.any(Event.class));
@@ -188,7 +195,7 @@ public final class TsdMetricsFactoryTest {
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         metrics.close();
         Mockito.verify(sink1).record(Mockito.any(Event.class));
         Mockito.verify(sink2).record(Mockito.any(Event.class));
@@ -204,7 +211,7 @@ public final class TsdMetricsFactoryTest {
                 .build();
         Mockito.verify(logger).warn(Mockito.anyString());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
 
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
@@ -221,11 +228,11 @@ public final class TsdMetricsFactoryTest {
                 .build();
         Mockito.verify(logger).warn(Mockito.anyString());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         metrics.close();
      }
 
@@ -239,11 +246,11 @@ public final class TsdMetricsFactoryTest {
                 .build();
         Mockito.verify(logger).warn(Mockito.anyString());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
-        Assert.assertTrue(metricsFactory.getSinks().get(0) instanceof WarningSink);
+        MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
         @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         metrics.close();
     }
 
@@ -259,7 +266,7 @@ public final class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -267,7 +274,7 @@ public final class TsdMetricsFactoryTest {
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         Mockito.verify(_mockHostResolver).get();
 
         final ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
@@ -290,7 +297,7 @@ public final class TsdMetricsFactoryTest {
                 .build();
 
         Assert.assertNotSame(_mockHostResolver, metricsFactory.getHostResolver());
-        Assert.assertTrue(metricsFactory.getUuidFactory() instanceof SplittableRandomUuidFactory);
+        MatcherAssert.assertThat(metricsFactory.getUuidFactory(), Matchers.instanceOf(SplittableRandomUuidFactory.class));
         Assert.assertEquals("MyService", metricsFactory.getServiceName());
         Assert.assertEquals("MyCluster", metricsFactory.getClusterName());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
@@ -298,7 +305,7 @@ public final class TsdMetricsFactoryTest {
 
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof TsdMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
         Mockito.verify(_mockHostResolver, Mockito.never()).get();
 
         final ArgumentCaptor<Event> eventArgumentCaptor = ArgumentCaptor.forClass(Event.class);
@@ -344,7 +351,7 @@ public final class TsdMetricsFactoryTest {
         final List<Sink> sinks = TsdMetricsFactory.createDefaultSinks(Collections.emptyList());
         Assert.assertNotNull(sinks);
         Assert.assertEquals(1, sinks.size());
-        Assert.assertTrue(sinks.iterator().next() instanceof WarningSink);
+        MatcherAssert.assertThat(sinks.iterator().next(), Matchers.instanceOf(WarningSink.class));
     }
 
     @Test
@@ -353,7 +360,7 @@ public final class TsdMetricsFactoryTest {
                 Collections.singletonList("com.arpnetworking.metrics.impl.NonExistentSink"));
         Assert.assertNotNull(sinks);
         Assert.assertEquals(1, sinks.size());
-        Assert.assertTrue(sinks.iterator().next() instanceof WarningSink);
+        MatcherAssert.assertThat(sinks.iterator().next(), Matchers.instanceOf(WarningSink.class));
     }
 
     @Test
@@ -362,7 +369,7 @@ public final class TsdMetricsFactoryTest {
                 Collections.singletonList("com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
         Assert.assertNotNull(sinks);
         Assert.assertEquals(1, sinks.size());
-        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+        MatcherAssert.assertThat(sinks.iterator().next(), Matchers.instanceOf(ValidDefaultSink.class));
     }
 
     @Test
@@ -373,7 +380,7 @@ public final class TsdMetricsFactoryTest {
                         "com.arpnetworking.metrics.impl.NonExistentSink"));
         Assert.assertNotNull(sinks);
         Assert.assertEquals(1, sinks.size());
-        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+        MatcherAssert.assertThat(sinks.iterator().next(), Matchers.instanceOf(ValidDefaultSink.class));
     }
 
     @Test
@@ -385,14 +392,14 @@ public final class TsdMetricsFactoryTest {
                         "com.arpnetworking.metrics.impl.TsdMetricsFactoryTest$ValidDefaultSink"));
         Assert.assertNotNull(sinks);
         Assert.assertEquals(1, sinks.size());
-        Assert.assertTrue(sinks.iterator().next() instanceof ValidDefaultSink);
+        MatcherAssert.assertThat(sinks.iterator().next(), Matchers.instanceOf(ValidDefaultSink.class));
     }
 
     @Test
     public void testCreateSinkSuccess() {
         final Optional<Sink> sink = TsdMetricsFactory.createSink(WarningSink.class);
         Assert.assertTrue(sink.isPresent());
-        Assert.assertTrue(sink.get() instanceof WarningSink);
+        MatcherAssert.assertThat(sink.get(), Matchers.instanceOf(WarningSink.class));
     }
 
     @Test
@@ -406,7 +413,7 @@ public final class TsdMetricsFactoryTest {
         final Optional<Class<? extends Sink>> sinkClass = TsdMetricsFactory.getSinkClass(
                 "com.arpnetworking.metrics.impl.WarningSink");
         Assert.assertTrue(sinkClass.isPresent());
-        Assert.assertTrue(WarningSink.class.equals(sinkClass.get()));
+        Assert.assertEquals(WarningSink.class, sinkClass.get());
     }
 
     @Test
@@ -420,6 +427,7 @@ public final class TsdMetricsFactoryTest {
     private HostResolver _mockHostResolver;
     @Mock
     private UuidFactory _mockUuidFactory;
+    private AutoCloseable _mocks;
 
     /**
      * Invalid default sink. This sink is an invalid default sink because it
