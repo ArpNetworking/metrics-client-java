@@ -15,6 +15,8 @@
  */
 package com.arpnetworking.metrics.impl;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -55,54 +57,54 @@ public final class AugmentedHistogramTest {
             sum += i * i;
         }
 
-        Assert.assertTrue(
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(null)
                         .setPrecision(7)
                         .setMinimum(1.0)
                         .setMaximum(10.0)
                         .setSum(sum)
-                        .build() instanceof NoOpAggregatedData);
-        Assert.assertTrue(
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(histogram)
                         .setPrecision(null)
                         .setMinimum(1.0)
                         .setMaximum(10.0)
                         .setSum(sum)
-                        .build() instanceof NoOpAggregatedData);
-        Assert.assertTrue(
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(histogram)
                         .setPrecision(7)
                         .setMinimum(null)
                         .setMaximum(10.0)
                         .setSum(sum)
-                        .build() instanceof NoOpAggregatedData);
-        Assert.assertTrue(
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(histogram)
                         .setPrecision(7)
                         .setMinimum(1.0)
                         .setMaximum(null)
                         .setSum(sum)
-                        .build() instanceof NoOpAggregatedData);
-        Assert.assertTrue(
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(histogram)
                         .setPrecision(7)
                         .setMinimum(1.0)
                         .setMaximum(10.0)
                         .setSum(null)
-                        .build() instanceof NoOpAggregatedData);
-        Assert.assertTrue(
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
+        MatcherAssert.assertThat(
                 new AugmentedHistogram.Builder()
                         .setHistogram(histogram)
                         .setPrecision(7)
                         .setMinimum(9999.0) // Min is greater than max
                         .setMaximum(0.9999)
                         .setSum(sum)
-                        .build() instanceof NoOpAggregatedData);
+                        .build(), Matchers.instanceOf(NoOpAggregatedData.class));
     }
 
     @Test

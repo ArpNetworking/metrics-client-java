@@ -26,7 +26,11 @@
          http://findbugs.sourceforge.net/bugDescriptions.html#DLS_DEAD_LOCAL_STORE
      -->
      <Match>
-         <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+         <Or>
+             <Bug pattern="DLS_DEAD_LOCAL_STORE" />
+             <Bug pattern="EI_EXPOSE_REP" />
+             <Bug pattern="EI_EXPOSE_REP2" />
+         </Or>
      </Match>
 
      <!-- Match all RV_RETURN_VALUE_IGNORED_BAD_PRACTICE violations on all unit

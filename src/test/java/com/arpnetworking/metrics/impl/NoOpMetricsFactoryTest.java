@@ -32,7 +32,7 @@ public final class NoOpMetricsFactoryTest {
     public void testCreate() {
         final Metrics metrics = new NoOpMetricsFactory().create();
         Assert.assertNotNull(metrics);
-        Assert.assertTrue(metrics instanceof NoOpMetrics);
+        MatcherAssert.assertThat(metrics, Matchers.instanceOf(NoOpMetrics.class));
     }
 
     @Test
