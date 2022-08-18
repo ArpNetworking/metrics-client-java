@@ -18,7 +18,7 @@
   <parent>
     <groupId>com.arpnetworking.build</groupId>
     <artifactId>arpnetworking-parent-pom</artifactId>
-    <version>3.0.9</version>
+    <version>3.0.10</version>
     <relativePath />
   </parent>
 
@@ -68,7 +68,7 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>2.0.4</arpnetworking.commons.version>
+    <arpnetworking.commons.version>2.0.5</arpnetworking.commons.version>
     <spotbugs.annotations.version>4.7.1</spotbugs.annotations.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
