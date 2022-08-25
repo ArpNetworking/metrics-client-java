@@ -3,7 +3,6 @@ pipeline {
     kubernetes {
       defaultContainer 'ubuntu'
       activeDeadlineSeconds 3600
-      idleMinutes 15
     }
   }
   stages {
