@@ -17,14 +17,14 @@ package io.inscopemetrics.client.impl;
 
 import com.arpnetworking.commons.uuidfactory.SplittableRandomUuidFactory;
 import com.arpnetworking.commons.uuidfactory.UuidFactory;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.inscopemetrics.client.Metrics;
 import io.inscopemetrics.client.MetricsFactory;
+import io.inscopemetrics.client.PeriodicMetrics;
+import io.inscopemetrics.client.ScopedMetrics;
 import io.inscopemetrics.client.Sink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,12 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
  * Default implementation of {@link MetricsFactory} for creating
- * {@link Metrics} instances for publication of time series data (TSD).
+ * {@link ScopedMetrics} instances for publication of time series data (TSD).
  *
  * For more information about the semantics of this class and its methods
  * please refer to the {@link MetricsFactory} interface documentation.
@@ -145,30 +147,29 @@ import javax.annotation.Nullable;
  *
  * query-log.YYYY-MM-DD-HH.log
  *
- * All the examples apply equally to {@link MetricsFactory#create()} and
- * {@link MetricsFactory#createLockFree()}.
+ * All the examples apply equally to {@link MetricsFactory#createScopedMetrics()}
+ * and {@link MetricsFactory#createLockFreeScopedMetrics()}.
  *
  * This class is thread safe.
+ *
+ * TODO(ville): Should we consider a lock-free version of the factory as well?
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
 public class TsdMetricsFactory implements MetricsFactory {
 
-    private static final List<String> DEFAULT_SINK_CLASS_NAMES;
     private static final Logger LOGGER = LoggerFactory.getLogger(TsdMetricsFactory.class);
 
-    static {
-        final List<String> sinkClassNames = new ArrayList<>();
-        sinkClassNames.add("com.arpnetworking.metrics.impl.HttpSink");
-        sinkClassNames.add("com.arpnetworking.metrics.impl.FileSink");
-        DEFAULT_SINK_CLASS_NAMES = Collections.unmodifiableList(sinkClassNames);
-    }
-
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
     private final List<Sink> sinks;
     private final Supplier<UUID> uuidFactory;
     private final Map<String, String> defaultDimensions;
     private final Map<String, Supplier<String>> defaultComputedDimensions;
+    private final PeriodicMetricsExecutor periodicMetricsExecutor;
+    private final Supplier<WarningSink.Builder> warningSinkBuilderSupplier;
     private final Logger logger;
+
+    private boolean isOpen = true;
 
     /**
      * Protected constructor.
@@ -186,6 +187,8 @@ public class TsdMetricsFactory implements MetricsFactory {
         defaultDimensions = Collections.unmodifiableMap(new HashMap<>(builder.defaultDimensions));
         defaultComputedDimensions = Collections.unmodifiableMap(new HashMap<>(builder.defaultComputedDimensions));
         // CHECKSTYLE.ON: IllegalInstantiation
+        periodicMetricsExecutor = new PeriodicMetricsExecutor.Builder().build();
+        warningSinkBuilderSupplier = builder.warningSinkBuilderSupplier;
         this.logger = logger;
     }
 
@@ -208,8 +211,8 @@ public class TsdMetricsFactory implements MetricsFactory {
      * fixed default dimension unless the computed dimension value {@link Supplier}
      * returns {@code null} in which case it is ignored.
      *
-     * @param defaultDimensions The dimensions to add to every {@link Metrics} instance.
-     * @param defaultComputedDimensions The dimensions to add to every {@link Metrics}
+     * @param defaultDimensions The dimensions to add to every {@link ScopedMetrics} instance.
+     * @param defaultComputedDimensions The dimensions to add to every {@link ScopedMetrics}
      * instance with the value evaluated at creation time from a {@link Supplier}.
      * @return Instance of {@link TsdMetricsFactory}.
      */
@@ -224,51 +227,120 @@ public class TsdMetricsFactory implements MetricsFactory {
     }
 
     @Override
-    public Metrics create() {
-        final UUID uuid = uuidFactory.get();
-        Metrics metrics;
+    public ScopedMetrics createScopedMetrics() {
+        readWriteLock.readLock().lock();
         try {
-            metrics = new TsdMetrics(
-                    uuid,
-                    sinks);
-            configureMetrics(metrics);
+            final UUID uuid = uuidFactory.get();
+            ScopedMetrics metrics;
+            try {
+                if (!isOpen) {
+                    throw new IllegalStateException("MetricsFactory is already closed");
+                }
+                metrics = new ThreadSafeScopedMetrics(
+                        uuid,
+                        sinks);
+                configureMetrics(metrics);
 
-            // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
-        } catch (final RuntimeException e) {
-            // CHECKSTYLE.ON: IllegalCatch
-            logger.warn("Unable to construct TsdMetrics, metrics disabled", e);
-            metrics = new TsdMetrics(
-                    uuid,
-                    Collections.singletonList(
-                            new WarningSink.Builder()
-                                    .setReasons(Collections.singletonList(e.getMessage()))
-                                    .build()));
+                // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
+            } catch (final RuntimeException e) {
+                // CHECKSTYLE.ON: IllegalCatch
+                logger.warn("Unable to construct ThreadSafeScopedMetrics, metrics disabled", e);
+                metrics = new ThreadSafeScopedMetrics(
+                        uuid,
+                        Collections.singletonList(
+                                warningSinkBuilderSupplier.get()
+                                        .setReasons(Collections.singletonList(e.getMessage()))
+                                        .build()));
+            }
+            return metrics;
+        } finally {
+            readWriteLock.readLock().unlock();
         }
-        return metrics;
     }
 
     @Override
-    public Metrics createLockFree() {
-        final UUID uuid = uuidFactory.get();
-        Metrics metrics;
+    public ScopedMetrics createLockFreeScopedMetrics() {
+        readWriteLock.readLock().lock();
         try {
-            metrics = new LockFreeMetrics(
-                    uuid,
-                    sinks);
-            configureMetrics(metrics);
+            final UUID uuid = uuidFactory.get();
+            ScopedMetrics metrics;
+            try {
+                if (!isOpen) {
+                    throw new IllegalStateException("MetricsFactory is already closed");
+                }
+                metrics = new LockFreeScopedMetrics(
+                        uuid,
+                        sinks);
+                configureMetrics(metrics);
 
-            // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
-        } catch (final RuntimeException e) {
-            // CHECKSTYLE.ON: IllegalCatch
-            logger.warn("Unable to construct LockFreeMetrics, metrics disabled", e);
-            metrics = new LockFreeMetrics(
-                    uuid,
-                    Collections.singletonList(
-                            new WarningSink.Builder()
-                                    .setReasons(Collections.singletonList(e.getMessage()))
-                                    .build()));
+                // CHECKSTYLE.OFF: IllegalCatch - Suppliers do not throw checked exceptions
+            } catch (final RuntimeException e) {
+                // CHECKSTYLE.ON: IllegalCatch
+                logger.warn("Unable to construct LockFreeScopedMetrics, metrics disabled", e);
+                metrics = new LockFreeScopedMetrics(
+                        uuid,
+                        Collections.singletonList(
+                                warningSinkBuilderSupplier.get()
+                                        .setReasons(Collections.singletonList(e.getMessage()))
+                                        .build()));
+            }
+            return metrics;
+        } finally {
+            readWriteLock.readLock().unlock();
         }
-        return metrics;
+    }
+
+    @Override
+    public PeriodicMetrics schedulePeriodicMetrics(final Duration interval) {
+        readWriteLock.readLock().lock();
+        try {
+            // NOTE: There is no check for isOpen here because periodic metrics
+            // rely on the periodic executor and scoped metrics from this factory
+            // both of which behalf "well" once closed.
+
+            // The default thread safe periodic metrics executes any registered
+            // callback in the executing thread. If your callbacks are too slow
+            // or you have too many registered to a single periodic metrics
+            // instance then your metrics recording may be delayed past the
+            // requested interval. The PeriodicMetricsExecutor makes a best
+            // effort attempt to detect this and emit periodic warnings.
+            //
+            // However, by default the PeriodicMetricsExecutor executes periodic
+            // metric instances in parallel using the a scheduled thread pool
+            // executor with one core thread and 60 second keep alive. If this
+            // results in higher than desired spot-load users may schedule periodic
+            // metrics themselves either using PeriodicMetricsExecutor with a
+            // custom scheduled thread pool executor or via some other means.
+            final ThreadSafePeriodicMetrics periodicMetrics = new ThreadSafePeriodicMetrics.Builder()
+                    .setMetricsFactory(this)
+                    .build();
+
+            periodicMetricsExecutor.scheduleAtFixedRate(periodicMetrics, interval);
+
+            return periodicMetrics;
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void close() throws InterruptedException {
+        readWriteLock.writeLock().lock();
+        isOpen = false;
+        try {
+            // TODO(ville): Track open scoped metrics instances.
+            // If there are open scoped metrics instances when the metrics
+            // factory is closed, that data will be lost. If it's possible
+            // to track them and warn if data is lost that would be more
+            // consistent with the library's behavior (e.g. as with timers).
+            // Alternatively, we could look at blocking until they close.
+            periodicMetricsExecutor.close();
+            for (final Sink sink : sinks) {
+                sink.close();
+            }
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -280,7 +352,7 @@ public class TsdMetricsFactory implements MetricsFactory {
                 defaultComputedDimensions);
     }
 
-    void configureMetrics(final Metrics metrics) {
+    void configureMetrics(final ScopedMetrics metrics) {
         metrics.addDimensions(defaultDimensions);
         for (final Map.Entry<String, Supplier<String>> entry : defaultComputedDimensions.entrySet()) {
             final String value = entry.getValue().get();
@@ -306,43 +378,6 @@ public class TsdMetricsFactory implements MetricsFactory {
         return uuidFactory;
     }
 
-    static @Nullable List<Sink> createDefaultSinks(final List<String> defaultSinkClassNames) {
-        for (final String sinkClassName : defaultSinkClassNames) {
-            final Optional<Class<? extends Sink>> sinkClass = getSinkClass(sinkClassName);
-            if (sinkClass.isPresent()) {
-                final Optional<Sink> sink = createSink(sinkClass.get());
-                if (sink.isPresent()) {
-                    return Collections.singletonList(sink.get());
-                }
-            }
-        }
-
-        return Collections.unmodifiableList(
-                Collections.singletonList(
-                        new WarningSink.Builder()
-                                .setReasons(Collections.singletonList("No default sink found."))
-                                .build()));
-    }
-
-    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
-    static Optional<Sink> createSink(final Class<? extends Sink> sinkClass) {
-        try {
-            final Class<?> sinkBuilderClass = Class.forName(sinkClass.getName() + "$Builder");
-            final Object sinkBuilder = sinkBuilderClass.newInstance();
-            final Method buildMethod = sinkBuilderClass.getMethod("build");
-            return Optional.of((Sink) buildMethod.invoke(sinkBuilder));
-            // CHECKSTYLE.OFF: IllegalCatch - Much cleaner than catching the half-dozen checked exceptions
-        } catch (final Exception e) {
-            // CHECKSTYLE.ON: IllegalCatch
-            LOGGER.warn(
-                    String.format(
-                            "Unable to load sink; sinkClass=%s",
-                            sinkClass),
-                    e);
-            return Optional.empty();
-        }
-    }
-
     @SuppressWarnings("unchecked")
     static Optional<Class<? extends Sink>> getSinkClass(final String name) {
         try {
@@ -363,21 +398,25 @@ public class TsdMetricsFactory implements MetricsFactory {
      *
      * Further, the constructed {@link TsdMetricsFactory} will operate
      * normally except that instead of publishing metrics to the sinks it
-     * will log a warning each time {@link Metrics#close()} is invoked on the
-     * {@link Metrics} instance.
+     * will log a warning each time {@link ScopedMetrics#close()} is invoked on the
+     * {@link ScopedMetrics} instance.
      *
-     * This class is thread safe.
+     * This class is <b>NOT</b> thread safe.
      *
      * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
      */
     public static class Builder implements com.arpnetworking.commons.builder.Builder<MetricsFactory> {
 
-        private static final List<Sink> DEFAULT_SINKS = createDefaultSinks(DEFAULT_SINK_CLASS_NAMES);
-        private static final Map<String, String> DEFAULT_DEFAULT_DIMENSIONS = Collections.emptyMap();
-        private static final Map<String, Supplier<String>> DEFAULT_DEFAULT_COMPUTED_DIMENSIONS = Collections.emptyMap();
+        private static final Map<String, String> EMPTY_DEFAULT_DIMENSIONS = Collections.emptyMap();
+        private static final Map<String, Supplier<String>> EMPTY_DEFAULT_COMPUTED_DIMENSIONS = Collections.emptyMap();
+
+        private static final List<Sink> DEFAULT_SINKS = Collections.singletonList(new HttpSink.Builder().build());
+        private static final Map<String, String> DEFAULT_DEFAULT_DIMENSIONS = EMPTY_DEFAULT_DIMENSIONS;
+        private static final Map<String, Supplier<String>> DEFAULT_DEFAULT_COMPUTED_DIMENSIONS = EMPTY_DEFAULT_COMPUTED_DIMENSIONS;
         private static final Supplier<UUID> DEFAULT_UUID_FACTORY = new SplittableRandomUuidFactory();
 
         private final Logger logger;
+        private final Supplier<WarningSink.Builder> warningSinkBuilderSupplier;
 
         private List<Sink> sinks = DEFAULT_SINKS;
         private Supplier<UUID> uuidFactory = DEFAULT_UUID_FACTORY;
@@ -388,12 +427,18 @@ public class TsdMetricsFactory implements MetricsFactory {
          * Public constructor.
          */
         public Builder() {
-            this(LOGGER);
+            this(LOGGER, WarningSink.Builder::new);
         }
 
         // NOTE: Package private for testing
         Builder(@Nullable final Logger logger) {
+            this(logger, WarningSink.Builder::new);
+        }
+
+        // NOTE: Package private for testing
+        Builder(@Nullable final Logger logger, final Supplier<WarningSink.Builder> warningSinkBuilderSupplier) {
             this.logger = logger;
+            this.warningSinkBuilderSupplier = warningSinkBuilderSupplier;
         }
 
         /**
@@ -403,24 +448,36 @@ public class TsdMetricsFactory implements MetricsFactory {
          */
         @Override
         public MetricsFactory build() {
-            // Defaults
+            final List<String> failures = new ArrayList<>();
+
+            // Validate
             if (sinks == null) {
-                sinks = DEFAULT_SINKS;
-                logger.info(String.format(
-                        "Defaulted null sinks; sinks=%s",
-                        sinks));
+                failures.add("MetricsFactory sinks cannot be null");
             }
+
+            // Defaults
             if (defaultDimensions == null) {
-                defaultDimensions = DEFAULT_DEFAULT_DIMENSIONS;
+                defaultDimensions = EMPTY_DEFAULT_DIMENSIONS;
                 logger.info(String.format(
                         "Defaulted null default dimensions; defaultDimensions=%s",
                         defaultDimensions));
             }
             if (defaultComputedDimensions == null) {
-                defaultComputedDimensions = DEFAULT_DEFAULT_COMPUTED_DIMENSIONS;
+                defaultComputedDimensions = EMPTY_DEFAULT_COMPUTED_DIMENSIONS;
                 logger.info(String.format(
                         "Defaulted null default computed dimensions; defaultComputedDimensions=%s",
                         defaultComputedDimensions));
+            }
+
+            // Apply fallback
+            if (!failures.isEmpty()) {
+                logger.warn(String.format(
+                        "Unable to construct TsdMetricsFactory, metrics disabled; failures=%s",
+                        failures));
+                sinks = Collections.singletonList(
+                        new WarningSink.Builder()
+                                .setReasons(failures)
+                                .build());
             }
 
             return new TsdMetricsFactory(this);
@@ -428,8 +485,7 @@ public class TsdMetricsFactory implements MetricsFactory {
 
         /**
          * Set the sinks to publish to. Cannot be null. Optional. Defaults to
-         * the first available {@link Sink} on the classpath from an ordered
-         * list of predefine {@link Sink} implementations.
+         * the the default instance of {@link HttpSink}.
          *
          * @param value The sinks to publish to.
          * @return This {@link Builder} instance.
@@ -440,8 +496,9 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         /**
-         * Set the dimensions to add to each {@link Metrics} instance. Cannot
-         * be null. Optional. Defaults to an empty map (no default dimensions).
+         * Set the dimensions to add to each {@link io.inscopemetrics.client.Metrics}
+         * instance. Cannot be null. Optional. Defaults to an empty map (no
+         * default dimensions).
          *
          * @param value The default dimensions.
          * @return This {@link Builder} instance.
@@ -452,8 +509,8 @@ public class TsdMetricsFactory implements MetricsFactory {
         }
 
         /**
-         * Set the computed dimensions to add to each {@link Metrics} instance where
-         * the value of the dimension is evaluated at {@link Metrics} creation time.
+         * Set the computed dimensions to add to each {@link io.inscopemetrics.client.Metrics}
+         * instance where the value of the dimension is evaluated at creation time.
          * Cannot be null. Optional. Defaults to an empty map (no default computed
          * dimensions).
          *
@@ -467,7 +524,7 @@ public class TsdMetricsFactory implements MetricsFactory {
 
         /**
          * Set the UuidFactory to be used to create UUIDs assigned to instances
-         * of {@link Metrics} created by this {@link MetricsFactory}.
+         * of {@link ScopedMetrics} created by this {@link MetricsFactory}.
          * Cannot be null. Optional. Defaults to using the Java native
          * {@link java.util.UUID#randomUUID()}.
          *

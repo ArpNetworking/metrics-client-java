@@ -28,26 +28,26 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests specific to {@link TsdMetrics}. Tests shared with {@link LockFreeMetrics}
- * are found in {@link TsdMetricsCommonTest}.
+ * Tests specific to {@link ThreadSafeScopedMetrics}. Tests shared with
+ * {@link LockFreeScopedMetrics} are found in {@link ScopedMetricsCommonTest}.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)
  */
-public final class TsdMetricsTest {
+public final class ThreadSafeScopedMetricsTest {
 
     @Test
     public void testGetOrCreate() {
         final Sink sink = mock(Sink.class);
         @SuppressWarnings("resource")
-        final TsdMetrics metrics = createTsdMetrics(sink);
+        final ThreadSafeScopedMetrics metrics = createThreadSafeScopedMetrics(sink);
 
         final ConcurrentMap<String, String> map = new ConcurrentHashMap<>();
         assertEquals("bar", metrics.getOrCreate(map, "foo", "bar"));
         assertEquals("bar", metrics.getOrCreate(map, "foo", "who"));
     }
 
-    private static TsdMetrics createTsdMetrics(final Sink sink) {
-        final TsdMetrics metrics = new TsdMetrics(
+    private static ThreadSafeScopedMetrics createThreadSafeScopedMetrics(final Sink sink) {
+        final ThreadSafeScopedMetrics metrics = new ThreadSafeScopedMetrics(
                 UUID.randomUUID(),
                 Collections.singletonList(sink),
                 Clock.systemDefaultZone(),

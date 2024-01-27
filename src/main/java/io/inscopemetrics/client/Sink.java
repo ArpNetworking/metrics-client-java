@@ -23,10 +23,19 @@ package io.inscopemetrics.client;
 public interface Sink {
 
     /**
-     * Invoked by {@link Metrics} to record unit of work metrics data to
+     * Invoked by {@link ScopedMetrics} to record unit of work metrics data to
      * this {@link Sink}.
      *
      * @param event The metrics data for the unit of work.
      */
     void record(Event event);
+
+    /**
+     * Close the sink. Sinks should be closed only after all periodic execution
+     * is stopped and all metrics objects are closed. The {@link MetricsFactory}
+     * will handle closing all registered sinks in the correct order.
+     *
+     * @throws InterruptedException if close is interrupted
+     */
+    void close() throws InterruptedException;
 }

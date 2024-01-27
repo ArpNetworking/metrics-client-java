@@ -27,7 +27,7 @@ public class NoOpCounter implements Counter, Quantity {
 
     /**
      * Public constructor. All {@link NoOpCounter} instances should
-     * be created through the {@link NoOpMetrics} instance.
+     * be created through the {@link NoOpScopedMetrics} instance.
      */
     public NoOpCounter() {
         // Do nothing

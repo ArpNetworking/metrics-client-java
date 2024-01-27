@@ -17,17 +17,17 @@ package io.inscopemetrics.client;
 
 /**
  * Interface for counter. Instances are initialized to zero on creation. The
- * zero-value sample is recorded when the {@link Metrics} instance is
+ * zero-value sample is recorded when the {@link ScopedMetrics} instance is
  * closed if no other actions are taken on the {@link Counter}.
  *
  * Modifying the {@link Counter} instance's value modifies the single
- * sample value. When the associated {@link Metrics} instance is closed
+ * sample value. When the associated {@link ScopedMetrics} instance is closed
  * whatever value the sample has is recorded. To create another sample you
  * create a new {@link Counter} instance with the same name.
  *
- * Each counter instance is bound to a {@link Metrics} instance. After the
- * {@link Metrics} instance is closed any modifications to the
- * {@link Counter} instances bound to that {@link Metrics} instance
+ * Each counter instance is bound to a {@link ScopedMetrics} instance. After the
+ * {@link ScopedMetrics} instance is closed any modifications to the
+ * {@link Counter} instances bound to that {@link ScopedMetrics} instance
  * will be ignored.
  *
  * @author Ville Koskela (ville dot koskela at inscopemetrics dot io)

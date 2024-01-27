@@ -54,10 +54,11 @@ public class TsdCounter implements Counter, Quantity {
 
     /**
      * Public static factory. All {@link TsdCounter} instances should
-     * be created through the {@link TsdMetrics} instance.
+     * be created through the {@link ThreadSafeScopedMetrics} instance.
      *
      * @param name The name of the counter.
-     * @param isOpen {@link Supplier} to the state of the underlying {@link io.inscopemetrics.client.Metrics} instance.
+     * @param isOpen {@link Supplier} to the state of the underlying {@link io.inscopemetrics.client.ScopedMetrics}
+     * instance.
      * @return New instance of {@link TsdCounter}.
      */
     public static TsdCounter newInstance(final String name, final Supplier<Boolean> isOpen) {

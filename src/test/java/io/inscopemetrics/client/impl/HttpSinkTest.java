@@ -35,12 +35,10 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -59,6 +57,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyLong;
@@ -79,11 +78,13 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
  */
 public final class HttpSinkTest {
 
-    private static final String PATH = "/metrics/v1/application";
+    private static final String PATH = "/wiremock/test/path";
 
     @Rule
     public WireMockRule wireMockRule = new WireMockRule(
-            WireMockConfiguration.wireMockConfig().dynamicPort());
+            WireMockConfiguration.wireMockConfig()
+                    .dynamicPort()
+                    .asynchronousResponseEnabled(true));
 
     private final UUID id = UUID.randomUUID();
     private final Instant start = Instant.now().minusMillis(812);
@@ -101,13 +102,17 @@ public final class HttpSinkTest {
         final HttpSink.Builder builder = new HttpSink.Builder();
         builder.setBufferSize(null);
         builder.setParallelism(null);
-        builder.setUri(null);
+        builder.setScheme(null);
+        builder.setHost(null);
+        builder.setPort(null);
+        builder.setPath(null);
         builder.setMaxBatchSize(null);
-        builder.setEmptyQueueInterval(null);
+        builder.setConnectTimeout(null);
+        builder.setRequestTimeout(null);
+        builder.setCloseTimeout(null);
         builder.setDispatchErrorLoggingInterval(null);
         builder.setEventsDroppedLoggingInteval(null);
         builder.setUnsupportedDataLoggingInterval(null);
-        builder.setEmptyQueueInterval(null);
         final Sink sink = builder.build();
         assertNotNull(sink);
         assertEquals(HttpSink.class, sink.getClass());
@@ -115,8 +120,9 @@ public final class HttpSinkTest {
 
     @Test
     public void testBuilderWithHttpsUri() {
-        final HttpSink.Builder builder = new HttpSink.Builder();
-        builder.setUri(URI.create("https://secure.example.com"));
+        final HttpSink.Builder builder = new HttpSink.Builder()
+                .setScheme("https")
+                .setHost("secure.example.com");
         final Sink sink = builder.build();
         assertNotNull(sink);
         assertEquals(HttpSink.class, sink.getClass());
@@ -124,11 +130,36 @@ public final class HttpSinkTest {
 
     @Test
     public void testBuilderWithNotHttpUri() {
-        final HttpSink.Builder builder = new HttpSink.Builder();
-        builder.setUri(URI.create("ftp://ftp.example.com"));
+        final HttpSink.Builder builder = new HttpSink.Builder()
+                .setScheme("ftp")
+                .setHost("ftp.example.com");
         final Sink sink = builder.build();
         assertNotNull(sink);
         assertNotEquals(HttpSink.class, sink.getClass());
+    }
+
+    @Test
+    public void testBuilderWithInvalidUri() {
+        final HttpSink.Builder builder = new HttpSink.Builder()
+                .setHost("no spaces allowed");
+        final Sink sink = builder.build();
+        assertNotNull(sink);
+        assertEquals(HttpSink.class, sink.getClass());
+        final HttpSink httpSink = (HttpSink) sink;
+        assertEquals("http://localhost:7090/metrics/v3/application", httpSink.getUri().toString());
+    }
+
+    @Test
+    public void testBuilderBatchLargerThanBuffer() {
+        final HttpSink.Builder builder = new HttpSink.Builder()
+                .setBufferSize(10)
+                .setMaxBatchSize(100);
+        final Sink sink = builder.build();
+        assertNotNull(sink);
+        assertEquals(HttpSink.class, sink.getClass());
+        final HttpSink httpSink = (HttpSink) sink;
+        assertEquals(10, httpSink.getBufferSize());
+        assertEquals(10, httpSink.getMaxBatchSize());
     }
 
     // CHECKSTYLE.OFF: MethodLength
@@ -177,7 +208,8 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .setEventHandler(
                         new AttemptCompletedAssertionHandler(
                                 assertionResult,
@@ -272,17 +304,17 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                        .setEventHandler(
-                                new AttemptCompletedAssertionHandler(
-                                        assertionResult,
-                                        1,
-                                        143,
-                                        true,
-                                        new CompletionHandler(semaphore))),
-                logger);
+        final Sink sink = new HttpSink.Builder(logger)
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                assertionResult,
+                                1,
+                                143,
+                                true,
+                                new CompletionHandler(semaphore)))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -361,17 +393,17 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                        .setEventHandler(
-                                new AttemptCompletedAssertionHandler(
-                                        assertionResult,
-                                        1,
-                                        117,
-                                        true,
-                                        new CompletionHandler(semaphore))),
-                logger);
+        final Sink sink = new HttpSink.Builder()
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                assertionResult,
+                                1,
+                                117,
+                                true,
+                                new CompletionHandler(semaphore)))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -426,17 +458,17 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                        .setEventHandler(
-                                new AttemptCompletedAssertionHandler(
-                                        assertionResult,
-                                        1,
-                                        104,
-                                        true,
-                                        new CompletionHandler(semaphore))),
-                logger);
+        final Sink sink = new HttpSink.Builder(logger)
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                assertionResult,
+                                1,
+                                104,
+                                true,
+                                new CompletionHandler(semaphore)))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -497,7 +529,8 @@ public final class HttpSinkTest {
 
         final Semaphore semaphore = new Semaphore(0);
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .setEventHandler(new CompletionHandler(semaphore))
                 .build();
 
@@ -526,44 +559,65 @@ public final class HttpSinkTest {
 
     @Test
     public void testBatchesRequests() throws InterruptedException {
+        final AtomicBoolean initialRequest = new AtomicBoolean(true);
+        final Semaphore clientSemaphore = new Semaphore(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final Semaphore completionSemaphore = new Semaphore(0);
+
         wireMockRule.stubFor(
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
-                            // Dimensions
-                            assertEquals(0, r.getDimensionsCount());
+                            if (initialRequest.get()) {
+                                initialRequest.set(false);
+                                try {
+                                    clientSemaphore.release();
+                                    serverSemaphore.acquire();
+                                } catch (final InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            } else {
+                                // Dimensions
+                                assertEquals(0, r.getDimensionsCount());
 
-                            // Samples
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "timer",
-                                    7d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "counter",
-                                    8d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "gauge",
-                                    9d);
+                                // Samples
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "timer",
+                                        7d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "counter",
+                                        8d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "gauge",
+                                        9d);
+                            }
                         }))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(200)));
 
-        final AtomicBoolean assertionResult = new AtomicBoolean(false);
-        final Semaphore semaphore = new Semaphore(0);
+        final AtomicBoolean blockerRequestResult = new AtomicBoolean(false);
+        final AtomicBoolean batchRequestResult = new AtomicBoolean(false);
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .setMaxBatchSize(10)
                 .setParallelism(1)
-                .setEmptyQueueInterval(Duration.ofMillis(1000))
                 .setEventHandler(
                         new AttemptCompletedAssertionHandler(
-                                assertionResult,
-                                3,
-                                315,
-                                true,
-                                new CompletionHandler(
-                                        semaphore)))
+                                Arrays.asList(
+                                    new AssertionResult(
+                                            blockerRequestResult,
+                                            1,
+                                            105,
+                                            true),
+                                    new AssertionResult(
+                                            batchRequestResult,
+                                            3,
+                                            315,
+                                            true)),
+                                new CompletionHandler(completionSemaphore)))
                 .build();
 
         final TsdEvent event = new TsdEvent(
@@ -577,55 +631,105 @@ public final class HttpSinkTest {
                         "gauge", TsdQuantity.newInstance(9d)),
                 Collections.emptyMap());
 
+        // Send initial "blocker" event to allow back-log to accumulate
+        sink.record(event);
+        clientSemaphore.acquire();
+
+        // Actual batch of requests
         for (int x = 0; x < 3; x++) {
             sink.record(event);
         }
-        semaphore.acquire();
+
+        // Allow the server to continue processing
+        serverSemaphore.release();
 
         // Ensure expected handler was invoked
-        assertTrue(assertionResult.get());
+        completionSemaphore.acquire(2);
+        assertTrue(blockerRequestResult.get());
+        assertTrue(batchRequestResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
                 .withHeader("Content-Type", WireMock.equalTo("application/octet-stream"));
 
         // Assert that data was sent
-        wireMockRule.verify(1, requestPattern);
+        wireMockRule.verify(2, requestPattern);
         assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
     public void testBatchesRequestsRespectsMax() throws InterruptedException {
+        final AtomicBoolean initialRequest = new AtomicBoolean(true);
+        final Semaphore clientSemaphore = new Semaphore(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final Semaphore completionSemaphore = new Semaphore(0);
+
         wireMockRule.stubFor(
                 WireMock.requestMatching(new RequestValueMatcher(
                         r -> {
-                            // Dimensions
-                            assertEquals(0, r.getDimensionsCount());
+                            if (initialRequest.get()) {
+                                initialRequest.set(false);
+                                try {
+                                    clientSemaphore.release();
+                                    serverSemaphore.acquire();
+                                } catch (final InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            } else {
+                                // Dimensions
+                                assertEquals(0, r.getDimensionsCount());
 
-                            // Samples
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "timer",
-                                    7d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "counter",
-                                    8d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "gauge",
-                                    9d);
+                                // Samples
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "timer",
+                                        7d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "counter",
+                                        8d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "gauge",
+                                        9d);
+                            }
                         }))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(200)));
 
-        final Semaphore semaphore = new Semaphore(-2);
+        final AtomicBoolean blockerRequestResult = new AtomicBoolean(false);
+        final AtomicBoolean batch1RequestResult = new AtomicBoolean(false);
+        final AtomicBoolean batch2RequestResult = new AtomicBoolean(false);
+        final AtomicBoolean batch3RequestResult = new AtomicBoolean(false);
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .setMaxBatchSize(2)
                 .setParallelism(1)
-                .setEmptyQueueInterval(Duration.ofMillis(1000))
-                .setEventHandler(new CompletionHandler(semaphore))
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                Arrays.asList(
+                                        new AssertionResult(
+                                                blockerRequestResult,
+                                                1,
+                                                105,
+                                                true),
+                                        new AssertionResult(
+                                                batch1RequestResult,
+                                                2,
+                                                210,
+                                                true),
+                                        new AssertionResult(
+                                                batch2RequestResult,
+                                                2,
+                                                210,
+                                                true),
+                                        new AssertionResult(
+                                                batch3RequestResult,
+                                                1,
+                                                105,
+                                                true)),
+                                new CompletionHandler(completionSemaphore)))
                 .build();
 
         final TsdEvent event = new TsdEvent(
@@ -639,26 +743,42 @@ public final class HttpSinkTest {
                         "gauge", TsdQuantity.newInstance(9d)),
                 Collections.emptyMap());
 
+        // Send initial "blocker" event to allow back-log to accumulate
+        sink.record(event);
+        clientSemaphore.acquire();
+
+        // Actual batch of requests
         for (int x = 0; x < 5; x++) {
             sink.record(event);
         }
-        semaphore.acquire();
+
+        // Allow the server to continue processing
+        serverSemaphore.release();
+
+        // Ensure expected handler was invoked
+        completionSemaphore.acquire(4);
+        assertTrue(blockerRequestResult.get());
+        assertTrue(batch1RequestResult.get());
+        assertTrue(batch2RequestResult.get());
+        assertTrue(batch3RequestResult.get());
 
         // Request matcher
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
                 .withHeader("Content-Type", WireMock.equalTo("application/octet-stream"));
 
         // Assert that data was sent
-        wireMockRule.verify(3, requestPattern);
+        wireMockRule.verify(4, requestPattern);
         assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
     }
 
     @Test
     public void testRespectsBufferMax() throws InterruptedException {
+        final AtomicBoolean initialRequest = new AtomicBoolean(true);
+        final Semaphore clientSemaphore = new Semaphore(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final Semaphore completionSemaphore = new Semaphore(0);
+
         final AtomicInteger droppedEvents = new AtomicInteger(0);
-        final Semaphore semaphoreA = new Semaphore(0);
-        final Semaphore semaphoreB = new Semaphore(0);
-        final Semaphore semaphoreC = new Semaphore(-2);
         final AtomicInteger recordsReceived = new AtomicInteger(0);
 
         wireMockRule.stubFor(
@@ -666,33 +786,46 @@ public final class HttpSinkTest {
                         r -> {
                             recordsReceived.incrementAndGet();
 
-                            // Dimensions
-                            assertEquals(0, r.getDimensionsCount());
+                            if (initialRequest.get()) {
+                                initialRequest.set(false);
+                                try {
+                                    clientSemaphore.release();
+                                    serverSemaphore.acquire();
+                                } catch (final InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            } else {
+                                // Dimensions
+                                assertEquals(0, r.getDimensionsCount());
 
-                            // Samples
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "timer",
-                                    7d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "counter",
-                                    8d);
-                            assertMetricData(
-                                    r.getDataList(),
-                                    "gauge",
-                                    9d);
+                                // Samples
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "timer",
+                                        7d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "counter",
+                                        8d);
+                                assertMetricData(
+                                        r.getDataList(),
+                                        "gauge",
+                                        9d);
+                            }
                         }))
                         .willReturn(WireMock.aResponse()
                                 .withStatus(200)));
 
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .setMaxBatchSize(2)
                 .setParallelism(1)
                 .setBufferSize(5)
-                .setEmptyQueueInterval(Duration.ofMillis(1000))
-                .setEventHandler(new RespectsMaxBufferEventHandler(semaphoreA, semaphoreB, semaphoreC, droppedEvents))
+                .setEventHandler(
+                        new EventDroppedAssertionHandler(
+                                droppedEvents,
+                                new CompletionHandler(completionSemaphore)))
                 .build();
 
         final TsdEvent event = new TsdEvent(
@@ -706,16 +839,20 @@ public final class HttpSinkTest {
                         "gauge", TsdQuantity.newInstance(9d)),
                 Collections.emptyMap());
 
-        // Add one event to be used as a synchronization point
+        // Send initial "blocker" event to allow back-log to accumulate
         sink.record(event);
-        semaphoreA.acquire();
+        clientSemaphore.acquire();
 
         // Add the actual events to analyze
         for (int x = 0; x < 10; x++) {
             sink.record(event);
         }
-        semaphoreB.release();
-        semaphoreC.acquire();
+
+        // Allow the server to continue processing
+        serverSemaphore.release();
+
+        // Ensure expected handler was invoked
+        completionSemaphore.acquire(4);
 
         // Ensure expected handler was invoked
         assertEquals(5, droppedEvents.get());
@@ -749,18 +886,18 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                        .setEventHandler(
-                                new AttemptCompletedAssertionHandler(
-                                        assertionResult,
-                                        1,
-                                        34,
-                                        false,
-                                        new CompletionHandler(
-                                                semaphore))),
-                logger);
+        final Sink sink = new HttpSink.Builder(logger)
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                assertionResult,
+                                1,
+                                34,
+                                false,
+                                new CompletionHandler(
+                                        semaphore)))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -807,18 +944,18 @@ public final class HttpSinkTest {
         final AtomicBoolean assertionResult = new AtomicBoolean(false);
         final Semaphore semaphore = new Semaphore(0);
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                        .setEventHandler(
-                                new AttemptCompletedAssertionHandler(
-                                        assertionResult,
-                                        1,
-                                        34,
-                                        false,
-                                        new CompletionHandler(
-                                                semaphore))),
-                logger);
+        final Sink sink = new HttpSink.Builder(logger)
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(
+                        new AttemptCompletedAssertionHandler(
+                                assertionResult,
+                                1,
+                                34,
+                                false,
+                                new CompletionHandler(
+                                        semaphore)))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -851,11 +988,11 @@ public final class HttpSinkTest {
     public void testPostBadHost() throws InterruptedException {
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://nohost.example.com" + PATH))
-                        .setEventHandler(new CompletionHandler(semaphore)),
-                logger);
+        final Sink sink = new HttpSink.Builder(logger)
+                .setHost("nohost.example.com")
+                .setPath(PATH)
+                .setEventHandler(new CompletionHandler(semaphore))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -892,12 +1029,11 @@ public final class HttpSinkTest {
 
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://nohost.example.com" + PATH))
-                        .setEventHandler(new CompletionHandler(semaphore)),
-                () -> httpClient,
-                logger);
+        final Sink sink = new HttpSink.Builder(logger, () -> httpClient)
+                .setHost("nohost.example.com")
+                .setPath(PATH)
+                .setEventHandler(new CompletionHandler(semaphore))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -933,12 +1069,11 @@ public final class HttpSinkTest {
 
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://nohost.example.com" + PATH))
-                        .setEventHandler(new CompletionHandler(semaphore)),
-                () -> httpClient,
-                logger);
+        final Sink sink = new HttpSink.Builder(logger, () -> httpClient)
+                .setHost("nohost.example.com")
+                .setPath(PATH)
+                .setEventHandler(new CompletionHandler(semaphore))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -982,12 +1117,11 @@ public final class HttpSinkTest {
 
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://nohost.example.com" + PATH))
-                        .setEventHandler(new CompletionHandler(semaphore)),
-                () -> httpClient,
-                logger);
+        final Sink sink = new HttpSink.Builder(logger, () -> httpClient)
+                .setHost("nohost.example.com")
+                .setPath(PATH)
+                .setEventHandler(new CompletionHandler(semaphore))
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -1027,15 +1161,16 @@ public final class HttpSinkTest {
         final org.slf4j.Logger logger = mock(org.slf4j.Logger.class);
         final Semaphore semaphore = new Semaphore(0);
         final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
-        final Sink sink = new HttpSink(
-                new HttpSink.Builder()
-                        .setUri(URI.create("http://nohost.example.com" + PATH))
-                        .setEventHandler(handler),
+        final Sink sink = new HttpSink.Builder(
+                logger,
                 () -> {
                     semaphore.release();
                     throw new IllegalStateException("Test Exception");
-                },
-                logger);
+                })
+                .setHost("nohost.example.com")
+                .setPath(PATH)
+                .setEventHandler(handler)
+                .build();
 
         final TsdEvent event = new TsdEvent(
                 id,
@@ -1050,7 +1185,7 @@ public final class HttpSinkTest {
 
         // Assert that the runtime exception was captured
         verify(logger, timeout(1000)).error(
-                startsWith("MetricsSinkApacheHttpWorker failure"),
+                startsWith("MetricsHttpSinkWorker failure"),
                 any(IllegalStateException.class));
 
         // Request matcher
@@ -1071,39 +1206,100 @@ public final class HttpSinkTest {
     }
 
     @Test
-    public void testStop() throws InterruptedException {
-        wireMockRule.stubFor(WireMock.post(WireMock.urlEqualTo(PATH))
+    public void testClose() throws Exception {
+        final Semaphore semaphore = new Semaphore(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final Semaphore clientSemaphore = new Semaphore(0);
+        final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
+
+        wireMockRule.stubFor(WireMock.requestMatching(new RequestValueMatcher(record -> {
+                    try {
+                        serverSemaphore.release();
+                        clientSemaphore.acquire();
+                    } catch (final InterruptedException e) {
+                        // Do nothing
+                    }
+                }))
                 .willReturn(WireMock.aResponse()
                         .withStatus(200)));
 
-        final Semaphore semaphore = new Semaphore(0);
         @SuppressWarnings("unchecked")
         final HttpSink sink = (HttpSink) new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
-                .setEventHandler(new CompletionHandler(semaphore))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setParallelism(1)
+                .setEventHandler(
+                        new CompletionHandler(
+                                semaphore,
+                                handler))
+                .setRequestTimeout(Duration.ofSeconds(2))
+                .setCloseTimeout(Duration.ofSeconds(5))
                 .build();
-
-        final Map<String, String> dimensions = new LinkedHashMap<>();
-        dimensions.put("foo", "bar");
-        dimensions.put("_start", Instant.now().minusMillis(812).atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_INSTANT));
-        dimensions.put("_end", Instant.now().atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_INSTANT));
-        dimensions.put("_host", "some.host.com");
-        dimensions.put("_service", "myservice");
-        dimensions.put("_cluster", "mycluster");
 
         final TsdEvent event = new TsdEvent(
                 id,
                 start,
                 end,
-                dimensions,
-                createQuantityMap(
-                        "timer", TsdQuantity.newInstance(123),
-                        "counter", TsdQuantity.newInstance(8),
-                        "gauge", TsdQuantity.newInstance(10)),
+                Collections.emptyMap(),
+                createQuantityMap("timer", TsdQuantity.newInstance(123)),
                 Collections.emptyMap());
 
-        sink.stop();
-        Thread.sleep(1000);
+        sink.record(event);
+        serverSemaphore.acquire();
+
+        final Thread thread = new Thread(() -> {
+                while (sink.isOpen()) {
+                    try {
+                        Thread.sleep(50);
+                    } catch (final InterruptedException e) {
+                        // Ignore
+                    }
+                }
+                clientSemaphore.release();
+            }, "testClose.helper");
+        thread.start();
+
+        sink.close();
+
+        // Request matcher
+        final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
+                .withHeader("Content-Type", WireMock.equalTo("application/octet-stream"));
+
+        // The in-flight message was allowed to complete successfully
+        wireMockRule.verify(1, requestPattern);
+        assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        verify(handler).attemptComplete(
+                eq(1L),
+                anyLong(),
+                eq(true),
+                anyLong(),
+                any(TimeUnit.class));
+    }
+
+    @Test
+    public void testRecordAfterClose() throws InterruptedException {
+        wireMockRule.stubFor(WireMock.post(WireMock.urlEqualTo(PATH))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(200)));
+
+        final Semaphore semaphore = new Semaphore(0);
+        final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
+        @SuppressWarnings("unchecked")
+        final Sink sink = new HttpSink.Builder()
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setEventHandler(new CompletionHandler(semaphore, handler))
+                .build();
+
+        final TsdEvent event = new TsdEvent(
+                id,
+                start,
+                end,
+                Collections.emptyMap(),
+                createQuantityMap("timer", TsdQuantity.newInstance(123)),
+                Collections.emptyMap());
+
+        sink.close();
         sink.record(event);
         assertFalse(semaphore.tryAcquire(1, TimeUnit.SECONDS));
 
@@ -1111,9 +1307,162 @@ public final class HttpSinkTest {
         final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
                 .withHeader("Content-Type", WireMock.equalTo("application/octet-stream"));
 
-        // Assert that data was sent
+        // Assert that data was not received (implying it was not sent)
         wireMockRule.verify(0, requestPattern);
         assertTrue(wireMockRule.findUnmatchedRequests().getRequests().isEmpty());
+        verify(handler).droppedEvent(any(Event.class));
+    }
+
+    @Test
+    public void testCloseForcefully() throws Exception {
+        final AtomicInteger droppedEvents = new AtomicInteger(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
+
+        wireMockRule.stubFor(WireMock.requestMatching(new RequestValueMatcher(record -> {
+                    try {
+                        serverSemaphore.release();
+                        Thread.sleep(5000);
+                        // Note: this request is intended to timeout
+                    } catch (final InterruptedException e) {
+                        // Do nothing
+                    }
+                }))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(200)));
+
+        @SuppressWarnings("unchecked")
+        final HttpSink sink = (HttpSink) new HttpSink.Builder()
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setParallelism(1)
+                .setEventHandler(
+                        new EventDroppedAssertionHandler(
+                                droppedEvents,
+                                new CompletionHandler(
+                                        serverSemaphore,
+                                        handler)))
+                .setRequestTimeout(Duration.ofSeconds(1))
+                .setCloseTimeout(Duration.ofMillis(100))
+                .build();
+
+        final TsdEvent event = new TsdEvent(
+                id,
+                start,
+                end,
+                Collections.emptyMap(),
+                createQuantityMap("timer", TsdQuantity.newInstance(123)),
+                Collections.emptyMap());
+
+        sink.record(event);
+        serverSemaphore.acquire();
+        sink.record(event);
+        sink.close();
+
+        // Normally after close the application terminates; here we wait for
+        // the result to verify that the request fails.
+        assertTrue(serverSemaphore.tryAcquire(2, TimeUnit.SECONDS));
+
+        // Assert that the first request's result was failed on the client side
+        verify(handler).attemptComplete(
+                eq(1L),
+                anyLong(),
+                eq(false),
+                anyLong(),
+                any(TimeUnit.class));
+
+        // Assert the second event was dropped
+        assertEquals(1, droppedEvents.get());
+    }
+
+    @Test
+    public void testCloseInterrupted() throws Exception {
+        final AtomicInteger droppedEvents = new AtomicInteger(0);
+        final Semaphore serverSemaphore = new Semaphore(0);
+        final HttpSinkEventHandler handler = mock(HttpSinkEventHandler.class);
+
+        wireMockRule.stubFor(WireMock.requestMatching(new RequestValueMatcher(record -> {
+                    try {
+                        serverSemaphore.release();
+                        Thread.sleep(5000);
+                        // Note: this request is intended to timeout
+                    } catch (final InterruptedException e) {
+                        // Do nothing
+                    }
+                }))
+                .willReturn(WireMock.aResponse()
+                        .withStatus(200)));
+
+        @SuppressWarnings("unchecked")
+        final HttpSink sink = (HttpSink) new HttpSink.Builder()
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
+                .setParallelism(1)
+                .setEventHandler(
+                        new EventDroppedAssertionHandler(
+                                droppedEvents,
+                                new CompletionHandler(
+                                        serverSemaphore,
+                                        handler)))
+                .setRequestTimeout(Duration.ofSeconds(2))
+                .setCloseTimeout(Duration.ofSeconds(5))
+                .build();
+
+        final TsdEvent event = new TsdEvent(
+                id,
+                start,
+                end,
+                Collections.emptyMap(),
+                createQuantityMap("timer", TsdQuantity.newInstance(123)),
+                Collections.emptyMap());
+
+        final AtomicBoolean closeInterrupted = new AtomicBoolean(false);
+        final Thread thread = new Thread(() -> {
+            try {
+                sink.close();
+            } catch (final InterruptedException e) {
+                closeInterrupted.set(true);
+            }
+        }, "testCloseInterrupted.closer");
+
+        // Submit a request, wait for it to block and then submit a second
+        sink.record(event);
+        serverSemaphore.acquire();
+        sink.record(event);
+
+        // Start async shutdown
+        thread.start();
+
+        // Wait for the first request to timeout
+        serverSemaphore.acquire();
+
+        // Interrupt and join the shutdown thread
+        thread.interrupt();
+        thread.join();
+
+        assertTrue(closeInterrupted.get());
+
+        // Normally after close the application terminates; here we wait for
+        // the result to verify that the request fails.
+        assertTrue(serverSemaphore.tryAcquire(3, TimeUnit.SECONDS));
+
+        // Request matcher
+        final RequestPatternBuilder requestPattern = WireMock.postRequestedFor(WireMock.urlEqualTo(PATH))
+                .withHeader("Content-Type", WireMock.equalTo("application/octet-stream"));
+
+        // Assert that the first request's result was failed on the client side. The interruption
+        // voided all data guarantees and there is neither a record of the second request being
+        // dropped nor is there a record of it being completed. Also, the server may or may not
+        // have received the second request. This is why it's important to shutdown cleanly. However,
+        // I suspect not many applications do this. We may want to consider a design that is more
+        // resilient to being forced to close.
+        verify(handler).attemptComplete(
+                eq(1L),
+                anyLong(),
+                eq(false),
+                anyLong(),
+                any(TimeUnit.class));
+        assertEquals(0, droppedEvents.get());
     }
 
     @Test
@@ -1123,13 +1472,12 @@ public final class HttpSinkTest {
                         .withStatus(200)));
 
         final Sink sink = new HttpSink.Builder()
-                .setUri(URI.create("http://localhost:" + wireMockRule.port() + PATH))
+                .setPort(wireMockRule.port())
+                .setPath(PATH)
                 .build();
 
         final Map<String, String> dimensions = new LinkedHashMap<>();
         dimensions.put("foo", "bar");
-        dimensions.put("_start", Instant.now().minusMillis(812).atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_INSTANT));
-        dimensions.put("_end", Instant.now().atZone(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_INSTANT));
         dimensions.put("_host", "some.host.com");
         dimensions.put("_service", "myservice");
         dimensions.put("_cluster", "mycluster");
@@ -1146,24 +1494,6 @@ public final class HttpSinkTest {
                 Collections.emptyMap());
 
         sink.record(event);
-    }
-
-    @Test
-    public void testSafeSleep() throws InterruptedException {
-        final AtomicBoolean value = new AtomicBoolean(false);
-        final Thread thread = new Thread(() -> {
-            // Value will not be set if safe sleep throws or is not interrupted.
-            HttpSink.safeSleep(500);
-            value.set(true);
-        });
-
-        thread.start();
-        Thread.sleep(100);
-        thread.interrupt();
-        thread.join(600);
-
-        assertFalse(thread.isAlive());
-        assertTrue(value.get());
     }
 
     private static Map<String, List<Quantity>> createQuantityMap(final Object... arguments) {
@@ -1351,15 +1681,13 @@ public final class HttpSinkTest {
         }
     }
 
-    private static final class AttemptCompletedAssertionHandler implements HttpSinkEventHandler {
-
+    private static final class AssertionResult {
         private final AtomicBoolean assertionResult;
         private final long expectedRecords;
         private final long expectedBytes;
         private final boolean expectedSuccess;
-        private final Optional<HttpSinkEventHandler> nextHandler;
 
-        AttemptCompletedAssertionHandler(
+        AssertionResult(
                 final AtomicBoolean assertionResult,
                 final long expectedRecords,
                 final long expectedBytes,
@@ -1368,6 +1696,26 @@ public final class HttpSinkTest {
             this.expectedRecords = expectedRecords;
             this.expectedBytes = expectedBytes;
             this.expectedSuccess = expectedSuccess;
+        }
+    }
+
+    private static final class AttemptCompletedAssertionHandler implements HttpSinkEventHandler {
+
+        private final AtomicInteger counter = new AtomicInteger(0);
+        private final List<AssertionResult> assertions;
+        private final Optional<HttpSinkEventHandler> nextHandler;
+
+        AttemptCompletedAssertionHandler(
+                final AtomicBoolean assertionResult,
+                final long expectedRecords,
+                final long expectedBytes,
+                final boolean expectedSuccess) {
+            assertions = new ArrayList<>();
+            assertions.add(new AssertionResult(
+                    assertionResult,
+                    expectedRecords,
+                    expectedBytes,
+                    expectedSuccess));
             nextHandler = Optional.empty();
         }
 
@@ -1377,29 +1725,44 @@ public final class HttpSinkTest {
                 final long expectedBytes,
                 final boolean expectedSuccess,
                 final HttpSinkEventHandler nextHandler) {
-            this.assertionResult = assertionResult;
-            this.expectedRecords = expectedRecords;
-            this.expectedBytes = expectedBytes;
-            this.expectedSuccess = expectedSuccess;
+            assertions = new ArrayList<>();
+            assertions.add(new AssertionResult(
+                    assertionResult,
+                    expectedRecords,
+                    expectedBytes,
+                    expectedSuccess));
+            this.nextHandler = Optional.of(nextHandler);
+        }
+
+        AttemptCompletedAssertionHandler(final List<AssertionResult> assertions) {
+            this.assertions = assertions;
+            this.nextHandler = Optional.empty();
+        }
+
+        AttemptCompletedAssertionHandler(
+                final List<AssertionResult> assertions,
+                final HttpSinkEventHandler nextHandler) {
+            this.assertions = assertions;
             this.nextHandler = Optional.of(nextHandler);
         }
 
         @Override
-        public void attemptComplete(
+        public synchronized void attemptComplete(
                 final long records,
                 final long bytes,
                 final boolean success,
                 final long elapasedTime,
                 final TimeUnit elapsedTimeUnit) {
+            final AssertionResult assertionResult = assertions.get(counter.getAndIncrement());
             try {
-                assertEquals(expectedRecords, records);
-                assertEquals(expectedBytes, bytes);
-                assertEquals(expectedSuccess, success);
-                assertionResult.set(true);
+                assertEquals(assertionResult.expectedRecords, records);
+                assertEquals(assertionResult.expectedBytes, bytes);
+                assertEquals(assertionResult.expectedSuccess, success);
+                assertionResult.assertionResult.set(true);
                 // CHECKSTYLE.OFF: IllegalCatch - JUnit throws assertions which derive from Throwable
             } catch (final Throwable t) {
                 // CHECKSTYLE.ON: IllegalCatch
-                assertionResult.set(false);
+                assertionResult.assertionResult.set(false);
             }
             nextHandler.ifPresent(h -> h.attemptComplete(records, bytes, success, elapasedTime, elapsedTimeUnit));
         }
