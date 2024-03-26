@@ -68,7 +68,7 @@
 
   <properties>
     <!--Dependency versions-->
-    <arpnetworking.commons.version>3.1.0</arpnetworking.commons.version>
+    <arpnetworking.commons.version>3.1.1</arpnetworking.commons.version>
     <spotbugs.annotations.version>4.8.3</spotbugs.annotations.version>
     <hamcrest.version>2.2</hamcrest.version>
     <jsr305.version>3.0.2</jsr305.version>
