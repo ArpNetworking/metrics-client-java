@@ -74,7 +74,7 @@
     <jsr305.version>3.0.2</jsr305.version>
     <junit.version>4.13.2</junit.version>
     <mockito.version>5.14.2</mockito.version>
-    <slf4j.version>2.0.16</slf4j.version>
+    <slf4j.version>2.0.17</slf4j.version>
 
     <!-- Spotbugs -->
     <!-- NOTE: Custom version excludes sample code as well -->
