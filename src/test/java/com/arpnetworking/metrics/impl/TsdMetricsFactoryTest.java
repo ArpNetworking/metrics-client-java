@@ -37,7 +37,6 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 
 import java.io.File;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -67,7 +66,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testNewInstance() throws UnknownHostException {
+    public void testNewInstance() {
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) TsdMetricsFactory.newInstance(
                 "MyService",
                 "MyCluster");
@@ -85,7 +84,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderDefaults() throws UnknownHostException {
+    public void testBuilderDefaults() {
         final Logger logger = Mockito.mock(Logger.class);
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver, logger)
@@ -106,7 +105,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderNullSinks() throws UnknownHostException {
+    public void testBuilderNullSinks() {
         final Logger logger = Mockito.mock(Logger.class);
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
         final TsdMetricsFactory metricsFactory = (TsdMetricsFactory) new TsdMetricsFactory.Builder(_mockHostResolver, logger)
@@ -128,7 +127,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderNullHostResolver() throws UnknownHostException {
+    public void testBuilderNullHostResolver() {
         final Logger logger = Mockito.mock(Logger.class);
         final Sink sink = Mockito.mock(Sink.class);
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
@@ -153,7 +152,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderHostResolverFailure() throws UnknownHostException {
+    public void testBuilderHostResolverFailure() {
         final Logger logger = Mockito.mock(Logger.class);
         final Sink sink = Mockito.mock(Sink.class);
         Mockito.doThrow(new RuntimeException()).when(_mockHostResolver).get();
@@ -168,7 +167,6 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         Assert.assertSame(sink, metricsFactory.getSinks().get(0));
 
-        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Mockito.verify(logger).warn(
                 Mockito.eq("Unable to construct TsdMetrics, metrics disabled; failures=[Unable to determine hostname]"),
@@ -192,7 +190,6 @@ public final class TsdMetricsFactoryTest {
                 .setServiceName("MyService")
                 .setSinks(sinks)
                 .build();
-        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
@@ -213,7 +210,6 @@ public final class TsdMetricsFactoryTest {
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
 
-        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         metrics.close();
     }
@@ -229,7 +225,6 @@ public final class TsdMetricsFactoryTest {
         Mockito.verify(logger).warn(Mockito.anyString());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
-        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
@@ -247,7 +242,6 @@ public final class TsdMetricsFactoryTest {
         Mockito.verify(logger).warn(Mockito.anyString());
         Assert.assertEquals(1, metricsFactory.getSinks().size());
         MatcherAssert.assertThat(metricsFactory.getSinks().get(0), Matchers.instanceOf(WarningSink.class));
-        @SuppressWarnings("resource")
         final Metrics metrics = metricsFactory.create();
         Assert.assertNotNull(metrics);
         MatcherAssert.assertThat(metrics, Matchers.instanceOf(TsdMetrics.class));
@@ -255,7 +249,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderHostResolver() throws UnknownHostException {
+    public void testBuilderHostResolver() {
         Mockito.doReturn("foo.example.com").when(_mockHostResolver).get();
         final Sink sink = Mockito.mock(Sink.class);
 
@@ -285,7 +279,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testBuilderHostNameOverride() throws UnknownHostException {
+    public void testBuilderHostNameOverride() {
         Mockito.doReturn("foo.example.com").when(_mockHostResolver).get();
         final Sink sink = Mockito.mock(Sink.class);
 
@@ -316,7 +310,7 @@ public final class TsdMetricsFactoryTest {
     }
 
     @Test
-    public void testCustomUuidFactory() throws Exception {
+    public void testCustomUuidFactory() {
         Mockito.doReturn("MyHost").when(_mockHostResolver).get();
         Mockito.when(_mockUuidFactory.get()).thenReturn(UUID.randomUUID(), UUID.randomUUID());
 
